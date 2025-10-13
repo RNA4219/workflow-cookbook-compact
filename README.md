@@ -26,6 +26,11 @@ next_review_due: 2025-11-14
 
 ![lint](https://github.com/RNA4219/workflow-cookbook/actions/workflows/markdown.yml/badge.svg)
 ![links](https://github.com/RNA4219/workflow-cookbook/actions/workflows/links.yml/badge.svg)
+![lead_time_p95_hours](https://img.shields.io/badge/lead__time__p95__hours-72h-blue)
+![mttr_p95_minutes](https://img.shields.io/badge/mttr__p95__minutes-60m-blue)
+![change_failure_rate_max](https://img.shields.io/badge/change__failure__rate__max-0.10-blue)
+
+> バッジ値は `governance/policy.yaml` の `slo` と同期。更新時は同ファイルの値を修正し、上記3つのバッジ表示を揃える。
 
 ### Commit message guide
 - feat: 〜 を追加
