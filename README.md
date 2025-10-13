@@ -1,3 +1,14 @@
+---
+intent_id: INT-001
+owner: your-handle
+status: active   # draft|active|deprecated
+last_reviewed_at: 2025-10-14
+next_review_due: 2025-11-14
+---
+
+> This repository defines **QA/Governance-first workflows (not application code)**.
+> AI agents implement changes **under these policies** with acceptance tests and canary rules.
+
 # Workflow Cookbook / Codex Task Kit
 
 任意のリポジトリに貼るだけで、**仕様→実装→検収**まで一貫して回せるMD群。
@@ -15,3 +26,9 @@
 
 ![lint](https://github.com/RNA4219/workflow-cookbook/actions/workflows/markdown.yml/badge.svg)
 ![links](https://github.com/RNA4219/workflow-cookbook/actions/workflows/links.yml/badge.svg)
+
+### Commit message guide
+- feat: 〜 を追加
+- fix: 〜 を修正
+- chore/docs: 〜 を整備
+- semver:major/minor/patch ラベルでリリース自動分類

@@ -1,15 +1,17 @@
-template: |
-  ## リリースサマリ
-  $CHANGES
-
-name-template: 'v$RESOLVED_VERSION'
-tag-template: 'v$RESOLVED_VERSION'
-version-template: '$MAJOR.$MINOR.$PATCH'
-change-template: '- $TITLE (#$NUMBER) by @$AUTHOR'
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
 categories:
-  - title: 🚀 Features
-    labels: [feature, enhancement]
-  - title: 🐛 Fixes
-    labels: [bug, fix]
-  - title: 🧰 Maintenance
-    labels: [chore, maintenance]
+  - title: "🚀 Features"
+    labels: ["type:feature"]
+  - title: "🐛 Fixes"
+    labels: ["type:bug"]
+  - title: "🧹 Chore/Docs"
+    labels: ["type:chore","type:docs"]
+change-template: "- $TITLE (#$NUMBER) @$AUTHOR"
+version-resolver:
+  major:
+    labels: ["semver:major"]
+  minor:
+    labels: ["semver:minor","type:feature"]
+  patch:
+    labels: ["semver:patch","type:bug","type:docs","type:chore"]

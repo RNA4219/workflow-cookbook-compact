@@ -1,22 +1,18 @@
-# 概要
-
-- Intent: <!-- e.g. INT-012 -->
+### 概要
+- Intent: <!-- INT-xxx -->
 - 種別: feature / fix / chore / docs
 
-## リンク
-
-- BLUEPRINT: <!-- path -->
+### リンク
+- BLUEPRINT: <!-- path or permalink -->
 - TASK: <!-- path -->
-- EVALUATION（検収条件）: <!-- anchor -->
+- EVALUATION（検収条件の見出し/アンカー）: <!-- anchor -->
 
-## リスクとロールバック
-
+### リスクとロールバック
 - 主要リスク:
-- Canary条件: 満たせば自動Abort（/governance/policy.yaml 参照）
-- Rollback手順: RUNBOOKの該当手順リンク
+- Canary条件: （/governance/policy.yaml に準拠）
+- Rollback手順: RUNBOOK の該当手順リンク
 
-## チェックリスト
-
+### チェックリスト
 - [ ] 受入基準（EVALUATION）緑
-- [ ] CHECKLISTS の該当項目済
-- [ ] CHANGELOG追記
+- [ ] CHECKLISTS 該当項目完了
+- [ ] CHANGELOG 追記

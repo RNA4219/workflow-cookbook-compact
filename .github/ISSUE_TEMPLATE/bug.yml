@@ -4,7 +4,7 @@ labels: ["type:bug", "triage:needed"]
 body:
   - type: input
     id: intent_id
-    attributes: { label: Intent ID, description: "BLUEPRINT / TASK に対応するID" }
+    attributes: { label: Intent ID, description: "BLUEPRINT / TASK のID" }
     validations: { required: true }
   - type: dropdown
     id: surface
@@ -28,7 +28,7 @@ body:
   - type: checkboxes
     id: gates
     attributes:
-      label: 自動ゲートで検知？
+      label: 自動ゲート検知
       options:
         - label: "canary中止が作動"
         - label: "リンク検査で失敗"

@@ -1,4 +1,12 @@
 ---
+intent_id: INT-001
+owner: your-handle
+status: active   # draft|active|deprecated
+last_reviewed_at: 2025-10-14
+next_review_due: 2025-11-14
+---
+
+---
 task_id: <YYYYMMDD-xx>
 repo: <https://github.com/owner/repo>
 base_branch: <main>
