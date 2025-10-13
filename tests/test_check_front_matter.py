@@ -14,7 +14,9 @@ module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 REQUIRED_FIELDS = tuple(module.REQUIRED_FIELDS)
+INCIDENT_REQUIRED_FIELDS = tuple(module.INCIDENT_REQUIRED_FIELDS)
 validate_markdown_front_matter = module.validate_markdown_front_matter
+validate_incident_front_matter = module.validate_incident_front_matter
 
 FieldPairs = Sequence[Tuple[str, str]]
 
@@ -80,4 +82,43 @@ def test_validate_markdown_front_matter_missing_fields(repo_root: Path) -> None:
 
     assert missing == {
         repo_root / "CHANGELOG.md": [field for field in REQUIRED_FIELDS if field in {"owner", "next_review_due"}]
+    }
+
+
+def test_validate_incident_front_matter_pass(repo_root: Path) -> None:
+    docs_dir = repo_root / "docs"
+    docs_dir.mkdir()
+    _write_markdown(
+        docs_dir / "IN-20250115-001.md",
+        (
+            ("incident_id", "IN-20250115-001"),
+            ("occurred_at", "2025-01-15T04:12:00+09:00"),
+            ("owner", "oncall@example"),
+            ("status", "resolved"),
+            ("linked_pr", "https://example.com/pr/123"),
+            ("runbook", "../RUNBOOK.md"),
+        ),
+    )
+
+    assert validate_incident_front_matter(repo_root) == {}
+
+
+def test_validate_incident_front_matter_missing_fields(repo_root: Path) -> None:
+    docs_dir = repo_root / "docs"
+    docs_dir.mkdir()
+    _write_markdown(
+        docs_dir / "IN-20250115-002.md",
+        (
+            ("incident_id", "IN-20250115-002"),
+            ("occurred_at", "2025-01-15T05:30:00+09:00"),
+            ("owner", "oncall@example"),
+            ("status", "resolved"),
+            ("linked_pr", "https://example.com/pr/456"),
+        ),
+    )
+
+    missing = validate_incident_front_matter(repo_root)
+
+    assert missing == {
+        docs_dir / "IN-20250115-002.md": [field for field in INCIDENT_REQUIRED_FIELDS if field == "runbook"]
     }
