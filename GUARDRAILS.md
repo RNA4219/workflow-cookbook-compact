@@ -142,23 +142,19 @@
 
 - **条件**：`index.json.generated_at` が最新コミットより古い／Capsが見つからない／対象ノードが未登録。
 - **対応**：
-
   - **ツールあり環境**（Function Calling）
-
-      - 例：`codemap.update` を呼ぶ（論理名）。
+    - 例：`codemap.update` を呼ぶ（論理名）。
   - **ツールなし環境**
+    - 本文に **ミラー封筒**を出し、外部実行を待つ。
 
-      - 本文に **ミラー封筒**を出し、外部実行を待つ。
-
-      ```tool_request
-      {"name":"codemap.update","arguments":{"targets":["frontend/src/App.tsx"],"emit":"index+caps"}}
-      ```
+        ```tool_request
+        {"name":"codemap.update","arguments":{"targets":["frontend/src/App.tsx"],"emit":"index+caps"}}
+        ```
 
     - 実行結果が到着するまで **偽の読込結果を作らない**。
 - **フォールバック**（最終手段）：
-
-    - `docs/BIRDSEYE.md` の **Edgesセクション**があればそこから ±1 hop を暫定抽出。
-    - それも無ければ「直近変更ファイルN件（例：5件）」のみ読込。
+  - `docs/BIRDSEYE.md` の **Edgesセクション**があればそこから ±1 hop を暫定抽出。
+  - それも無ければ「直近変更ファイルN件（例：5件）」のみ読込。
 
 ---
 
