@@ -1,0 +1,21 @@
+name: frontmatter
+on: [pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure required front matter exists on top-level MDs
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=$(git ls-files '*.md' | grep -E '^(BLUEPRINT|RUNBOOK|EVALUATION|TASK|CHECKLISTS|CHANGELOG)\.md$' || true)
+          [ -z "$files" ] && exit 0
+          fail=0
+          for f in $files; do
+            fm=$(awk 'NR==1&&/^---$/{in=1;next} in&&/^---$/{in=0;exit} in{print}' "$f")
+            for k in intent_id owner status last_reviewed_at next_review_due; do
+              echo "$fm" | grep -qE "^${k}:" || { echo "::error file=$f::missing front matter key: ${k}"; fail=1; }
+            done
+          done
+          [ "$fail" -eq 0 ] || exit 1
