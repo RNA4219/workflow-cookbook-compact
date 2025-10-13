@@ -1,0 +1,19 @@
+name: Vale
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Vale
+        uses: errata-ai/vale-action@v2
+        with:
+          config: vale.ini
