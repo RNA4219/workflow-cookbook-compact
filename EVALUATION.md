@@ -11,6 +11,7 @@ next_review_due: 2025-11-14
 ## Acceptance Criteria
 
 - 必須要件（フォーマット・件数・整合性など）
+- インシデント発生時は docs/IN-YYYYMMDD-XXX.md を作成し、該当PRおよびRUNBOOKから相互リンクする
 
 ## KPIs
 
