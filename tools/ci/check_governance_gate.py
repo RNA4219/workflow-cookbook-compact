@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from fnmatch import fnmatch
 from pathlib import Path
 from typing import Iterable, List, Sequence
+
+
+PRIORITY_SCORE_PATTERN = re.compile(r"Priority Score:\s*(\d+)\s*/\s*(.+)")
 
 
 def load_forbidden_patterns(policy_path: Path) -> List[str]:
@@ -88,7 +92,11 @@ def read_event_body(event_path: Path) -> str | None:
 def validate_priority_score(body: str | None) -> bool:
     if not body:
         return False
-    return "Priority Score:" in body
+    match = PRIORITY_SCORE_PATTERN.search(body)
+    if not match:
+        return False
+    reason = match.group(2).strip()
+    return bool(reason)
 
 
 def main() -> int:

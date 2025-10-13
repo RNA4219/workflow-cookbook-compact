@@ -33,6 +33,10 @@ def test_find_forbidden_matches(changed_paths, patterns, expected):
     "body, is_valid",
     [
         ("Priority Score: 5 / 安全性強化", True),
+        ("Priority Score: 1 / 即応性向上", True),
+        ("Priority Score: 3", False),
+        ("Priority Score: / 理由", False),
+        ("Priority Score: abc / 理由", False),
         ("priority score: 3", False),
         ("", False),
         (None, False),
