@@ -62,6 +62,7 @@ next_review_due: 2025-11-14
 | Evaluation | `EVALUATION.md` | 受け入れ基準・品質指標 | 中 | 検収条件 |
 | Checklist | `CHECKLISTS.md` | リリース/レビュー確認項目 | 低 | 後工程 |
 | Orchestration | `orchestration/*.md` | ワークフロー構成・依存関係 | 可変 | 最優先のブロッカーを提示 |
+| Birdseye Map | `docs/birdseye/index.json`, `docs/birdseye/caps/*.json` | ノード一覧と局所カプセルで依存トポロジと役割を把握 | 高 | `plan` 出力にノードID/役割を埋め込む基準面 |
 | Task Seeds | `TASK.*-MM-DD-YYYY` | 既存タスクドラフト | 可変 | 未着手タスクの候補 |
 
 補完資料:
@@ -86,15 +87,16 @@ next_review_due: 2025-11-14
 
 1. **スキャン**: ルートと `orchestration/` 配下を再帰探索し、Markdown front matter
    (`---`) を含むファイルを優先取得。
-2. **ノード生成**: 各ファイルから `##` レベルの節をノード化し、`Priority`
+2. **Birdseye 同期**: `docs/birdseye/index.json` から対象ファイル±2 hop のノードIDと役割を取得し、必要な `docs/birdseye/caps/*.json` を取り込み、各節に `node_id` と `role` を差し込む。これにより GUARDRAILS の `plan` 出力要件（ノードID明示）を満たす初期データを確保。
+3. **ノード生成**: 各ファイルから `##` レベルの節をノード化し、`Priority`
    `Dependencies` などのキーワードを抽出。
-3. **依存解決**: Orchestrationノードに含まれる依存パスを解析し、該当セクションを子ノードとして連結。
-4. **インシデント抽出**: `docs/IN-*.md` のインシデントセクションを走査し、再発防止やテスト強化の箇条書きを Task Seed 候補としてタグ付け。
-5. **粒度調整**: ノード内の ToDo / 箇条書きを単位作業へ分割し、`<= 0.5d`
+4. **依存解決**: Orchestrationノードに含まれる依存パスを解析し、該当セクションを子ノードとして連結。
+5. **インシデント抽出**: `docs/IN-*.md` のインシデントセクションを走査し、再発防止やテスト強化の箇条書きを Task Seed 候補としてタグ付け。
+6. **粒度調整**: ノード内の ToDo / 箇条書きを単位作業へ分割し、`<= 0.5d`
    を目安にまとめ直し。
-6. **テンプレート投影**: 各作業ユニットを `TASK.*-MM-DD-YYYY` 形式の Task Seed
+7. **テンプレート投影**: 各作業ユニットを `TASK.*-MM-DD-YYYY` 形式の Task Seed
    (`Objective` `Requirements` `Commands`) へ変換し、欠損フィールドは元資料の該当行を引用。
-7. **出力整形**: 優先度、依存、担当の有無でソートし、GitHub Issue もしくは
+8. **出力整形**: 優先度、依存、担当の有無でソートし、GitHub Issue もしくは
    PR下書きとしてJSON/YAMLに整形。
 
 ## 4. ノード抽出ルール
@@ -129,3 +131,5 @@ next_review_due: 2025-11-14
 - Orchestration MD には `## Phase` `## Stage` 等の段階名を揃える
 - タスク自動生成ツールはドライランでJSON出力を確認後にIssue化
 - 生成後は `CHANGELOG.md` へ反映済みタスクを移すことで履歴が追える
+- Birdseye 鮮度: `docs/birdseye/index.json.generated_at` が最新コミットより古ければ再収集を要求し、該当 Capsule も同時更新
+- `codemap.update` は Birdseye 再生成時のみ実行し、Dual Stack では関数呼び出し→`tool_request` ミラーを同一内容で送る
