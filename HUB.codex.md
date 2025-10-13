@@ -112,7 +112,6 @@
   dependencies:
     - 20240331-ops-01
 ```
-
 ## 6. 運用メモ
 
 - Orchestration MD には `## Phase` `## Stage` 等の段階名を揃える
