@@ -1,25 +1,18 @@
-# Overview
+### 概要
+- Intent: <!-- e.g. INT-012 -->
+- 種別: feature / fix / chore / docs
 
-- 目的 / 変更概要
+### リンク
+- BLUEPRINT: <!-- path -->
+- TASK: <!-- path -->
+- EVALUATION（検収条件）: <!-- anchor -->
 
-## Changes
+### リスクとロールバック
+- 主要リスク: 
+- Canary条件: 満たせば自動Abort（/governance/policy.yaml 参照）
+- Rollback手順: RUNBOOKの該当手順リンク
 
-- 主な差分
-
-## Tests
-
-- 追加/更新したテストと結果
-
-## Impact
-
-- 互換性/依存/ドキュメント
-
-## Rollback
-
-- 戻し方
-
-## Checklist
-
-- [ ] Lint/Type/Test OK
-- [ ] Acceptance Criteria 満たす
-- [ ] Docs/Changelog 更新
+### チェックリスト
+- [ ] 受入基準（EVALUATION）緑
+- [ ] CHECKLISTS の該当項目済
+- [ ] CHANGELOG追記
