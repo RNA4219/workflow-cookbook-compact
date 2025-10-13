@@ -14,10 +14,17 @@
 | --- | --- | --- | --- | --- |
 | Blueprint | `BLUEPRINT.md` | 要件・制約・背景 | 高 | 最上位方針
 | Runbook | `RUNBOOK.md` | 実行手順・コマンド | 中 | 具体的操作
+| Guardrails | `GUARDRAILS.md` | ガードレール/行動指針 | 高 | 全メンバー必読
 | Evaluation | `EVALUATION.md` | 受け入れ基準・品質指標 | 中 | 検収条件
 | Checklist | `CHECKLISTS.md` | リリース/レビュー確認項目 | 低 | 後工程
 | Orchestration | `orchestration/*.md` | ワークフロー構成・依存関係 | 可変 | 最優先のブロッカーを提示
 | Task Seeds | `TASK.*-MM-DD-YYYY` | 既存タスクドラフト | 可変 | 未着手タスクの候補
+
+補完資料:
+
+- `README.md`: リポジトリ概要と参照リンク
+- `CHANGELOG.md`: 完了タスクと履歴の記録
+- `.github/PULL_REQUEST_TEMPLATE.md`: PR 作成時のチェック項目
 
 更新日: 2025-10-13
 
