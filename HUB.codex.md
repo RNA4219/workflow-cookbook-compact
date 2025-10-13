@@ -52,7 +52,8 @@ Rules:
 
 - `README.md`: リポジトリ概要と参照リンク
 - `CHANGELOG.md`: 完了タスクと履歴の記録
-- `.github/PULL_REQUEST_TEMPLATE.md`: PR 作成時のチェック項目
+- `.github/PULL_REQUEST_TEMPLATE.md`: PR 作成時のチェック項目（Intent/リスク/Canary連携）
+- `.github/ISSUE_TEMPLATE/bug.yml`: Intent ID と自動ゲート確認を必須化した不具合報告フォーム
 
 更新日: 2025-10-13
 
