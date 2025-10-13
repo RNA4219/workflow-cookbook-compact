@@ -62,7 +62,7 @@ next_review_due: 2025-11-14
 | Evaluation | `EVALUATION.md` | 受け入れ基準・品質指標 | 中 | 検収条件 |
 | Checklist | `CHECKLISTS.md` | リリース/レビュー確認項目 | 低 | 後工程 |
 | Orchestration | `orchestration/*.md` | ワークフロー構成・依存関係 | 可変 | 最優先のブロッカーを提示 |
-| Birdseye Map | `docs/birdseye/index.json`, `docs/birdseye/caps/*.json` | ノード一覧と局所カプセルで依存トポロジと役割を把握 | 高 | `plan` 出力にノードID/役割を埋め込む基準面 |
+| Birdseye Map | `docs/birdseye/index.json` / `docs/birdseye/caps/*.json` | ノード一覧と局所カプセルで依存トポロジと役割を把握 | 高 | `plan` 出力にノードID/役割を埋め込む基準面 |
 | Task Seeds | `TASK.*-MM-DD-YYYY` | 既存タスクドラフト | 可変 | 未着手タスクの候補 |
 
 補完資料:
