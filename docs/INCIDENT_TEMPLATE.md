@@ -1,4 +1,5 @@
 # Incident (IN-YYYYMMDD-XXX)
+
 - 検知方法: 自動 / 手動 / その他
 - Canary 判定: 続行 / 自動中止
 - 影響範囲:
