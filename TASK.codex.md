@@ -74,7 +74,7 @@ make ci || true
 
 ## Patch
 
-*** Provide a unified diff. Include full paths. New files must be complete. ***
+***Provide a unified diff. Include full paths. New files must be complete.***
 
 ## Tests
 
