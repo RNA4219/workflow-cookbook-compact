@@ -54,6 +54,14 @@ Rules:
 - `CHANGELOG.md`: 完了タスクと履歴の記録
 - `.github/PULL_REQUEST_TEMPLATE.md`: PR 作成時のチェック項目（Intent/リスク/Canary連携）
 - `.github/ISSUE_TEMPLATE/bug.yml`: Intent ID と自動ゲート確認を必須化した不具合報告フォーム
+- `governance/policy.yaml`: QA が管理する自己改変境界・カナリア中止条件・SLO
+- `governance/prioritization.yaml`: 設計更新の優先度スコア計算ルール
+- `docs/INCIDENT_TEMPLATE.md`: 検知/影響/5Whys/再発防止/タイムラインのインシデント雛形
+- `SECURITY.md`: 脆弱性報告窓口と連絡手順
+- `CODEOWNERS`: `/governance/**` とインシデント雛形を QA 管轄とする宣言
+- `LICENSE`: OSS としての配布条件（MIT）
+- `.github/release-drafter.yml`: リリースノート自動整形のテンプレート
+- `.github/workflows/release-drafter.yml`: Release Drafter の CI 設定
 
 更新日: 2025-10-13
 
