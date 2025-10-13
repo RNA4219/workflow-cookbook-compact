@@ -11,6 +11,8 @@ next_review_due: 2025-11-14
 ## Acceptance Criteria
 
 - 必須要件（フォーマット・件数・整合性など）
+- PR本文に Priority Score（値と根拠）が記録されていること。
+- governance/policy.yaml の forbidden_paths を変更しないこと。
 
 ## KPIs
 
