@@ -53,17 +53,24 @@ next_review_due: 2025-11-14
 
 ## 2. 入力ファイル分類
 
-| 種別 | 例 | 主な内容 | 優先順 | 備考 |
-| --- | --- | --- | --- | --- |
-| Blueprint | `BLUEPRINT.md` | 要件・制約・背景 | 高 | 最上位方針 |
-| Runbook | `RUNBOOK.md` | 実行手順・コマンド | 中 | 具体的操作 |
-| Guardrails | `GUARDRAILS.md` | ガードレール/行動指針 | 高 | 全メンバー必読 |
-| Incident Logs | `docs/IN-*.md` | インシデント記録（影響・再発防止など） | 高 | 再発防止策とフォローアップアクションを抽出 |
-| Evaluation | `EVALUATION.md` | 受け入れ基準・品質指標 | 中 | 検収条件 |
-| Checklist | `CHECKLISTS.md` | リリース/レビュー確認項目 | 低 | 後工程 |
-| Orchestration | `orchestration/*.md` | ワークフロー構成・依存関係 | 可変 | 最優先のブロッカーを提示 |
-| Birdseye Map | `docs/birdseye/index.json` / `docs/birdseye/caps/*.json` | ノード一覧と局所カプセルで依存トポロジと役割を把握 | 高 | `plan` 出力にノードID/役割を埋め込む基準面 |
-| Task Seeds | `TASK.*-MM-DD-YYYY` | 既存タスクドラフト | 可変 | 未着手タスクの候補 |
+- **Blueprint** (`BLUEPRINT.md`): 要件・制約・背景。優先順: 高。
+  備考: 最上位方針。
+- **Runbook** (`RUNBOOK.md`): 実行手順・コマンド。優先順: 中。
+  備考: 具体的操作。
+- **Guardrails** (`GUARDRAILS.md`): ガードレール/行動指針。優先順: 高。
+  備考: 全メンバー必読。
+- **Incident Logs** (`docs/IN-*.md`): インシデント記録（影響・再発防止など）。優先順: 高。
+  備考: 再発防止策とフォローアップ抽出。
+- **Evaluation** (`EVALUATION.md`): 受け入れ基準・品質指標。優先順: 中。
+  備考: 検収条件。
+- **Checklist** (`CHECKLISTS.md`): リリース/レビュー確認項目。優先順: 低。
+  備考: 後工程。
+- **Orchestration** (`orchestration/*.md`): ワークフロー構成・依存関係。優先順: 可変。
+  備考: 最優先のブロッカーを提示。
+- **Birdseye Map** (`docs/birdseye/index.json` など): 依存トポロジと役割を把握。優先順: 高。
+  備考: `plan` 出力にノードID/役割を埋め込む基準面。
+- **Task Seeds** (`TASK.*-MM-DD-YYYY`): 既存タスクドラフト。優先順: 可変。
+  備考: 未着手タスクの候補。
 
 補完資料:
 
@@ -87,11 +94,14 @@ next_review_due: 2025-11-14
 
 1. **スキャン**: ルートと `orchestration/` 配下を再帰探索し、Markdown front matter
    (`---`) を含むファイルを優先取得。
-2. **Birdseye 同期**: `docs/birdseye/index.json` から対象ファイル±2 hop のノードIDと役割を取得し、必要な `docs/birdseye/caps/*.json` を取り込み、各節に `node_id` と `role` を差し込む。これにより GUARDRAILS の `plan` 出力要件（ノードID明示）を満たす初期データを確保。
+2. **Birdseye 同期**: `docs/birdseye/index.json` から対象ファイル±2 hop のノードIDと役割を取得。
+   必要な `docs/birdseye/caps/*.json` を取り込み、各節に `node_id` と `role` を差し込む。
+   これにより GUARDRAILS の `plan` 出力要件（ノードID明示）を満たす初期データを確保。
 3. **ノード生成**: 各ファイルから `##` レベルの節をノード化し、`Priority`
    `Dependencies` などのキーワードを抽出。
 4. **依存解決**: Orchestrationノードに含まれる依存パスを解析し、該当セクションを子ノードとして連結。
-5. **インシデント抽出**: `docs/IN-*.md` のインシデントセクションを走査し、再発防止やテスト強化の箇条書きを Task Seed 候補としてタグ付け。
+5. **インシデント抽出**: `docs/IN-*.md` のインシデントセクションを走査。
+   再発防止やテスト強化の箇条書きを Task Seed 候補としてタグ付け。
 6. **粒度調整**: ノード内の ToDo / 箇条書きを単位作業へ分割し、`<= 0.5d`
    を目安にまとめ直し。
 7. **テンプレート投影**: 各作業ユニットを `TASK.*-MM-DD-YYYY` 形式の Task Seed
@@ -131,5 +141,7 @@ next_review_due: 2025-11-14
 - Orchestration MD には `## Phase` `## Stage` 等の段階名を揃える
 - タスク自動生成ツールはドライランでJSON出力を確認後にIssue化
 - 生成後は `CHANGELOG.md` へ反映済みタスクを移すことで履歴が追える
-- Birdseye 鮮度: `docs/birdseye/index.json.generated_at` が最新コミットより古ければ再収集を要求し、該当 Capsule も同時更新
-- `codemap.update` は Birdseye 再生成時のみ実行し、Dual Stack では関数呼び出し→`tool_request` ミラーを同一内容で送る
+- Birdseye 鮮度: `docs/birdseye/index.json.generated_at` が最新コミットより古ければ再収集を要求。
+  該当 Capsule も同時更新。
+- `codemap.update` は Birdseye 再生成時のみ実行。
+  Dual Stack では関数呼び出し→`tool_request` ミラーを同一内容で送る。

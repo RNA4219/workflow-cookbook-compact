@@ -1,4 +1,5 @@
 # Incident (IN-YYYYMMDD-XXX)
+
 - 検知方法: 自動 / 手動（Canary: 続行 or 自動中止）
 - 影響範囲:
 - 根本原因（5 Whys）:

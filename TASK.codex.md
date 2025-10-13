@@ -6,42 +6,46 @@ last_reviewed_at: 2025-10-14
 next_review_due: 2025-11-14
 ---
 
----
-task_id: <YYYYMMDD-xx>
-repo: <https://github.com/owner/repo>
-base_branch: <main>
-work_branch: <feat/short-slug>
-priority: <P1|P2|P3>
+# Task Seed Template
+
+## メタデータ
+
+```yaml
+task_id: YYYYMMDD-xx
+repo: https://github.com/owner/repo
+base_branch: main
+work_branch: feat/short-slug
+priority: P1|P2|P3
 langs: [auto]   # auto | python | typescript | go | rust | etc.
----
+```
 
 # Objective
 
-<一文で目的>
+{{一文で目的}}
 
 ## Scope
 
-- In: <対象(ディレクトリ/機能/CLI)を箇条書き>
-- Out: <非対象(触らない領域)を箇条書き>
+- In: {{対象(ディレクトリ/機能/CLI)を箇条書き}}
+- Out: {{非対象(触らない領域)を箇条書き}}
 
 ## Requirements
 
 - Behavior:
-  - <期待挙動1>
-  - <期待挙動2>
+  - {{期待挙動1}}
+  - {{期待挙動2}}
 - I/O Contract:
-  - Input: <型/例>
-  - Output: <型/例>
+  - Input: {{型/例}}
+  - Output: {{型/例}}
 - Constraints:
   - 既存API破壊なし / 不要な依存追加なし
   - Lint/Type/Test はゼロエラー
 - Acceptance Criteria:
-  - <検収条件1>
-  - <検収条件2>
+  - {{検収条件1}}
+  - {{検収条件2}}
 
 ## Affected Paths
 
-- <glob例: backend/src/**, frontend/src/hooks/**, tools/*.sh>
+- {{glob例: backend/src/**, frontend/src/hooks/**, tools/*.sh}}
 
 ## Local Commands（存在するものだけ実行）
 
@@ -89,10 +93,10 @@ make ci || true
 ### Outline
 
 - Unit:
-  - <case-1: 入力→出力の最小例>
-  - <case-2: エッジ/エラー例>
+  - {{case-1: 入力→出力の最小例}}
+  - {{case-2: エッジ/エラー例}}
 - Integration:
-  - <代表シナリオ1つ>
+  - {{代表シナリオ1つ}}
 
 ## Commands
 
@@ -104,12 +108,12 @@ make ci || true
 
 ### Rationale
 
-- <設計判断を1～2行>
+- {{設計判断を1～2行}}
 
 ### Risks
 
-- <既知の制約/互換性リスク>
+- {{既知の制約/互換性リスク}}
 
 ### Follow-ups
 
-- <後続タスクあれば>
+- {{後続タスクあれば}}
