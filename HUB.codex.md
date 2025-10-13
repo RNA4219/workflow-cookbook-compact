@@ -1,3 +1,31 @@
+[Agent Tool Policy — Dual Stack]
+
+Runtimes:
+A) Native function-calling tools are registered (OpenAI/Gemini/Vertex).
+B) No native tools; an external orchestrator parses JSON blocks in text.
+
+Rules:
+1) If native tools exist, CALL them (function calling) using the tool names below.
+2) Always MIRROR each call as a JSON envelope so non-native runtimes can parse:
+
+```tool_request
+{"name":"web.search","arguments":{"q":"...", "recency":30}}
+```
+
+3. Never fabricate tool results. If tools are unavailable, emit <plan> and JSON envelopes only.
+4. Platform-specific macros remain VERBATIM (do not expand).
+5. Default language: Japanese unless code identifiers dictate otherwise.
+
+[Logical Tool Names]
+
+* web.search{q, recency?, domains?}
+* web.open{url}
+* drive.search{query, owner?, modified_after?}
+* gmail.search{query, max_results?}
+* calendar.search{time_min?, time_max?, query?}
+
+[Output Contract] <plan>/<patch>/<tests>/<commands>/<notes>
+
 # HUB.codex.md
 
 リポジトリ内の仕様・運用MDを集約し、エージェントがタスクを自動分割できるようにするハブ定義。`BLUEPRINT.md` など既存ファイルに加えて、オーケストレーション専用のMD（例: `orchestration/*.md`）も取り込む。
