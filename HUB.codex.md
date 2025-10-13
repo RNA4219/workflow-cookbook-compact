@@ -58,6 +58,7 @@ next_review_due: 2025-11-14
 | Blueprint | `BLUEPRINT.md` | 要件・制約・背景 | 高 | 最上位方針 |
 | Runbook | `RUNBOOK.md` | 実行手順・コマンド | 中 | 具体的操作 |
 | Guardrails | `GUARDRAILS.md` | ガードレール/行動指針 | 高 | 全メンバー必読 |
+| Incident Logs | `docs/IN-*.md` | インシデント記録（影響・再発防止など） | 高 | 再発防止策とフォローアップアクションを抽出 |
 | Evaluation | `EVALUATION.md` | 受け入れ基準・品質指標 | 中 | 検収条件 |
 | Checklist | `CHECKLISTS.md` | リリース/レビュー確認項目 | 低 | 後工程 |
 | Orchestration | `orchestration/*.md` | ワークフロー構成・依存関係 | 可変 | 最優先のブロッカーを提示 |
@@ -72,6 +73,7 @@ next_review_due: 2025-11-14
 - `.github/ISSUE_TEMPLATE/bug.yml`: Intent ID と自動ゲート確認を必須化した不具合報告フォーム
 - `governance/policy.yaml`: QA が管理する自己改変境界・カナリア中止条件・SLO
 - `governance/prioritization.yaml`: 設計更新の優先度スコア計算ルール
+- `docs/IN-*.md`: インシデントログ本体。Blueprint/Evaluation との相互リンクを維持し、再発防止策の同期を確認
 - `docs/INCIDENT_TEMPLATE.md`: 検知/影響/5Whys/再発防止/タイムラインのインシデント雛形
 - `SECURITY.md`: 脆弱性報告窓口と連絡手順
 - `CODEOWNERS`: `/governance/**` とインシデント雛形を QA 管轄とする宣言
@@ -89,11 +91,12 @@ next_review_due: 2025-11-14
 3. **ノード生成**: 各ファイルから `##` レベルの節をノード化し、`Priority`
    `Dependencies` などのキーワードを抽出。
 4. **依存解決**: Orchestrationノードに含まれる依存パスを解析し、該当セクションを子ノードとして連結。
-5. **粒度調整**: ノード内の ToDo / 箇条書きを単位作業へ分割し、`<= 0.5d`
+5. **インシデント抽出**: `docs/IN-*.md` のインシデントセクションを走査し、再発防止やテスト強化の箇条書きを Task Seed 候補としてタグ付け。
+6. **粒度調整**: ノード内の ToDo / 箇条書きを単位作業へ分割し、`<= 0.5d`
    を目安にまとめ直し。
-6. **テンプレート投影**: 各作業ユニットを `TASK.*-MM-DD-YYYY` 形式の Task Seed
+7. **テンプレート投影**: 各作業ユニットを `TASK.*-MM-DD-YYYY` 形式の Task Seed
    (`Objective` `Requirements` `Commands`) へ変換し、欠損フィールドは元資料の該当行を引用。
-7. **出力整形**: 優先度、依存、担当の有無でソートし、GitHub Issue もしくは
+8. **出力整形**: 優先度、依存、担当の有無でソートし、GitHub Issue もしくは
    PR下書きとしてJSON/YAMLに整形。
 
 ## 4. ノード抽出ルール

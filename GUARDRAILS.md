@@ -174,6 +174,16 @@ next_review_due: 2025-11-14
   - `docs/BIRDSEYE.md` の **Edgesセクション**があればそこから ±1 hop を暫定抽出。
   - それも無ければ「直近変更ファイルN件（例：5件）」のみ読込。
 
+#### codemap 未実装時の暫定手順
+
+- `codemap.update` を呼べない（実装未提供／環境未配備）場合は、**必ず人間に再生成を依頼**する。
+- 依頼フロー：
+  1. `tool_request` 封筒で `codemap.update` 要求を出力（対象と希望出力を明示）。
+  2. ノートに「人間が codemap スクリプトをローカルで実行し、成果物をコミットして戻す」旨を記載。
+  3. 実行結果が共有されるまで Birdseye 参照を保留し、暫定読みは上記フォールバックのみ使用。
+- 可能なら `docs/birdseye/` を手動で更新するための最小手順（対象ファイル列挙、既存 JSON の削除有無）をノートに添える。
+- 手動生成後は `generated_at` の更新と差分確認を忘れない。
+
 ---
 
 ### セキュリティ/境界
@@ -205,6 +215,8 @@ next_review_due: 2025-11-14
 - `codemap.update`: args
   `{targets?: string[], emit?: "index"|"caps"|"index+caps"}`
   — Birdseye再生成。
+  - **実装未提供**：人間がローカル `tools/codemap/*` などのスクリプトを走らせ、成果物（`index.json`, `caps/*.json`）をコミット。
+  - 代替操作例：対象ファイル一覧をメモし、`docs/BIRDSEYE.md` を基に手動で JSON を補完。
 - `web.search`: args
   `{q: string, recency?: number, domains?: string[]}`
   — 必要時の検索。
@@ -213,3 +225,7 @@ next_review_due: 2025-11-14
 > ランタイムは**論理名→実ツール**のマッピングを持つ。ツールなし環境では `tool_request` を出すだけ。
 
 ---
+
+### Notes / Follow-ups
+
+- `codemap` 実装（スクリプト/ツール連携）の整備が未了の場合は、後続タスクとして Issue 起票を検討する。
