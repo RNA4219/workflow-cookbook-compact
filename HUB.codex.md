@@ -14,7 +14,7 @@
 | --- | --- | --- | --- | --- |
 | Blueprint | `BLUEPRINT.md` | 要件・制約・背景 | 高 | 最上位方針
 | Runbook | `RUNBOOK.md` | 実行手順・コマンド | 中 | 具体的操作
-| Quickstart | `QUICKSTART.md` | 初動セットアップ | 中 | 新規参加者向け
+| Guardrails | `GUARDRAILS.md` | ガードレール/行動指針 | 高 | 全メンバー必読
 | Evaluation | `EVALUATION.md` | 受け入れ基準・品質指標 | 中 | 検収条件
 | Checklist | `CHECKLISTS.md` | リリース/レビュー確認項目 | 低 | 後工程
 | Orchestration | `orchestration/*.md` | ワークフロー構成・依存関係 | 可変 | 最優先のブロッカーを提示
