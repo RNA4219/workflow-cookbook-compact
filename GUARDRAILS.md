@@ -14,7 +14,7 @@
 3. I/O 契約（入力/出力の型・例）を `BLUEPRINT.md` に整理する。
 4. Acceptance Criteria（検収条件）を `EVALUATION.md` に列挙する。
 5. 最小フロー（準備→実行→確認）を `RUNBOOK.md` に記す。
-6. `HUB.codex.md` の自動タスク分割フローに従い、タスク化した内容を `TASK.codex.md` テンプレートへマッピングして配布する。
+6. `HUB.codex.md` の自動タスク分割フローに従い、タスク化した内容を `TASK.*-MM-DD-YYYY` 形式の Task Seed へマッピングして配布する。
 7. タスク自動生成ツールはドライランで JSON 出力を確認してから Issue 化する。
 8. 完了済みタスクは `CHANGELOG.md` へ移し、履歴を更新する。
 9. テスト/型/lint/CI の実行結果を確認し、`CHECKLISTS.md` でリリース可否を判断する。
