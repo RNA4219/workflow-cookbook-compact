@@ -17,7 +17,9 @@
 | Evaluation | `EVALUATION.md` | 受け入れ基準・品質指標 | 中 | 検収条件
 | Checklist | `CHECKLISTS.md` | リリース/レビュー確認項目 | 低 | 後工程
 | Orchestration | `orchestration/*.md` | ワークフロー構成・依存関係 | 可変 | 最優先のブロッカーを提示
-| Task Seeds | `TASK.*.md` | 既存タスクドラフト | 可変 | 未着手タスクの候補
+| Task Seeds | `TASK.*-MM-DD-YYYY` | 既存タスクドラフト | 可変 | 未着手タスクの候補
+
+更新日: 2025-10-13
 
 ## 3. 自動タスク分割フロー
 
