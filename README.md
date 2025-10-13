@@ -10,3 +10,6 @@
 3. 実行手順は `RUNBOOK.md`、評価基準は `EVALUATION.md` に記述
 4. タスクごとに `TASK.codex.md` を複製して内容を埋め、エージェントに渡す
 5. リリースは `CHECKLISTS.md` をなぞり、差分は `CHANGELOG.md` に追記
+
+![lint](https://github.com/RNA4219/workflow-cookbook/actions/workflows/markdown.yml/badge.svg) ![links](https://github.com/RNA4219/workflow-cookbook/actions/workflows/links.yml/badge.svg)
+

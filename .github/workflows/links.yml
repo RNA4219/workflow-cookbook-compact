@@ -1,0 +1,19 @@
+﻿name: link-check
+on:
+  pull_request:
+  schedule:
+    - cron: "0 3 * * *"  # 毎日 03:00 UTC
+jobs:
+  lychee:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: lycheeverse/lychee-action@v1
+        with:
+          args: >-
+            --no-progress --verbose
+            --accept 200,206,429,500
+            --exclude-mail
+            "**/*.md"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
