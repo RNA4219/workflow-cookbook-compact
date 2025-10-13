@@ -123,75 +123,78 @@
 2. `docs/birdseye/index.json` を読み、**対象変更ファイル±2 hop** のノードID集合を得る。
 3. 対応する **`docs/birdseye/caps/*.json` だけ**を読み込む。
 4. `index.json.generated_at` が最新コミットより古い場合、**再生成を要求**する（下記“鮮度管理”参照）。
-5. 生成物（<plan>/<patch>/<tests>/<commands>/<notes> 等）では、**ノードID（パス）を明示**し出典を示す。
+5. 生成物（`plan`/`patch`/`tests`/`commands`/`notes` 等）では、**ノードID（パス）を明示**し出典を示す。
 
 **SHOULD**（推奨）
 
-* 2 hop の合計が **1,200 tokens** を超えそうなら **1 hop** に縮小。
-* 読み順は **entrypoints → application → domain → infra → ui**。
-* 巨大Capsuleは**120語以内 summary**に収める（Capsule側の規約）。
+- 2 hop の合計が **1,200 tokens** を超えそうなら **1 hop** に縮小。
+- 読み順は **entrypoints → application → domain → infra → ui**。
+- 巨大Capsuleは**120語以内 summary**に収める（Capsule側の規約）。
 
 **MUST NOT**（禁止）
 
-* `node_modules`, `.venv`, `dist`, `build`, `coverage` 等の**重量ディレクトリを直読み**しない。
-* `BIRDSEYE.md` 全文を**常時**読まない（必要時のみ参照）。
+- `node_modules`, `.venv`, `dist`, `build`, `coverage` 等の**重量ディレクトリを直読み**しない。
+- `BIRDSEYE.md` 全文を**常時**読まない（必要時のみ参照）。
 
 ---
 
 ### 鮮度管理（Staleness Handling）
 
-* **条件**：`index.json.generated_at` が最新コミットより古い／Capsが見つからない／対象ノードが未登録。
-* **対応**：
+- **条件**：`index.json.generated_at` が最新コミットより古い／Capsが見つからない／対象ノードが未登録。
+- **対応**：
 
-  * **ツールあり環境**（Function Calling）
+  - **ツールあり環境**（Function Calling）
 
-    * 例：`codemap.update` を呼ぶ（論理名）。
-  * **ツールなし環境**
+      - 例：`codemap.update` を呼ぶ（論理名）。
+  - **ツールなし環境**
 
-    * 本文に **ミラー封筒**を出し、外部実行を待つ。
+      - 本文に **ミラー封筒**を出し、外部実行を待つ。
 
-    ```tool_request
-    {"name":"codemap.update","arguments":{"targets":["frontend/src/App.tsx"],"emit":"index+caps"}}
-    ```
-  * 実行結果が到着するまで **偽の読込結果を作らない**。
-* **フォールバック**（最終手段）：
+      ```tool_request
+      {"name":"codemap.update","arguments":{"targets":["frontend/src/App.tsx"],"emit":"index+caps"}}
+      ```
 
-  * `docs/BIRDSEYE.md` の **Edgesセクション**があればそこから ±1 hop を暫定抽出。
-  * それも無ければ「直近変更ファイルN件（例：5件）」のみ読込。
+    - 実行結果が到着するまで **偽の読込結果を作らない**。
+- **フォールバック**（最終手段）：
+
+    - `docs/BIRDSEYE.md` の **Edgesセクション**があればそこから ±1 hop を暫定抽出。
+    - それも無ければ「直近変更ファイルN件（例：5件）」のみ読込。
 
 ---
 
 ### セキュリティ/境界
 
-* リポ外パス、機密格納領域への自動アクセスを禁止。
-* 生成物に**不要な機密情報**（環境変数/Secrets）を含めない。
+- リポ外パス、機密格納領域への自動アクセスを禁止。
+- 生成物に**不要な機密情報**（環境変数/Secrets）を含めない。
 
 ---
 
 ### 生成物に関する要求（出力契約）
 
-* **<plan>**：読み込んだ **CapsノードID一覧** と hop、抜粋理由、未読箇所の扱い。
-* **<patch>**：変更対象ファイルの相対パスを**先頭コメント**で明記。
-* **<tests>**：対象ノードの `tests/*` を参照して増補。存在しなければ最小サンプルを併記。
-* **<commands>**：読込に使ったツール（有無/種類）と再現手順を列挙。
-* **<notes>**：鮮度判断、スコープ外ファイル、既知リスク。
+- **`plan`**：読み込んだ **CapsノードID一覧** と hop、抜粋理由、未読箇所の扱い。
+- **`patch`**：変更対象ファイルの相対パスを**先頭コメント**で明記。
+- **`tests`**：対象ノードの `tests/*` を参照して増補。存在しなければ最小サンプルを併記。
+- **`commands`**：読込に使ったツール（有無/種類）と再現手順を列挙。
+- **`notes`**：鮮度判断、スコープ外ファイル、既知リスク。
 
 ---
 
 ### 実装メモ（自動生成）
 
-* `codemap` 相当のスクリプトで **index.json** と **caps/*.json** を生成する。
-* 失敗時でも人間向け `docs/BIRDSEYE.md` は残す。**機械読みは JSON を第一読者**にする。
+- `codemap` 相当のスクリプトで **index.json** と **caps/*.json** を生成する。
+- 失敗時でも人間向け `docs/BIRDSEYE.md` は残す。**機械読みは JSON を第一読者**にする。
 
 ---
 
 ### 互換のための論理ツール名（最小セット）
 
-| name             | args（抜粋）                                            | 用途     |                |             |
-| ---------------- | --------------------------------------------------- | ------ | -------------- | ----------- |
-| `codemap.update` | `{targets?: string[], emit?: "index"                | "caps" | "index+caps"}` | Birdseye再生成 |
-| `web.search`     | `{q: string, recency?: number, domains?: string[]}` | 必要時の検索 |                |             |
-| `web.open`       | `{url: string}`                                     | 詳細参照   |                |             |
+- `codemap.update`: args
+  `{targets?: string[], emit?: "index"|"caps"|"index+caps"}`
+  — Birdseye再生成。
+- `web.search`: args
+  `{q: string, recency?: number, domains?: string[]}`
+  — 必要時の検索。
+- `web.open`: args `{url: string}` — 詳細参照。
 
 > ランタイムは**論理名→実ツール**のマッピングを持つ。ツールなし環境では `tool_request` を出すだけ。
 
