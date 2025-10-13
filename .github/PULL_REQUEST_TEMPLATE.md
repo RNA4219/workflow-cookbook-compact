@@ -16,3 +16,5 @@
 - [ ] 受入基準（EVALUATION）緑
 - [ ] CHECKLISTS 該当項目完了
 - [ ] CHANGELOG 追記
+- 禁止パス遵守チェック（governance/policy.yaml）: <!-- 例: OK / 対象外 / 詳細 -->
+- Priority Score: <!-- <value> / 根拠 -->
