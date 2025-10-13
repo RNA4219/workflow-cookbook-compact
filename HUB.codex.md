@@ -112,9 +112,9 @@
   dependencies:
     - 20240331-ops-01
 ```
+
 ## 6. 運用メモ
 
 - Orchestration MD には `## Phase` `## Stage` 等の段階名を揃える
 - タスク自動生成ツールはドライランでJSON出力を確認後にIssue化
 - 生成後は `CHANGELOG.md` へ反映済みタスクを移すことで履歴が追える
-
