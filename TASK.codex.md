@@ -8,13 +8,16 @@ langs: [auto]   # auto | python | typescript | go | rust | etc.
 ---
 
 # Objective
+
 <一文で目的>
 
-# Scope
+## Scope
+
 - In: <対象(ディレクトリ/機能/CLI)を箇条書き>
 - Out: <非対象(触らない領域)を箇条書き>
 
-# Requirements
+## Requirements
+
 - Behavior:
   - <期待挙動1>
   - <期待挙動2>
@@ -28,16 +31,19 @@ langs: [auto]   # auto | python | typescript | go | rust | etc.
   - <検収条件1>
   - <検収条件2>
 
-# Affected Paths
+## Affected Paths
+
 - <glob例: backend/src/**, frontend/src/hooks/**, tools/*.sh>
 
-# Local Commands（存在するものだけ実行）
+## Local Commands（存在するものだけ実行）
+
 ```bash
 # Python
 ruff check . && black --check . && mypy --strict . && pytest -q
 
 # TypeScript/Node
-pnpm lint && pnpm typecheck && pnpm test || npm run lint && npm run typecheck && npm test
+pnpm lint && pnpm typecheck && pnpm test
+npm run lint && npm run typecheck && npm test
 
 # Go
 go vet ./... && go test ./...
@@ -49,44 +55,53 @@ cargo fmt --check && cargo clippy -- -D warnings && cargo test
 make ci || true
 ```
 
-# Deliverables
+## Deliverables
+
 - PR: タイトル/要約/影響/ロールバック
 - Artifacts: 変更パッチ、テスト、必要ならREADME/CHANGELOG差分
 
 ---
 
-<plan>
-# Steps
+## Plan
+
+### Steps
+
 1) 現状把握（対象ファイル列挙、既存テストとI/O確認）
 2) 小さな差分で仕様を満たす実装
 3) テスト追加/更新（先に/同時）
 4) コマンド群でゲート通過
 5) ドキュメント最小更新（必要なら）
-</plan>
 
-<patch>
-*** Provide a unified diff. Include full paths. New files must be complete. ***
-</patch>
+## Patch
 
-<tests>
-# Outline
+***Provide a unified diff. Include full paths. New files must be complete.***
+
+## Tests
+
+### Outline
+
 - Unit:
   - <case-1: 入力→出力の最小例>
   - <case-2: エッジ/エラー例>
 - Integration:
   - <代表シナリオ1つ>
-</tests>
 
-<commands>
-# Run gates
-# （上の "Local Commands" から該当スタックを選んで実行）
-</commands>
+## Commands
 
-<notes>
-# Rationale
+### Run gates
+
+- （上の "Local Commands" から該当スタックを選んで実行）
+
+## Notes
+
+### Rationale
+
 - <設計判断を1～2行>
-# Risks
+
+### Risks
+
 - <既知の制約/互換性リスク>
-# Follow-ups
+
+### Follow-ups
+
 - <後続タスクあれば>
-</notes>
