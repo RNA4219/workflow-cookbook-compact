@@ -1,0 +1,10 @@
+criteria:
+  - name: impact_scope
+    weight: 0.4
+  - name: design_staleness
+    weight: 0.2
+  - name: test_failures
+    weight: 0.2
+  - name: user_feedback
+    weight: 0.2
+algorithm: weighted_sum
