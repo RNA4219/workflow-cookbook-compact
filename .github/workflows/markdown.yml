@@ -17,3 +17,6 @@ jobs:
         with:
           globs: |
             **/*.md
+      - name: Run Vale
+        uses: errata-ai/vale-action@v2
+        continue-on-error: true
