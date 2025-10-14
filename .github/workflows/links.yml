@@ -9,10 +9,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: lycheeverse/lychee-action@v2
+        # lychee v0.20.x 以降では --exclude-mail が廃止されており、既定でメールリンクを除外する
         with:
           args: >-
             --verbose --no-progress
-            --exclude-mail
             --max-redirects 5
             --timeout 20
             **/*.md
