@@ -12,7 +12,6 @@ jobs:
         with:
           args: >-
             --verbose --no-progress
-            --exclude-mail
             --max-redirects 5
             --timeout 20
             **/*.md
