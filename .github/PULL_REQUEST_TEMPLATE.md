@@ -4,7 +4,7 @@
 
 ### 概要
 
-- Intent: <!-- 必ず INT-123 の形式で記載 -->
+- Intent: INT-??? <!-- 必ず INT-123 の形式で記載 -->
 - 種別: feature / fix / chore / docs
 
 ### リンク
