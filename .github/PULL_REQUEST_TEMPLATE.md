@@ -4,7 +4,7 @@
 
 ### 概要
 
-- Intent: INT-000 <!-- 必ず INT-123 の形式で更新 -->
+- Intent: <!-- 必ず INT-123 の形式で記載 -->
 - 種別: feature / fix / chore / docs
 
 ### リンク
@@ -25,4 +25,4 @@
 - [ ] CHECKLISTS 該当項目完了
 - [ ] CHANGELOG 追記
 - 禁止パス遵守チェック（governance/policy.yaml）: <!-- 例: OK / 対象外 / 詳細 -->
-- Priority Score: 0 / 仮値 <!-- prioritization.yaml を根拠に更新 -->
+- Priority Score: <!-- 例: 5 / prioritization.yaml#phase1 -->
