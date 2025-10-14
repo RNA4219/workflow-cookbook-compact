@@ -8,8 +8,7 @@ next_review_due: 2025-11-14
 
 # Workflow Cookbook / Codex Task Kit
 
-> Repo defines **QA/Governance-first workflows** (no application code).
-> AI agents follow these policies with acceptance tests and canary checks.
+This repo defines QA/Governance-first workflows (not application code). AI agents implement changes under these policies with acceptance tests and canary rules.
 
 任意のリポジトリに貼るだけで、**仕様→実装→検収**まで一貫して回せるMD群。
 
