@@ -229,3 +229,15 @@ next_review_due: 2025-11-14
 ### Notes / Follow-ups
 
 - `codemap` 実装（スクリプト/ツール連携）の整備が未了の場合は、後続タスクとして Issue 起票を検討する。
+
+<!-- guardrails:yaml
+forbidden_paths:
+  - "/core/schema/**"
+  - "/auth/**"
+require_human_approval:
+  - "/governance/**"
+slo:
+  lead_time_p95_hours: 72
+  mttr_p95_minutes: 60
+  change_failure_rate_max: 0.10
+-->
