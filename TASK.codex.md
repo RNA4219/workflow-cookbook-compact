@@ -19,7 +19,7 @@ priority: P1|P2|P3
 langs: [auto]   # auto | python | typescript | go | rust | etc.
 ```
 
-# Objective
+## Objective
 
 {{一文で目的}}
 
