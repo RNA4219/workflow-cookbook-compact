@@ -50,20 +50,20 @@ langs: [auto]   # auto | python | typescript | go | rust | etc.
 ## Local Commands（存在するものだけ実行）
 
 ```bash
-# Python
+## Python
 ruff check . && black --check . && mypy --strict . && pytest -q
 
-# TypeScript/Node
+## TypeScript/Node
 pnpm lint && pnpm typecheck && pnpm test
 npm run lint && npm run typecheck && npm test
 
-# Go
+## Go
 go vet ./... && go test ./...
 
-# Rust
+## Rust
 cargo fmt --check && cargo clippy -- -D warnings && cargo test
 
-# Fallback
+## Fallback
 make ci || true
 ```
 
