@@ -37,6 +37,7 @@ def test_find_forbidden_matches(changed_paths, patterns, expected):
         ("Priority Score: 3", False),
         ("Priority Score: / 理由", False),
         ("Priority Score: abc / 理由", False),
+        ("Priority Score: <!-- 例: 5 / prioritization.yaml#phase1 -->", False),
         ("priority score: 3", False),
         ("", False),
         (None, False),

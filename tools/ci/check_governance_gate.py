@@ -96,7 +96,11 @@ def validate_priority_score(body: str | None) -> bool:
     if not match:
         return False
     reason = match.group(2).strip()
-    return bool(reason)
+    if not reason:
+        return False
+    if reason.startswith("<!--") and reason.endswith("-->"):
+        return False
+    return True
 
 
 def main() -> int:
