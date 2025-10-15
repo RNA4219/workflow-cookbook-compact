@@ -8,7 +8,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 from tools.ci.check_governance_gate import (
     find_forbidden_matches,
     load_forbidden_patterns,
-    validate_priority_score,
+    validate_pr_body,
 )
 
 
@@ -29,22 +29,49 @@ def test_find_forbidden_matches(changed_paths, patterns, expected):
     assert find_forbidden_matches(changed_paths, normalized) == expected
 
 
-@pytest.mark.parametrize(
-    "body",
-    [
-        "Priority Score: 5 / 安全性強化",
-        "Priority Score: 1 / 即応性向上",
-        "Priority Score: 3",
-        "Priority Score: / 理由",
-        "Priority Score: abc / 理由",
-        "Priority Score: <!-- 例: 5 / prioritization.yaml#phase1 -->",
-        "priority score: 3",
-        "",
-        None,
-    ],
-)
-def test_validate_priority_score_is_now_noop(body):
-    assert validate_priority_score(body) is True
+def test_validate_pr_body_success(capsys):
+    body = """
+Intent: INT-123
+## EVALUATION
+Priority Score: 4.5 / 安全性強化
+"""
+
+    assert validate_pr_body(body) is True
+    captured = capsys.readouterr()
+    assert captured.err == ""
+
+
+def test_validate_pr_body_missing_intent(capsys):
+    body = """
+## EVALUATION
+Priority Score: 2
+"""
+
+    assert validate_pr_body(body) is False
+    captured = capsys.readouterr()
+    assert "PR body must include 'Intent: INT-xxx'" in captured.err
+
+
+def test_validate_pr_body_missing_evaluation(capsys):
+    body = """
+Intent: INT-001
+Priority Score: 3
+"""
+
+    assert validate_pr_body(body) is False
+    captured = capsys.readouterr()
+    assert "PR must reference EVALUATION" in captured.err
+
+
+def test_validate_pr_body_warns_without_priority_score(capsys):
+    body = """
+Intent: INT-789
+## EVALUATION
+"""
+
+    assert validate_pr_body(body) is True
+    captured = capsys.readouterr()
+    assert "Consider adding 'Priority Score: <number>'" in captured.err
 
 
 def test_load_forbidden_patterns(tmp_path):

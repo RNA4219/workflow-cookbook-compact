@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from fnmatch import fnmatch
@@ -85,8 +86,28 @@ def read_event_body(event_path: Path) -> str | None:
     return body
 
 
-def validate_priority_score(body: str | None) -> bool:
-    return True
+INTENT_PATTERN = re.compile(r"Intent:\s*INT-\d+", re.IGNORECASE)
+EVALUATION_PATTERN = re.compile(r"EVALUATION", re.IGNORECASE)
+PRIORITY_PATTERN = re.compile(r"Priority\s*Score\s*:\s*\d+(?:\.\d+)?", re.IGNORECASE)
+
+
+def validate_pr_body(body: str | None) -> bool:
+    normalized_body = body or ""
+    success = True
+
+    if not INTENT_PATTERN.search(normalized_body):
+        print("PR body must include 'Intent: INT-xxx'", file=sys.stderr)
+        success = False
+    if not EVALUATION_PATTERN.search(normalized_body):
+        print("PR must reference EVALUATION (acceptance) anchor", file=sys.stderr)
+        success = False
+    if not PRIORITY_PATTERN.search(normalized_body):
+        print(
+            "Consider adding 'Priority Score: <number>' based on prioritization.yaml",
+            file=sys.stderr,
+        )
+
+    return success
 
 
 def main() -> int:
@@ -112,7 +133,8 @@ def main() -> int:
         print("GITHUB_EVENT_PATH is not set", file=sys.stderr)
         return 1
     body = read_event_body(Path(event_path_value))
-    validate_priority_score(body)
+    if not validate_pr_body(body):
+        return 1
 
     return 0
 
