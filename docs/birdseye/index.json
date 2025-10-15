@@ -6,17 +6,17 @@
       "path": "README.md",
       "capsule": "caps/README.md.json"
     },
-    {
-      "id": "HUB.codex.md",
-      "path": "HUB.codex.md",
-      "capsule": "caps/HUB.codex.md.json"
+    "HUB.codex.md": {
+      "role": "navigation",
+      "caps": "docs/birdseye/caps/HUB.codex.md.json",
+      "mtime": "2025-10-14T13:23:56Z"
     },
-    {
-      "id": "GUARDRAILS.md",
-      "path": "GUARDRAILS.md",
-      "capsule": "caps/GUARDRAILS.md.json"
+    "GUARDRAILS.md": {
+      "role": "policy",
+      "caps": "docs/birdseye/caps/GUARDRAILS.md.json",
+      "mtime": "2025-10-14T04:25:52Z"
     }
-  ],
+  },
   "edges": [
     {
       "source": "README.md",

@@ -1,10 +1,10 @@
 {
-  "path": "HUB.codex.md",
-  "role": "agent_policy",
-  "summary": "エージェントが利用するツールポリシーと入出力契約を定義する。",
-  "deps_in": [
-    "README.md"
-  ],
-  "deps_out": [],
+  "id": "HUB.codex.md",
+  "role": "navigation",
+  "public_api": [],
+  "summary": "エージェント向けのツール利用ポリシーと、自動タスク分割に必要な主要ドキュメント群・分類ルールを整理したハブ。",
+  "deps_out": ["GUARDRAILS.md"],
+  "deps_in": ["README.md"],
+  "risks": ["Birdseye インデックスと同期が遅れるとタスク分割精度が低下"],
   "tests": []
 }
