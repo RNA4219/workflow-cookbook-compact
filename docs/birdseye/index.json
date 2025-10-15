@@ -1,10 +1,10 @@
 {
-  "generated_at": "2025-10-15T20:41:18Z",
-  "nodes": {
-    "README.md": {
-      "role": "overview",
-      "caps": "docs/birdseye/caps/README.md.json",
-      "mtime": "2025-10-14T04:36:51Z"
+  "generated_at": "2025-10-15T20:42:10Z",
+  "nodes": [
+    {
+      "id": "README.md",
+      "path": "README.md",
+      "capsule": "caps/README.md.json"
     },
     "HUB.codex.md": {
       "role": "navigation",
@@ -18,8 +18,15 @@
     }
   },
   "edges": [
-    ["README.md", "HUB.codex.md"],
-    ["README.md", "GUARDRAILS.md"],
-    ["HUB.codex.md", "GUARDRAILS.md"]
+    {
+      "source": "README.md",
+      "target": "HUB.codex.md",
+      "type": "dependency"
+    },
+    {
+      "source": "README.md",
+      "target": "GUARDRAILS.md",
+      "type": "dependency"
+    }
   ]
 }
