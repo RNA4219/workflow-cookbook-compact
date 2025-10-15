@@ -1,10 +1,10 @@
 {
-  "path": "GUARDRAILS.md",
-  "role": "governance_policy",
-  "summary": "実装原則・スコープ制約・テストフローなどの運用ガイドラインを定義する。",
-  "deps_in": [
-    "README.md"
-  ],
+  "id": "GUARDRAILS.md",
+  "role": "policy",
+  "public_api": [],
+  "summary": "行動指針とBirdseye運用ルールを定義し、LLMが最小コンテキストで資料を走査するための手順を規定する。",
   "deps_out": [],
+  "deps_in": ["README.md", "HUB.codex.md"],
+  "risks": ["Birdseye更新が遅れるとガードレール遵守が困難"],
   "tests": []
 }
