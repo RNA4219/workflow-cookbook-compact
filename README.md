@@ -41,3 +41,9 @@ canary rules.
 - fix: 〜 を修正
 - chore/docs: 〜 を整備
 - semver:major/minor/patch ラベルでリリース自動分類
+
+### Pull Request checklist (CI 必須項目)
+
+- PR 本文に `Intent: INT-xxx`（例: `Intent: INT-123`）を含めること。
+- `EVALUATION` 見出し（例: `[Acceptance Criteria](../EVALUATION.md#acceptance-criteria)`）へのリンクを本文に明示すること。
+- 可能であれば `Priority Score: <number>` を追記し、`prioritization.yaml` の値を参照する。
