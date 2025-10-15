@@ -1,0 +1,11 @@
+{
+  "path": "README.md",
+  "role": "repository_overview",
+  "summary": "リポジトリ全体の目的・使用手順を説明し、主要ドキュメントの連携を示す。",
+  "deps_in": [],
+  "deps_out": [
+    "HUB.codex.md",
+    "GUARDRAILS.md"
+  ],
+  "tests": []
+}

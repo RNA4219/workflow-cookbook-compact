@@ -1,0 +1,42 @@
+{
+  "generated_at": "2025-10-15T20:33:04Z",
+  "nodes": [
+    {
+      "id": "README.md",
+      "path": "README.md",
+      "capsule": "caps/README.md.json"
+    },
+    {
+      "id": "HUB.codex.md",
+      "path": "HUB.codex.md",
+      "capsule": "caps/HUB.codex.md.json"
+    },
+    {
+      "id": "GUARDRAILS.md",
+      "path": "GUARDRAILS.md",
+      "capsule": "caps/GUARDRAILS.md.json"
+    }
+  ],
+  "edges": [
+    {
+      "source": "README.md",
+      "target": "HUB.codex.md",
+      "type": "dependency"
+    },
+    {
+      "source": "README.md",
+      "target": "GUARDRAILS.md",
+      "type": "dependency"
+    },
+    {
+      "source": "HUB.codex.md",
+      "target": "README.md",
+      "type": "dependency"
+    },
+    {
+      "source": "GUARDRAILS.md",
+      "target": "README.md",
+      "type": "dependency"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "path": "GUARDRAILS.md",
+  "role": "governance_policy",
+  "summary": "実装原則・スコープ制約・テストフローなどの運用ガイドラインを定義する。",
+  "deps_in": [
+    "README.md"
+  ],
+  "deps_out": [],
+  "tests": []
+}
