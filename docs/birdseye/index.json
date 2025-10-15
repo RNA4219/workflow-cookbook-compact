@@ -1,5 +1,5 @@
 {
-  "generated_at": "2025-10-15T23:37:52Z",
+  "generated_at": "2025-10-15T23:42:24Z",
   "nodes": {
     "README.md": {
       "role": "overview",
@@ -18,8 +18,17 @@
     }
   },
   "edges": [
-    ["README.md", "HUB.codex.md"],
-    ["README.md", "GUARDRAILS.md"],
-    ["HUB.codex.md", "GUARDRAILS.md"]
+    {
+      "source": "README.md",
+      "target": "HUB.codex.md"
+    },
+    {
+      "source": "README.md",
+      "target": "GUARDRAILS.md"
+    },
+    {
+      "source": "HUB.codex.md",
+      "target": "GUARDRAILS.md"
+    }
   ]
 }
