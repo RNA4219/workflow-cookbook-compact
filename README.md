@@ -1,3 +1,13 @@
+<!-- LLM-BOOTSTRAP v1 -->
+読む順番:
+1. docs/birdseye/index.json  …… ノード一覧・隣接関係（軽量）
+2. docs/birdseye/caps/<path>.json …… 必要ノードだけ point read（個別カプセル）
+
+フォーカス手順:
+- 直近変更ファイル±2hopのノードIDを index.json から取得
+- 対応する caps/*.json のみ読み込み
+<!-- /LLM-BOOTSTRAP -->
+
 ---
 intent_id: INT-001
 owner: your-handle
