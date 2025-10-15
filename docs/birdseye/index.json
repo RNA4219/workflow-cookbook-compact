@@ -1,5 +1,5 @@
 {
-  "generated_at": "2025-10-15T20:33:04Z",
+  "generated_at": "2025-10-15T20:42:10Z",
   "nodes": [
     {
       "id": "README.md",
@@ -26,16 +26,6 @@
     {
       "source": "README.md",
       "target": "GUARDRAILS.md",
-      "type": "dependency"
-    },
-    {
-      "source": "HUB.codex.md",
-      "target": "README.md",
-      "type": "dependency"
-    },
-    {
-      "source": "GUARDRAILS.md",
-      "target": "README.md",
       "type": "dependency"
     }
   ]
