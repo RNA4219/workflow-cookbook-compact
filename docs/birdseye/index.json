@@ -1,17 +1,20 @@
 {
-  "generated_at": "2025-10-15T20:42:10Z",
-  "nodes": [
-    {
-      "id": "README.md",
+  "generated_at": "2025-10-15T20:50:20Z",
+  "nodes": {
+    "README.md": {
       "path": "README.md",
-      "capsule": "caps/README.md.json"
+      "role": "overview",
+      "caps": "docs/birdseye/caps/README.md.json",
+      "mtime": "2025-10-15T20:45:30Z"
     },
     "HUB.codex.md": {
+      "path": "HUB.codex.md",
       "role": "navigation",
       "caps": "docs/birdseye/caps/HUB.codex.md.json",
       "mtime": "2025-10-14T13:23:56Z"
     },
     "GUARDRAILS.md": {
+      "path": "GUARDRAILS.md",
       "role": "policy",
       "caps": "docs/birdseye/caps/GUARDRAILS.md.json",
       "mtime": "2025-10-14T04:25:52Z"
@@ -25,6 +28,11 @@
     },
     {
       "source": "README.md",
+      "target": "GUARDRAILS.md",
+      "type": "dependency"
+    },
+    {
+      "source": "HUB.codex.md",
       "target": "GUARDRAILS.md",
       "type": "dependency"
     }
