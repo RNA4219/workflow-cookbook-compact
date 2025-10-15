@@ -69,7 +69,8 @@ make ci || true
 
 ## Deliverables
 
-- PR: タイトル/要約/影響/ロールバックに加え、本文へ `Intent: INT-xxx` と `## EVALUATION` アンカー（必要なら `Priority Score: <number>`）を明記
+- PR: タイトル/要約/影響/ロールバックに加え、本文へ `Intent: INT-xxx` と `## EVALUATION` アンカーを明記
+  - 必要なら `Priority Score: <number>` を追記
 - Artifacts: 変更パッチ、テスト、必要ならREADME/CHANGELOG差分
 
 ---
