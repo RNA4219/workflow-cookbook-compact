@@ -12,7 +12,7 @@ next_review_due: 2025-11-14
 
 - 初版（MD一式 / Codex対応テンプレ含む）
 
-## [1.0.0] - 2025-10-16
+## 1.0.0 - 2025-10-16
 ### Added
 - Stable Template API（主要MDの凍結）
 - PR運用の明確化（Intent / EVALUATION リンク / semverラベル）
