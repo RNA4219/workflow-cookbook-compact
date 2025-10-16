@@ -36,9 +36,11 @@ canary rules.
 2. `BLUEPRINT.md` で要件と制約を1ページに集約
 3. 実行手順は `RUNBOOK.md`、評価基準は `EVALUATION.md` に記述し、
    以下で Birdseye の最小読込とタスク分割の前提を共有
-   - [`GUARDRAILS.md`](GUARDRAILS.md) …… 行動指針と Birdseye の `deps_out` と整合する最小読込ガードレールを確認
+   - [`GUARDRAILS.md`](GUARDRAILS.md) …… 行動指針と Birdseye の `deps_out`
+     と整合する最小読込ガードレールを確認
    - [`HUB.codex.md`](HUB.codex.md) …… 仕様集約とタスク分割ハブを整備し、Birdseye カプセルの依存関係を維持
-   - [`docs/IN-20250115-001.md`](docs/IN-20250115-001.md) …… インシデントログを参照し Birdseye カプセル要約で指示される `deps_out` を照合
+   - [`docs/IN-20250115-001.md`](docs/IN-20250115-001.md) …… インシデントログを参照し
+     Birdseye カプセル要約で指示される `deps_out` を照合
 4. タスクごとに `TASK.codex.md` を複製して内容を埋め、エージェントに渡す
 5. リリースは `CHECKLISTS.md` をなぞり、差分は `CHANGELOG.md` に追記
 
@@ -62,5 +64,7 @@ canary rules.
 ### Pull Request checklist (CI 必須項目)
 
 - PR 本文に `Intent: INT-xxx`（例: `Intent: INT-123`）を含めること。
-- `EVALUATION` 見出し（例: `[Acceptance Criteria](EVALUATION.md#acceptance-criteria)`）へのリンクを本文に明示すること。
+- `EVALUATION` 見出し（例:
+  `[Acceptance Criteria](EVALUATION.md#acceptance-criteria)`）へのリンクを
+  本文に明示すること。
 - 可能であれば `Priority Score: <number>` を追記し、`prioritization.yaml` の値を参照する。
