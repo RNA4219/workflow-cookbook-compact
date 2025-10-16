@@ -239,6 +239,10 @@
       "docs/birdseye/caps/"
     ],
     [
+      "docs/birdseye/index.json",
+      "docs/birdseye/caps/"
+    ],
+    [
       "EVALUATION.md",
       "governance/policy.yaml"
     ],
@@ -357,6 +361,14 @@
     [
       "tools/codemap/update.py",
       "tools/codemap/README.md"
+    ],
+    [
+      "tools/codemap/update.py",
+      "docs/birdseye/index.json"
+    ],
+    [
+      "tools/codemap/update.py",
+      "docs/birdseye/caps/"
     ],
     [
       "tools/codemap/update.py",
