@@ -123,7 +123,7 @@ Intent: INT-789
 
 
 def test_pr_template_contains_required_sections():
-    template = Path(".github/PULL_REQUEST_TEMPLATE.md").read_text(encoding="utf-8")
+    template = Path(".github/pull_request_template.md").read_text(encoding="utf-8")
 
     assert "Intent:" in template
     assert "## EVALUATION" in template
