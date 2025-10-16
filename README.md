@@ -36,15 +36,17 @@ canary rules.
 2. `BLUEPRINT.md` で要件と制約を1ページに集約
 3. 実行手順は `RUNBOOK.md`、評価基準は `EVALUATION.md` に記述し、
    以下で Birdseye の最小読込とタスク分割の前提を共有
-   - [`GUARDRAILS.md`](GUARDRAILS.md) …… 行動指針と Birdseye の `deps_out`
-     と整合する最小読込ガードレールを確認
-   - [`tools/codemap/README.md`](tools/codemap/README.md) /
-     [`tools/codemap/update.py`](tools/codemap/update.py) …… `codemap.update`
-     による Birdseye 再生成義務（`GUARDRAILS.md` の[鮮度管理](GUARDRAILS.md#%E9%AE%AE%E5%BA%A6%E7%AE%A1%E7%90%86staleness-handling)参照）と
-     `python tools/codemap/update.py` 実行フローを確認
-   - [`HUB.codex.md`](HUB.codex.md) …… 仕様集約とタスク分割ハブを整備し、Birdseye カプセルの依存関係を維持
-   - [`docs/IN-20250115-001.md`](docs/IN-20250115-001.md) …… インシデントログを参照し
-     Birdseye カプセル要約で指示される `deps_out` を照合
+
+    - [`GUARDRAILS.md`](GUARDRAILS.md) …… 行動指針と Birdseye の `deps_out`
+      と整合する最小読込ガードレールを確認
+    - [`tools/codemap/README.md`](tools/codemap/README.md) …… Birdseye カプセル
+      再生成前提と `codemap.update` の流れを把握
+    - [`tools/codemap/update.py`](tools/codemap/update.py) …… `python tools/codemap/update.py`
+      で `codemap.update` を実行し Birdseye カプセルを再生成する
+      （`GUARDRAILS.md` の[鮮度管理](GUARDRAILS.md#%E9%AE%AE%E5%BA%A6%E7%AE%A1%E7%90%86staleness-handling)参照）
+    - [`HUB.codex.md`](HUB.codex.md) …… 仕様集約とタスク分割ハブを整備し、Birdseye カプセルの依存関係を維持
+    - [`docs/IN-20250115-001.md`](docs/IN-20250115-001.md) …… インシデントログを参照し
+      Birdseye カプセル要約で指示される `deps_out` を照合
 4. タスクごとに `TASK.codex.md` を複製して内容を埋め、エージェントに渡す
 5. リリースは `CHECKLISTS.md` をなぞり、差分は `CHANGELOG.md` に追記
 
