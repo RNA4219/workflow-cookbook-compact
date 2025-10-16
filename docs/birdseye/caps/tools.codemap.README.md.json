@@ -2,6 +2,7 @@
   "id": "tools/codemap/README.md",
   "role": "guide",
   "public_api": [],
+
   "summary": "codemap ツールの目的、使用手順、入出力制約を記載した運用向けリファレンス。",
   "deps_in": [
     "tools/codemap/",
