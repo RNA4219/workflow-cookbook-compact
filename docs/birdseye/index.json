@@ -216,6 +216,10 @@
     ],
     [
       "GUARDRAILS.md",
+      "docs/INCIDENT_TEMPLATE.md"
+    ],
+    [
+      "GUARDRAILS.md",
       "docs/birdseye/index.json"
     ],
     [
