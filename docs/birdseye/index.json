@@ -61,6 +61,11 @@
       "caps": "docs/birdseye/caps/governance.policy.yaml.json",
       "mtime": "2025-10-14T00:00:00Z"
     },
+    "governance/prioritization.yaml": {
+      "role": "governance",
+      "caps": "docs/birdseye/caps/governance.prioritization.yaml.json",
+      "mtime": "2025-10-16T12:30:00Z"
+    },
     "docs/birdseye/index.json": {
       "role": "index",
       "caps": "docs/birdseye/caps/docs.birdseye.index.json.json",
@@ -287,6 +292,10 @@
     [
       "HUB.codex.md",
       "tools/codemap/"
+    ],
+    [
+      "HUB.codex.md",
+      "governance/prioritization.yaml"
     ],
     [
       "GUARDRAILS.md",

@@ -13,7 +13,8 @@
     "CHANGELOG.md",
     "SECURITY.md",
     "docs/IN-20250115-001.md",
-    "governance/policy.yaml"
+    "governance/policy.yaml",
+    "governance/prioritization.yaml"
   ],
   "deps_in": [
     "README.md",
