@@ -86,7 +86,7 @@ def read_event_body(event_path: Path) -> str | None:
     return body
 
 
-INTENT_PATTERN = re.compile(r"Intent:\s*INT-\d+", re.IGNORECASE)
+INTENT_PATTERN = re.compile(r"Intent\s*[：:]\s*INT-\d+", re.IGNORECASE)
 EVALUATION_PATTERN = re.compile(r"EVALUATION", re.IGNORECASE)
 PRIORITY_PATTERN = re.compile(r"Priority\s*Score\s*:\s*\d+(?:\.\d+)?", re.IGNORECASE)
 
