@@ -3,9 +3,7 @@
   "role": "operations",
   "public_api": [],
   "summary": "環境ごとの差分、準備→実行→確認の手順、監視ポイント、ロールバック方針をまとめた運用ガイド。",
-  "deps_out": [
-    "docs/IN-20250115-001.md"
-  ],
+  "deps_out": [],
   "deps_in": [
     "README.md",
     "HUB.codex.md",
