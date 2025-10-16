@@ -12,7 +12,8 @@
     "README.md",
     "HUB.codex.md",
     "GUARDRAILS.md",
-    "TASK.codex.md"
+    "TASK.codex.md",
+    "docs/IN-20250115-001.md"
   ],
   "risks": [],
   "tests": [

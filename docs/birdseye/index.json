@@ -47,7 +47,7 @@
       "mtime": "2025-10-14T00:00:00Z"
     },
     "docs/IN-20250115-001.md": {
-      "role": "incident_report",
+      "role": "incident",
       "caps": "docs/birdseye/caps/docs.IN-20250115-001.md.json",
       "mtime": "2025-01-15T04:12:00Z"
     },
@@ -171,6 +171,10 @@
     [
       "GUARDRAILS.md",
       "CHECKLISTS.md"
+    ],
+    [
+      "GUARDRAILS.md",
+      "docs/IN-20250115-001.md"
     ],
     [
       "GUARDRAILS.md",
