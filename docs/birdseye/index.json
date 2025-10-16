@@ -242,10 +242,7 @@
       "README.md",
       "docs/birdseye/caps/"
     ],
-    [
-      "docs/birdseye/index.json",
-      "docs/birdseye/caps/"
-    ],
+    ["docs/birdseye/index.json","docs/birdseye/caps/"],
     [
       "EVALUATION.md",
       "governance/policy.yaml"
