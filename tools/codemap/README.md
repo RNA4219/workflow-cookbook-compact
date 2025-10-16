@@ -15,7 +15,7 @@
    ```bash
    python tools/codemap/update.py --targets docs/birdseye/index.json --emit index+caps
    ```
-   
+
    - `--targets` には再生成したい Birdseye リソースをカンマ区切りで指定します。
    - `--emit` には出力したい成果物（`index` / `caps` / `index+caps`）を指定します。
 3. 実行後、以下の成果物が更新されます。
