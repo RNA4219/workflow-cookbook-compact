@@ -18,17 +18,17 @@
     }
   },
   "edges": [
-    {
-      "source": "README.md",
-      "target": "HUB.codex.md"
-    },
-    {
-      "source": "README.md",
-      "target": "GUARDRAILS.md"
-    },
-    {
-      "source": "HUB.codex.md",
-      "target": "GUARDRAILS.md"
-    }
+    [
+      "README.md",
+      "HUB.codex.md"
+    ],
+    [
+      "README.md",
+      "GUARDRAILS.md"
+    ],
+    [
+      "HUB.codex.md",
+      "GUARDRAILS.md"
+    ]
   ]
 }
