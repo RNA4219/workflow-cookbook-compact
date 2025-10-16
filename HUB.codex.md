@@ -120,6 +120,7 @@ next_review_due: 2025-11-14
 - コードブロックはコマンドサンプルとして `Commands` セクションに集約
 
 - **Task Status & Blockers**
+
 ```yaml
 許容ステータス（Allowed）
 - `[]` or `[ ]` or `- [ ]`：未着手・未割り振り
