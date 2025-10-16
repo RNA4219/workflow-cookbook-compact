@@ -116,8 +116,25 @@ next_review_due: 2025-11-14
 
 - Front matter内の `priority`, `owner`, `deadline` を最優先で採用
 - 節タイトルに `[Blocker]` を含む場合は依存解決フェーズで最上位へ昇格
-- 箇条書きのうち `[]` or `[ ]` 形式はチェックリスト扱い、`- [ ]` はタスク分解対象
+- 箇条書きのうち `[]` or `[ ]` 形式はチェックリスト扱い、`- [ ]` はタスク分解対象。詳細ステータスは後述`Task Status & Blockers`参照
 - コードブロックはコマンドサンプルとして `Commands` セクションに集約
+
+- **Task Status & Blockers**
+```yaml
+許容ステータス（Allowed）
+- `[]` or `[ ]` or `- [ ]`：未着手・未割り振り
+- planned：バックログ。着手順待ち
+- active：受付済/優先キュー入り（担当/期日が付いた状態）
+- in_progress：着手中
+- reviewing：見直し中（レビュー/ふりかえり/承認待ち）
+- blocked：ブロック中（外的依存で進められない）
+- done：完了
+
+遷移例（標準）
+planned → active → in_progress → reviewing → done
+ブロック例（例外）
+in_progress → blocked → in_progress（解除後に戻す）
+```
 
 ## 5. 出力例（擬似）
 
