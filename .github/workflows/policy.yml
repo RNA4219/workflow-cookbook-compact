@@ -22,10 +22,10 @@ jobs:
         with:
           script: |
             const body = (context.payload.pull_request && context.payload.pull_request.body) || ""
-            if (!/Intent:\s*INT-\d+/i.test(body)) {
+            if (!/Intent\s*[：:]\s*INT-[0-9A-Z]+(?:-[0-9A-Z]+)*/i.test(body)) {
               core.setFailed("PR body must include 'Intent: INT-xxx'")
             }
-            if (!/EVALUATION/i.test(body)) {
+            if (!/^#{2,6}\s*EVALUATION\b/mi.test(body)) {
               core.setFailed("PR must reference EVALUATION (acceptance) anchor")
             }
             if (!/Priority\s*Score\s*:\s*\d+(\.\d+)?/i.test(body)) {
