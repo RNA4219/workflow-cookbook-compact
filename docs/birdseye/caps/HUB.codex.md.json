@@ -12,6 +12,7 @@
     "CHECKLISTS.md",
     "CHANGELOG.md",
     "SECURITY.md",
+    "docs/IN-20250115-001.md",
     "governance/policy.yaml"
   ],
   "deps_in": [

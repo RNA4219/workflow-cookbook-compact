@@ -3,8 +3,19 @@
   "role": "history",
   "public_api": [],
   "summary": "リリースバージョンごとの追加内容と既知の制約を記録し、テンプレート更新の履歴を追跡する変更ログ。",
-  "deps_out": [],
-  "deps_in": ["README.md", "HUB.codex.md", "GUARDRAILS.md"],
+  "deps_out": [
+    "README.md",
+    "EVALUATION.md",
+    "governance/policy.yaml"
+  ],
+  "deps_in": [
+    "README.md",
+    "HUB.codex.md",
+    "GUARDRAILS.md",
+    "TASK.codex.md"
+  ],
   "risks": [],
-  "tests": []
+  "tests": [
+    "手動: 新リリース記載後にREADME/policy.yamlとの整合を確認"
+  ]
 }

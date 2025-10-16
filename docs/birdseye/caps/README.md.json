@@ -12,10 +12,11 @@
     "TASK.codex.md",
     "CHECKLISTS.md",
     "CHANGELOG.md",
+    "docs/IN-20250115-001.md",
     "governance/policy.yaml"
   ],
   "deps_in": [
-    "GUARDRAILS.md"
+    "CHANGELOG.md"
   ],
   "risks": [],
   "tests": []

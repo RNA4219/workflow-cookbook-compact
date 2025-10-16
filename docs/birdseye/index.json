@@ -46,6 +46,11 @@
       "caps": "docs/birdseye/caps/CHANGELOG.md.json",
       "mtime": "2025-10-14T00:00:00Z"
     },
+    "docs/IN-20250115-001.md": {
+      "role": "incident_report",
+      "caps": "docs/birdseye/caps/docs.IN-20250115-001.md.json",
+      "mtime": "2025-01-15T04:12:00Z"
+    },
     "SECURITY.md": {
       "role": "security",
       "caps": "docs/birdseye/caps/SECURITY.md.json",
@@ -101,6 +106,10 @@
     ],
     [
       "README.md",
+      "docs/IN-20250115-001.md"
+    ],
+    [
+      "README.md",
       "governance/policy.yaml"
     ],
     [
@@ -130,6 +139,10 @@
     [
       "HUB.codex.md",
       "SECURITY.md"
+    ],
+    [
+      "HUB.codex.md",
+      "docs/IN-20250115-001.md"
     ],
     [
       "HUB.codex.md",
@@ -174,6 +187,50 @@
     [
       "EVALUATION.md",
       "governance/policy.yaml"
+    ],
+    [
+      "RUNBOOK.md",
+      "docs/IN-20250115-001.md"
+    ],
+    [
+      "EVALUATION.md",
+      "RUNBOOK.md"
+    ],
+    [
+      "EVALUATION.md",
+      "docs/IN-20250115-001.md"
+    ],
+    [
+      "TASK.codex.md",
+      "EVALUATION.md"
+    ],
+    [
+      "TASK.codex.md",
+      "CHANGELOG.md"
+    ],
+    [
+      "CHECKLISTS.md",
+      "EVALUATION.md"
+    ],
+    [
+      "CHANGELOG.md",
+      "README.md"
+    ],
+    [
+      "CHANGELOG.md",
+      "EVALUATION.md"
+    ],
+    [
+      "CHANGELOG.md",
+      "governance/policy.yaml"
+    ],
+    [
+      "docs/IN-20250115-001.md",
+      "RUNBOOK.md"
+    ],
+    [
+      "docs/IN-20250115-001.md",
+      "EVALUATION.md"
     ]
   ]
 }
