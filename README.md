@@ -16,7 +16,7 @@ canary rules.
 読む順番:
 
 1. docs/birdseye/index.json  …… ノード一覧・隣接関係（軽量）
-2. docs/birdseye/caps/{path}.json …… 必要ノードだけ point read（個別カプセル）
+2. docs/birdseye/caps/`<path>`.json …… 必要ノードだけ point read（個別カプセル）
 
 フォーカス手順:
 
@@ -24,6 +24,7 @@ canary rules.
 - 対応する caps/*.json のみ読み込み
 
 <!-- /LLM-BOOTSTRAP -->
+
 任意のリポジトリに貼るだけで、**仕様→実装→検収**まで一貫して回せるMD群。
 
 - 人間にもエージェント（Codex等）にも読ませやすい最小フォーマット
