@@ -54,6 +54,18 @@ Priority Score: 3
     assert captured.err == ""
 
 
+def test_validate_pr_body_accepts_alphanumeric_segments(capsys):
+    body = """
+Intent: INT-OPS-7A
+## EVALUATION
+Priority Score: 2
+"""
+
+    assert validate_pr_body(body) is True
+    captured = capsys.readouterr()
+    assert captured.err == ""
+
+
 def test_validate_pr_body_accepts_fullwidth_colon(capsys):
     body = """
 Intent：INT-456
