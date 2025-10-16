@@ -39,6 +39,7 @@ canary rules.
    - [`GUARDRAILS.md`](GUARDRAILS.md) …… 行動指針と Birdseye の `deps_out` と整合する最小読込ガードレールを確認
    - [`HUB.codex.md`](HUB.codex.md) …… 仕様集約とタスク分割ハブを整備し、Birdseye カプセルの依存関係を維持
    - [`docs/IN-20250115-001.md`](docs/IN-20250115-001.md) …… インシデントログを参照し Birdseye カプセル要約で指示される `deps_out` を照合
+   - Birdseye カプセルを更新する場合は [`tools/codemap/README.md`](tools/codemap/README.md) を参照し、`python tools/codemap/update.py --caps README.md` など `tools/codemap/update.py` で再生成して index の依存と同期
 4. タスクごとに `TASK.codex.md` を複製して内容を埋め、エージェントに渡す
 5. リリースは `CHECKLISTS.md` をなぞり、差分は `CHANGELOG.md` に追記
 
