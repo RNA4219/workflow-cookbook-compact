@@ -54,6 +54,18 @@ Priority Score: 3
     assert captured.err == ""
 
 
+def test_validate_pr_body_accepts_alphanumeric_segments(capsys):
+    body = """
+Intent: INT-OPS-7A
+## EVALUATION
+Priority Score: 2
+"""
+
+    assert validate_pr_body(body) is True
+    captured = capsys.readouterr()
+    assert captured.err == ""
+
+
 def test_validate_pr_body_accepts_fullwidth_colon(capsys):
     body = """
 Intent：INT-456
@@ -108,6 +120,13 @@ Intent: INT-789
     assert validate_pr_body(body) is True
     captured = capsys.readouterr()
     assert "Consider adding 'Priority Score: <number>'" in captured.err
+
+
+def test_pr_template_contains_required_sections():
+    template = Path(".github/PULL_REQUEST_TEMPLATE.md").read_text(encoding="utf-8")
+
+    assert "Intent:" in template
+    assert "## EVALUATION" in template
 
 
 def test_load_forbidden_patterns(tmp_path):

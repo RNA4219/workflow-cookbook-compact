@@ -13,7 +13,10 @@
 
 - BLUEPRINT: <!-- path or permalink -->
 - TASK: <!-- path -->
-- EVALUATION（検収条件の見出し/アンカー）:
+
+## EVALUATION
+
+- 検収条件の見出し/アンカー:
   - [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
   - 受入条件の見出しアンカーを指定
 
