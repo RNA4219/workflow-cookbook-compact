@@ -5,6 +5,7 @@ import pytest
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
+from tools.ci import check_governance_gate
 from tools.ci.check_governance_gate import (
     find_forbidden_matches,
     load_forbidden_patterns,
@@ -123,3 +124,25 @@ self_modification:
     )
 
     assert load_forbidden_patterns(policy) == ["core/schema/**", "auth/**"]
+
+
+def test_collect_changed_paths_falls_back(monkeypatch):
+    calls: list[list[str]] = []
+
+    def fake_run(args, **kwargs):  # type: ignore[no-untyped-def]
+        calls.append(list(args))
+        refspec = args[-1]
+        if refspec in {"origin/main...", "main..."}:
+            raise check_governance_gate.subprocess.CalledProcessError(128, args)
+        return type("Result", (), {"stdout": "first.txt\nsecond.txt\n"})()
+
+    monkeypatch.setattr(check_governance_gate.subprocess, "run", fake_run)
+
+    changed = check_governance_gate.collect_changed_paths()
+
+    assert changed == ["first.txt", "second.txt"]
+    assert calls == [
+        ["git", "diff", "--name-only", "origin/main..."],
+        ["git", "diff", "--name-only", "main..."],
+        ["git", "diff", "--name-only", "HEAD"],
+    ]

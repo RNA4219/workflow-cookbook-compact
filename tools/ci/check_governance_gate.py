@@ -60,6 +60,21 @@ def get_changed_paths(refspec: str) -> List[str]:
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
+DEFAULT_DIFF_REFSPECS: Sequence[str] = ("origin/main...", "main...", "HEAD")
+
+
+def collect_changed_paths(refspecs: Sequence[str] = DEFAULT_DIFF_REFSPECS) -> List[str]:
+    last_error: subprocess.CalledProcessError | None = None
+    for refspec in refspecs:
+        try:
+            return get_changed_paths(refspec)
+        except subprocess.CalledProcessError as error:
+            last_error = error
+    if last_error is not None:
+        raise last_error
+    return []
+
+
 def find_forbidden_matches(paths: Iterable[str], patterns: Sequence[str]) -> List[str]:
     matches: List[str] = []
     for path in paths:
@@ -116,7 +131,7 @@ def main() -> int:
     forbidden_patterns = load_forbidden_patterns(policy_path)
 
     try:
-        changed_paths = get_changed_paths("origin/main...")
+        changed_paths = collect_changed_paths()
     except subprocess.CalledProcessError as error:
         print(f"Failed to collect changed paths: {error}", file=sys.stderr)
         return 1
