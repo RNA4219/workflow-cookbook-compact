@@ -34,7 +34,8 @@ canary rules.
 
 1. これらのMDをリポジトリ直下に配置
 2. `BLUEPRINT.md` で要件と制約を1ページに集約
-3. 実行手順は `RUNBOOK.md`、評価基準は `EVALUATION.md` に記述し、以下で Birdseye の最小読込とタスク分割の前提を共有
+3. 実行手順は `RUNBOOK.md`、評価基準は `EVALUATION.md` に記述し、
+   以下で Birdseye の最小読込とタスク分割の前提を共有
    - [`GUARDRAILS.md`](GUARDRAILS.md) …… 行動指針と Birdseye の `deps_out` と整合する最小読込ガードレールを確認
    - [`HUB.codex.md`](HUB.codex.md) …… 仕様集約とタスク分割ハブを整備し、Birdseye カプセルの依存関係を維持
    - [`docs/IN-20250115-001.md`](docs/IN-20250115-001.md) …… インシデントログを参照し Birdseye カプセル要約で指示される依存関係と照合
