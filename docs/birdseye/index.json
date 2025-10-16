@@ -85,6 +85,11 @@
       "role": "script",
       "caps": "docs/birdseye/caps/tools.codemap.update.py.json",
       "mtime": "2025-10-16T10:47:48Z"
+    },
+    "docs/INCIDENT_TEMPLATE.md": {
+      "role": "template",
+      "caps": "docs/birdseye/caps/docs.INCIDENT_TEMPLATE.md.json",
+      "mtime": "2025-10-16T12:00:00Z"
     }
   },
   "edges": [
@@ -371,6 +376,22 @@
     [
       "GUARDRAILS.md",
       "tools/codemap/update.py"
+    ],
+    [
+      "HUB.codex.md",
+      "docs/INCIDENT_TEMPLATE.md"
+    ],
+    [
+      "docs/INCIDENT_TEMPLATE.md",
+      "RUNBOOK.md"
+    ],
+    [
+      "docs/INCIDENT_TEMPLATE.md",
+      "CHECKLISTS.md"
+    ],
+    [
+      "docs/INCIDENT_TEMPLATE.md",
+      "docs/IN-20250115-001.md"
     ]
   ]
 }
