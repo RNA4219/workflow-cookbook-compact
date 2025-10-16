@@ -14,7 +14,9 @@
     "CHANGELOG.md",
     "governance/policy.yaml"
   ],
-  "deps_in": [],
+  "deps_in": [
+    "GUARDRAILS.md"
+  ],
   "risks": [],
   "tests": []
 }
