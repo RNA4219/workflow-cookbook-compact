@@ -65,6 +65,11 @@
       "role": "index",
       "caps": "docs/birdseye/caps/docs.birdseye.index.json.json",
       "mtime": "2025-10-14T00:00:00Z"
+    },
+    "docs/birdseye/caps/": {
+      "role": "collection",
+      "caps": "docs/birdseye/caps/docs.birdseye.caps.json",
+      "mtime": "2025-10-14T00:00:00Z"
     }
   },
   "edges": [
@@ -183,6 +188,26 @@
     [
       "GUARDRAILS.md",
       "docs/birdseye/index.json"
+    ],
+    [
+      "GUARDRAILS.md",
+      "docs/birdseye/caps/"
+    ],
+    [
+      "HUB.codex.md",
+      "docs/birdseye/index.json"
+    ],
+    [
+      "HUB.codex.md",
+      "docs/birdseye/caps/"
+    ],
+    [
+      "README.md",
+      "docs/birdseye/index.json"
+    ],
+    [
+      "README.md",
+      "docs/birdseye/caps/"
     ],
     [
       "EVALUATION.md",
