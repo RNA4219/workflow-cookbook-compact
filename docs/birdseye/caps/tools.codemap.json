@@ -8,7 +8,11 @@
     "docs/birdseye/caps/"
   ],
   "deps_in": [
+    "README.md",
+    "HUB.codex.md",
     "GUARDRAILS.md",
+    "docs/birdseye/index.json",
+    "docs/birdseye/caps/",
     "tools/codemap/README.md",
     "tools/codemap/update.py"
   ],
