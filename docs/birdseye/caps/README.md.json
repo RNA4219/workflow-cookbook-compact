@@ -13,6 +13,8 @@
     "CHECKLISTS.md",
     "CHANGELOG.md",
     "docs/IN-20250115-001.md",
+    "docs/birdseye/caps/",
+    "docs/birdseye/index.json",
     "governance/policy.yaml",
     "governance/prioritization.yaml"
   ],
