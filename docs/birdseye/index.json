@@ -69,7 +69,12 @@
     "docs/birdseye/caps/": {
       "role": "collection",
       "caps": "docs/birdseye/caps/docs.birdseye.caps.json",
-      "mtime": "2025-10-14T00:00:00Z"
+      "mtime": "2025-10-16T10:47:48Z"
+    },
+    "tools/codemap/": {
+      "role": "tooling",
+      "caps": "docs/birdseye/caps/tools.codemap.json",
+      "mtime": "2025-10-16T10:47:48Z"
     }
   },
   "edges": [
@@ -260,6 +265,26 @@
     [
       "docs/IN-20250115-001.md",
       "EVALUATION.md"
+    ],
+    [
+      "README.md",
+      "tools/codemap/"
+    ],
+    [
+      "HUB.codex.md",
+      "tools/codemap/"
+    ],
+    [
+      "GUARDRAILS.md",
+      "tools/codemap/"
+    ],
+    [
+      "tools/codemap/",
+      "docs/birdseye/index.json"
+    ],
+    [
+      "tools/codemap/",
+      "docs/birdseye/caps/"
     ]
   ]
 }
