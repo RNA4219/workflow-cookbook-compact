@@ -401,6 +401,30 @@
     [
       "docs/INCIDENT_TEMPLATE.md",
       "docs/IN-20250115-001.md"
+    ],
+    [
+      "README.md",
+      "governance/prioritization.yaml"
+    ],
+    [
+      "EVALUATION.md",
+      "governance/prioritization.yaml"
+    ],
+    [
+      "TASK.codex.md",
+      "governance/prioritization.yaml"
+    ],
+    [
+      "governance/prioritization.yaml",
+      "README.md"
+    ],
+    [
+      "governance/prioritization.yaml",
+      "EVALUATION.md"
+    ],
+    [
+      "governance/prioritization.yaml",
+      "TASK.codex.md"
     ]
   ]
 }
