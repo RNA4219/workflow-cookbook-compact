@@ -38,6 +38,10 @@ canary rules.
    以下で Birdseye の最小読込とタスク分割の前提を共有
    - [`GUARDRAILS.md`](GUARDRAILS.md) …… 行動指針と Birdseye の `deps_out`
      と整合する最小読込ガードレールを確認
+   - [`tools/codemap/README.md`](tools/codemap/README.md) /
+     [`tools/codemap/update.py`](tools/codemap/update.py) …… `codemap.update`
+     による Birdseye 再生成義務（`GUARDRAILS.md` の[鮮度管理](GUARDRAILS.md#%E9%AE%AE%E5%BA%A6%E7%AE%A1%E7%90%86staleness-handling)参照）と
+     `python tools/codemap/update.py` 実行フローを確認
    - [`HUB.codex.md`](HUB.codex.md) …… 仕様集約とタスク分割ハブを整備し、Birdseye カプセルの依存関係を維持
    - [`docs/IN-20250115-001.md`](docs/IN-20250115-001.md) …… インシデントログを参照し
      Birdseye カプセル要約で指示される `deps_out` を照合
