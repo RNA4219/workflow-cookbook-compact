@@ -401,6 +401,14 @@
     [
       "docs/INCIDENT_TEMPLATE.md",
       "docs/IN-20250115-001.md"
+    ],
+    [
+      "README.md",
+      "docs/INCIDENT_TEMPLATE.md"
+    ],
+    [
+      "GUARDRAILS.md",
+      "docs/INCIDENT_TEMPLATE.md"
     ]
   ]
 }
