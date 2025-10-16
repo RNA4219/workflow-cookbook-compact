@@ -7,8 +7,8 @@
     "HUB.codex.md"
   ],
   "deps_out": [
-    "RUNBOOK.md",
     "CHECKLISTS.md",
+    "RUNBOOK.md",
     "docs/IN-20250115-001.md"
   ],
   "risks": [],
