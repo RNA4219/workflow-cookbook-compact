@@ -2,14 +2,13 @@
   "id": "docs/INCIDENT_TEMPLATE.md",
   "role": "template",
   "public_api": [],
-  "summary": "インシデント報告を迅速に構造化するためのテンプレート。主要ドキュメントとの整合性を保ちながら対応フローを起動できる。",
+  "summary": "標準化したインシデント報告フォーマットで初動対応を平準化する。",
   "deps_in": [
     "HUB.codex.md"
   ],
   "deps_out": [
     "RUNBOOK.md",
-    "CHECKLISTS.md",
-    "docs/IN-20250115-001.md"
+    "CHECKLISTS.md"
   ],
   "risks": [],
   "tests": []

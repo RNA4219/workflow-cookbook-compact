@@ -12,7 +12,8 @@
     "RUNBOOK.md",
     "TASK.codex.md",
     "CHANGELOG.md",
-    "CHECKLISTS.md"
+    "CHECKLISTS.md",
+    "docs/INCIDENT_TEMPLATE.md"
   ],
   "deps_in": [
     "README.md",
