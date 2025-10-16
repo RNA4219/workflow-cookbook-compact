@@ -1,6 +1,7 @@
 {
   "id": "docs/IN-20250115-001.md",
   "role": "incident",
+  "public_api": [],
   "summary": "2025-01-15 に発生した Canary 停止インシデントの影響、原因、復旧・是正アクションを記録した事後ログ。",
   "deps_in": [
     "README.md",
