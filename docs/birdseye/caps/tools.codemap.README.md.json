@@ -11,6 +11,8 @@
     "GUARDRAILS.md"
   ],
   "deps_out": [
+    "docs/birdseye/caps/",
+    "docs/birdseye/index.json",
     "tools/codemap/update.py"
   ],
   "risks": [
