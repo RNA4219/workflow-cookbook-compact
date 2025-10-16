@@ -110,6 +110,13 @@ Intent: INT-789
     assert "Consider adding 'Priority Score: <number>'" in captured.err
 
 
+def test_pr_template_contains_required_sections():
+    template = Path(".github/PULL_REQUEST_TEMPLATE.md").read_text(encoding="utf-8")
+
+    assert "Intent:" in template
+    assert "## EVALUATION" in template
+
+
 def test_load_forbidden_patterns(tmp_path):
     policy = tmp_path / "policy.yaml"
     policy.write_text(
