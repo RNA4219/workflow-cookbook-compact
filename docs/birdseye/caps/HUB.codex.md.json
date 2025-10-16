@@ -16,7 +16,8 @@
     "governance/policy.yaml"
   ],
   "deps_in": [
-    "README.md"
+    "README.md",
+    "GUARDRAILS.md"
   ],
   "risks": [
     "Birdseye インデックスと同期が遅れるとタスク分割精度が低下"

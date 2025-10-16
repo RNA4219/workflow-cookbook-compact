@@ -60,6 +60,11 @@
       "role": "governance",
       "caps": "docs/birdseye/caps/governance.policy.yaml.json",
       "mtime": "2025-10-14T00:00:00Z"
+    },
+    "docs/birdseye/index.json": {
+      "role": "index",
+      "caps": "docs/birdseye/caps/docs.birdseye.index.json.json",
+      "mtime": "2025-10-14T00:00:00Z"
     }
   },
   "edges": [
@@ -166,6 +171,18 @@
     [
       "GUARDRAILS.md",
       "CHECKLISTS.md"
+    ],
+    [
+      "GUARDRAILS.md",
+      "README.md"
+    ],
+    [
+      "GUARDRAILS.md",
+      "HUB.codex.md"
+    ],
+    [
+      "GUARDRAILS.md",
+      "docs/birdseye/index.json"
     ],
     [
       "EVALUATION.md",
