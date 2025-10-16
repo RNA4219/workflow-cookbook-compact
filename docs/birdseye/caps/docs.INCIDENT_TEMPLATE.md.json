@@ -8,7 +8,8 @@
   ],
   "deps_out": [
     "RUNBOOK.md",
-    "CHECKLISTS.md"
+    "CHECKLISTS.md",
+    "docs/IN-20250115-001.md"
   ],
   "risks": [],
   "tests": []
