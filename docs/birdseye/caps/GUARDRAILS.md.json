@@ -17,7 +17,8 @@
     "docs/INCIDENT_TEMPLATE.md",
     "tools/codemap/",
     "tools/codemap/README.md",
-    "tools/codemap/update.py"
+    "tools/codemap/update.py",
+    "docs/IN-20250115-001.md"
   ],
   "deps_in": [
     "README.md",
