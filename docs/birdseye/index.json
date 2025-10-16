@@ -19,16 +19,16 @@
   },
   "edges": [
     [
-      "README.md",
-      "HUB.codex.md"
-    ],
-    [
-      "README.md",
-      "GUARDRAILS.md"
-    ],
-    [
       "HUB.codex.md",
       "GUARDRAILS.md"
+    ],
+    [
+      "README.md",
+      "GUARDRAILS.md"
+    ],
+    [
+      "README.md",
+      "HUB.codex.md"
     ]
   ]
 }
