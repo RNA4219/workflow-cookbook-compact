@@ -87,6 +87,17 @@ Priority Score: 3
     assert "PR must reference EVALUATION" in captured.err
 
 
+def test_validate_pr_body_requires_evaluation_heading(capsys):
+    body = """
+Intent: INT-555
+Evaluation anchor is explained here without heading.
+"""
+
+    assert validate_pr_body(body) is False
+    captured = capsys.readouterr()
+    assert "PR must reference EVALUATION" in captured.err
+
+
 def test_validate_pr_body_warns_without_priority_score(capsys):
     body = """
 Intent: INT-789
