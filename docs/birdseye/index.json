@@ -75,6 +75,16 @@
       "role": "tooling",
       "caps": "docs/birdseye/caps/tools.codemap.json",
       "mtime": "2025-10-16T10:47:48Z"
+    },
+    "tools/codemap/README.md": {
+      "role": "guide",
+      "caps": "docs/birdseye/caps/tools.codemap.README.md.json",
+      "mtime": "2025-10-16T10:47:48Z"
+    },
+    "tools/codemap/update.py": {
+      "role": "script",
+      "caps": "docs/birdseye/caps/tools.codemap.update.py.json",
+      "mtime": "2025-10-16T10:47:48Z"
     }
   },
   "edges": [
@@ -285,6 +295,78 @@
     [
       "tools/codemap/",
       "docs/birdseye/caps/"
+    ],
+    [
+      "tools/codemap/",
+      "tools/codemap/README.md"
+    ],
+    [
+      "tools/codemap/",
+      "tools/codemap/update.py"
+    ],
+    [
+      "tools/codemap/README.md",
+      "tools/codemap/"
+    ],
+    [
+      "tools/codemap/README.md",
+      "tools/codemap/update.py"
+    ],
+    [
+      "tools/codemap/README.md",
+      "README.md"
+    ],
+    [
+      "tools/codemap/README.md",
+      "HUB.codex.md"
+    ],
+    [
+      "tools/codemap/README.md",
+      "GUARDRAILS.md"
+    ],
+    [
+      "tools/codemap/update.py",
+      "tools/codemap/"
+    ],
+    [
+      "tools/codemap/update.py",
+      "tools/codemap/README.md"
+    ],
+    [
+      "tools/codemap/update.py",
+      "README.md"
+    ],
+    [
+      "tools/codemap/update.py",
+      "HUB.codex.md"
+    ],
+    [
+      "tools/codemap/update.py",
+      "GUARDRAILS.md"
+    ],
+    [
+      "README.md",
+      "tools/codemap/README.md"
+    ],
+    [
+      "README.md",
+      "tools/codemap/update.py"
+    ],
+    [
+      "HUB.codex.md",
+      "tools/codemap/README.md"
+    ],
+    [
+      "HUB.codex.md",
+      "tools/codemap/update.py"
+    ],
+    [
+      "GUARDRAILS.md",
+      "tools/codemap/README.md"
+    ],
+    [
+      "GUARDRAILS.md",
+      "tools/codemap/update.py"
     ]
   ]
 }
