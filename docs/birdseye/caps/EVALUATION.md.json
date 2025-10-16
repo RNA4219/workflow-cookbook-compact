@@ -1,0 +1,10 @@
+{
+  "id": "EVALUATION.md",
+  "role": "quality",
+  "public_api": [],
+  "summary": "受け入れ基準とKPI、テストアウトラインを定義し、policy.yamlの制約順守とインシデント連携を明示する品質基準書。",
+  "deps_out": ["governance/policy.yaml"],
+  "deps_in": ["README.md", "HUB.codex.md", "GUARDRAILS.md"],
+  "risks": [],
+  "tests": []
+}

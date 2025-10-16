@@ -1,5 +1,5 @@
 {
-  "generated_at": "2025-10-15T23:42:24Z",
+  "generated_at": "2025-10-16T12:00:00Z",
   "nodes": {
     "README.md": {
       "role": "overview",
@@ -15,11 +15,148 @@
       "role": "policy",
       "caps": "docs/birdseye/caps/GUARDRAILS.md.json",
       "mtime": "2025-10-14T04:25:52Z"
+    },
+    "BLUEPRINT.md": {
+      "role": "requirements",
+      "caps": "docs/birdseye/caps/BLUEPRINT.md.json",
+      "mtime": "2025-10-14T00:00:00Z"
+    },
+    "RUNBOOK.md": {
+      "role": "operations",
+      "caps": "docs/birdseye/caps/RUNBOOK.md.json",
+      "mtime": "2025-10-14T00:00:00Z"
+    },
+    "EVALUATION.md": {
+      "role": "quality",
+      "caps": "docs/birdseye/caps/EVALUATION.md.json",
+      "mtime": "2025-10-14T00:00:00Z"
+    },
+    "TASK.codex.md": {
+      "role": "template",
+      "caps": "docs/birdseye/caps/TASK.codex.md.json",
+      "mtime": "2025-10-14T00:00:00Z"
+    },
+    "CHECKLISTS.md": {
+      "role": "checklist",
+      "caps": "docs/birdseye/caps/CHECKLISTS.md.json",
+      "mtime": "2025-10-14T00:00:00Z"
+    },
+    "CHANGELOG.md": {
+      "role": "history",
+      "caps": "docs/birdseye/caps/CHANGELOG.md.json",
+      "mtime": "2025-10-14T00:00:00Z"
+    },
+    "SECURITY.md": {
+      "role": "security",
+      "caps": "docs/birdseye/caps/SECURITY.md.json",
+      "mtime": "2025-10-14T00:00:00Z"
+    },
+    "governance/policy.yaml": {
+      "role": "governance",
+      "caps": "docs/birdseye/caps/governance.policy.yaml.json",
+      "mtime": "2025-10-14T00:00:00Z"
     }
   },
   "edges": [
-    ["HUB.codex.md", "GUARDRAILS.md"],
-    ["README.md", "GUARDRAILS.md"],
-    ["README.md", "HUB.codex.md"]
+    [
+      "HUB.codex.md",
+      "GUARDRAILS.md"
+    ],
+    [
+      "README.md",
+      "GUARDRAILS.md"
+    ],
+    [
+      "README.md",
+      "HUB.codex.md"
+    ],
+    [
+      "README.md",
+      "BLUEPRINT.md"
+    ],
+    [
+      "README.md",
+      "RUNBOOK.md"
+    ],
+    [
+      "README.md",
+      "EVALUATION.md"
+    ],
+    [
+      "README.md",
+      "TASK.codex.md"
+    ],
+    [
+      "README.md",
+      "CHECKLISTS.md"
+    ],
+    [
+      "README.md",
+      "CHANGELOG.md"
+    ],
+    [
+      "README.md",
+      "governance/policy.yaml"
+    ],
+    [
+      "HUB.codex.md",
+      "BLUEPRINT.md"
+    ],
+    [
+      "HUB.codex.md",
+      "RUNBOOK.md"
+    ],
+    [
+      "HUB.codex.md",
+      "EVALUATION.md"
+    ],
+    [
+      "HUB.codex.md",
+      "TASK.codex.md"
+    ],
+    [
+      "HUB.codex.md",
+      "CHECKLISTS.md"
+    ],
+    [
+      "HUB.codex.md",
+      "CHANGELOG.md"
+    ],
+    [
+      "HUB.codex.md",
+      "SECURITY.md"
+    ],
+    [
+      "HUB.codex.md",
+      "governance/policy.yaml"
+    ],
+    [
+      "GUARDRAILS.md",
+      "BLUEPRINT.md"
+    ],
+    [
+      "GUARDRAILS.md",
+      "EVALUATION.md"
+    ],
+    [
+      "GUARDRAILS.md",
+      "RUNBOOK.md"
+    ],
+    [
+      "GUARDRAILS.md",
+      "TASK.codex.md"
+    ],
+    [
+      "GUARDRAILS.md",
+      "CHANGELOG.md"
+    ],
+    [
+      "GUARDRAILS.md",
+      "CHECKLISTS.md"
+    ],
+    [
+      "EVALUATION.md",
+      "governance/policy.yaml"
+    ]
   ]
 }

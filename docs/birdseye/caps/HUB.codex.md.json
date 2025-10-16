@@ -3,8 +3,22 @@
   "role": "navigation",
   "public_api": [],
   "summary": "エージェント向けのツール利用ポリシーと、自動タスク分割に必要な主要ドキュメント群・分類ルールを整理したハブ。",
-  "deps_out": ["GUARDRAILS.md"],
-  "deps_in": ["README.md"],
-  "risks": ["Birdseye インデックスと同期が遅れるとタスク分割精度が低下"],
+  "deps_out": [
+    "GUARDRAILS.md",
+    "BLUEPRINT.md",
+    "RUNBOOK.md",
+    "EVALUATION.md",
+    "TASK.codex.md",
+    "CHECKLISTS.md",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    "governance/policy.yaml"
+  ],
+  "deps_in": [
+    "README.md"
+  ],
+  "risks": [
+    "Birdseye インデックスと同期が遅れるとタスク分割精度が低下"
+  ],
   "tests": []
 }

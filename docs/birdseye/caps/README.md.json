@@ -3,7 +3,17 @@
   "role": "overview",
   "public_api": [],
   "summary": "リポジトリの目的と導入手順を日本語中心で説明し、各種ガバナンス文書とチェックリストの使い方を案内する。",
-  "deps_out": ["HUB.codex.md", "GUARDRAILS.md"],
+  "deps_out": [
+    "HUB.codex.md",
+    "GUARDRAILS.md",
+    "BLUEPRINT.md",
+    "RUNBOOK.md",
+    "EVALUATION.md",
+    "TASK.codex.md",
+    "CHECKLISTS.md",
+    "CHANGELOG.md",
+    "governance/policy.yaml"
+  ],
   "deps_in": [],
   "risks": [],
   "tests": []

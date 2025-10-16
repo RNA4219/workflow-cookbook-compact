@@ -1,0 +1,10 @@
+{
+  "id": "CHECKLISTS.md",
+  "role": "checklist",
+  "public_api": [],
+  "summary": "日次・リリース・衛生の3カテゴリで確認項目を列挙し、運用中の抜け漏れ防止を図るチェックリスト集。",
+  "deps_out": [],
+  "deps_in": ["README.md", "HUB.codex.md", "GUARDRAILS.md"],
+  "risks": [],
+  "tests": []
+}
