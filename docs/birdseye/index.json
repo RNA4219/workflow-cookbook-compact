@@ -214,7 +214,10 @@
       "GUARDRAILS.md",
       "HUB.codex.md"
     ],
-    ["GUARDRAILS.md", "docs/INCIDENT_TEMPLATE.md"],
+    [
+      "GUARDRAILS.md",
+      "docs/INCIDENT_TEMPLATE.md"
+    ],
     [
       "GUARDRAILS.md",
       "docs/birdseye/index.json"
@@ -239,7 +242,10 @@
       "README.md",
       "docs/birdseye/caps/"
     ],
-    ["docs/birdseye/index.json","docs/birdseye/caps/"],
+    [
+      "docs/birdseye/index.json",
+      "docs/birdseye/caps/"
+    ],
     [
       "EVALUATION.md",
       "governance/policy.yaml"
