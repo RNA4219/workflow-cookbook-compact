@@ -5,7 +5,8 @@
   "summary": "受け入れ基準とKPI、テストアウトラインを定義し、policy.yamlの制約順守とインシデント連携を明示する品質基準書。",
   "deps_out": [
     "RUNBOOK.md",
-    "governance/policy.yaml"
+    "governance/policy.yaml",
+    "governance/prioritization.yaml"
   ],
   "deps_in": [
     "README.md",

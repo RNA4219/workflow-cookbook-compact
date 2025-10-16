@@ -5,7 +5,8 @@
   "summary": "タスクシードのメタデータ、スコープ、要件、実行コマンド、成果物を統一フォーマットで記述するためのテンプレート。",
   "deps_out": [
     "EVALUATION.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "governance/prioritization.yaml"
   ],
   "deps_in": ["README.md", "HUB.codex.md", "GUARDRAILS.md"],
   "risks": [],
