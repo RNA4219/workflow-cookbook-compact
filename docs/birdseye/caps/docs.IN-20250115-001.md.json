@@ -1,0 +1,20 @@
+{
+  "id": "docs/IN-20250115-001.md",
+  "role": "incident_report",
+  "public_api": [],
+  "summary": "2025-01-15 のCanary停止インシデントの影響・根本原因・時系列と、Runbook/Evaluation更新タスクを記録した事後レポート。",
+  "deps_out": [
+    "RUNBOOK.md",
+    "EVALUATION.md"
+  ],
+  "deps_in": [
+    "README.md",
+    "HUB.codex.md",
+    "RUNBOOK.md",
+    "EVALUATION.md"
+  ],
+  "risks": [],
+  "tests": [
+    "手動: タイムラインと再発防止策がRunbook/Evaluationの更新内容と齟齬がないか確認"
+  ]
+}

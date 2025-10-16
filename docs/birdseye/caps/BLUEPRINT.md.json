@@ -6,5 +6,7 @@
   "deps_out": [],
   "deps_in": ["README.md", "HUB.codex.md", "GUARDRAILS.md"],
   "risks": [],
-  "tests": []
+  "tests": [
+    "手動: Mermaid フロー図が崩れないことをプレビューで確認"
+  ]
 }
