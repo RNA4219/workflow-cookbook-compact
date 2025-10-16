@@ -6,7 +6,7 @@
 
 ### 概要
 
-- Intent: INT-??? <!-- 必ず INT-123 の形式で記載 -->
+- Intent: INT-123 <!-- 必ず INT-123 の形式で記載。必ず実際の Intent 番号に置き換えてください -->
 - 種別: feature / fix / chore / docs
 
 ### リンク
