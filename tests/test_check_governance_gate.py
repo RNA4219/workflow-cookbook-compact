@@ -41,6 +41,30 @@ Priority Score: 4.5 / 安全性強化
     assert captured.err == ""
 
 
+def test_validate_pr_body_accepts_segmented_intent(capsys):
+    body = """
+Intent: INT-2024-001
+## EVALUATION
+Priority Score: 3
+"""
+
+    assert validate_pr_body(body) is True
+    captured = capsys.readouterr()
+    assert captured.err == ""
+
+
+def test_validate_pr_body_accepts_fullwidth_colon(capsys):
+    body = """
+Intent：INT-456
+## EVALUATION
+Priority Score: 1
+"""
+
+    assert validate_pr_body(body) is True
+    captured = capsys.readouterr()
+    assert captured.err == ""
+
+
 def test_validate_pr_body_missing_intent(capsys):
     body = """
 ## EVALUATION
