@@ -165,3 +165,30 @@ def test_collect_changed_paths_falls_back(monkeypatch):
         ["git", "diff", "--name-only", "main..."],
         ["git", "diff", "--name-only", "HEAD"],
     ]
+
+
+def test_main_accepts_pr_body_env(monkeypatch, capsys):
+    monkeypatch.setattr(check_governance_gate, "collect_changed_paths", lambda: [])
+    monkeypatch.setenv(
+        "PR_BODY",
+        """Intent: INT-999\n## EVALUATION\nPriority Score: 2\n""",
+    )
+    monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
+
+    exit_code = check_governance_gate.main()
+
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert captured.err == ""
+
+
+def test_main_requires_pr_body(monkeypatch, capsys):
+    monkeypatch.setattr(check_governance_gate, "collect_changed_paths", lambda: [])
+    monkeypatch.delenv("PR_BODY", raising=False)
+    monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
+
+    exit_code = check_governance_gate.main()
+
+    assert exit_code == 1
+    captured = capsys.readouterr()
+    assert "PR body data is unavailable" in captured.err

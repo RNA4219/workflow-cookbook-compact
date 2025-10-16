@@ -101,6 +101,22 @@ def read_event_body(event_path: Path) -> str | None:
     return body
 
 
+def resolve_pr_body() -> str | None:
+    direct_body = os.environ.get("PR_BODY")
+    if direct_body is not None:
+        return direct_body
+
+    event_path_value = os.environ.get("GITHUB_EVENT_PATH")
+    if not event_path_value:
+        print(
+            "PR body data is unavailable. Set PR_BODY or GITHUB_EVENT_PATH.",
+            file=sys.stderr,
+        )
+        return None
+
+    return read_event_body(Path(event_path_value))
+
+
 INTENT_PATTERN = re.compile(
     r"Intent\s*[：:]\s*INT-[0-9A-Z]+(?:-[0-9A-Z]+)*",
     re.IGNORECASE,
@@ -146,11 +162,9 @@ def main() -> int:
         )
         return 1
 
-    event_path_value = os.environ.get("GITHUB_EVENT_PATH")
-    if not event_path_value:
-        print("GITHUB_EVENT_PATH is not set", file=sys.stderr)
+    body = resolve_pr_body()
+    if body is None:
         return 1
-    body = read_event_body(Path(event_path_value))
     if not validate_pr_body(body):
         return 1
 
