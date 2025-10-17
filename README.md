@@ -62,6 +62,17 @@ canary rules.
    - 雛形との差分を確認したい場合は `examples/TASK.sample.md` を参照し、実在の値が埋め込まれたダミーサンプルと比較する
 5. リリースは `CHECKLISTS.md` をなぞり、差分は `CHANGELOG.md` に追記
 
+### 最小導入セット
+
+- [`BLUEPRINT.md`](BLUEPRINT.md) …… Intent と仕様全体の骨子を提示
+- [`RUNBOOK.md`](RUNBOOK.md) …… 実装および運用手順を逐次記載
+- [`EVALUATION.md`](EVALUATION.md) …… 受入基準と検証観点を定義
+- [`GUARDRAILS.md`](GUARDRAILS.md) …… 行動指針と Birdseye 連携の制約を明示
+- [`HUB.codex.md`](HUB.codex.md) …… タスク分割と依存グラフの中核ハブを維持
+- [`CHECKLISTS.md`](CHECKLISTS.md) …… リリースとレビューフローのチェックリストを提供
+- [`.github/workflows/governance-gate.yml`](.github/workflows/governance-gate.yml) …… Intent 検証 CI を常時有効化
+- Intent ゲートは [`tools/ci/check_governance_gate.py`](tools/ci/check_governance_gate.py) により自動適用されるため、CI の設定だけで運用に組み込めます
+
 <!-- markdownlint-disable MD013 -->
 ![lint](https://github.com/RNA4219/workflow-cookbook/actions/workflows/markdown.yml/badge.svg)
 ![links](https://github.com/RNA4219/workflow-cookbook/actions/workflows/links.yml/badge.svg)
