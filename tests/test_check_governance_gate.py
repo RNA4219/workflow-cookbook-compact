@@ -102,7 +102,7 @@ Priority Score: 3
 
     assert validate_pr_body(body) is False
     captured = capsys.readouterr()
-    assert "PR must include an EVALUATION section heading" in captured.err
+    assert "PR must reference EVALUATION (acceptance) anchor" in captured.err
 
 
 def test_validate_pr_body_missing_evaluation_anchor(capsys):
@@ -125,7 +125,7 @@ Evaluation anchor is explained here without heading.
 
     assert validate_pr_body(body) is False
     captured = capsys.readouterr()
-    assert "PR must include an EVALUATION section heading" in captured.err
+    assert "PR must reference EVALUATION (acceptance) anchor" in captured.err
 
 
 def test_validate_pr_body_warns_without_priority_score(capsys):
