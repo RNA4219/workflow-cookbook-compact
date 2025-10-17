@@ -139,10 +139,9 @@ def validate_pr_body(body: str | None) -> bool:
     if not INTENT_PATTERN.search(normalized_body):
         print("PR body must include 'Intent: INT-xxx'", file=sys.stderr)
         success = False
-    if not EVALUATION_HEADING_PATTERN.search(normalized_body):
-        print("PR must include an EVALUATION section heading", file=sys.stderr)
-        success = False
-    if not EVALUATION_ANCHOR_PATTERN.search(normalized_body):
+    has_evaluation_heading = bool(EVALUATION_HEADING_PATTERN.search(normalized_body))
+    has_evaluation_anchor = bool(EVALUATION_ANCHOR_PATTERN.search(normalized_body))
+    if not has_evaluation_heading or not has_evaluation_anchor:
         print("PR must reference EVALUATION (acceptance) anchor", file=sys.stderr)
         success = False
     if not PRIORITY_PATTERN.search(normalized_body):
