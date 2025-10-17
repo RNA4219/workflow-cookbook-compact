@@ -48,8 +48,10 @@ canary rules.
     - [`tools/codemap/README.md`](tools/codemap/README.md) …… Birdseye カプセル
       再生成前提と `codemap.update` の流れを把握
     - [`tools/codemap/update.py`](tools/codemap/update.py) …… `python tools/codemap/update.py`
-      で `codemap.update` を実行し Birdseye カプセルを再生成する
-      （`GUARDRAILS.md` の[鮮度管理](GUARDRAILS.md#%E9%AE%AE%E5%BA%A6%E7%AE%A1%E7%90%86staleness-handling)参照）
+      で `codemap.update` を実行し Birdseye カプセルを再生成する。
+      標準では直近変更ファイルから±2 hop のカプセルのみ更新し、
+      今後導入予定の `--full` オプション指定時に全カプセルを再生成する
+      （`GUARDRAILS.md` の[鮮度管理](GUARDRAILS.md#%E9%AE%AE%E5%BA%A6%E7%AE%A1%E7%90%86staleness-handling)参照）。
 
       ```sh
       # 例: カプセル出力先と解析ルートを指定して再生成
