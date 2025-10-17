@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import re
@@ -101,10 +102,32 @@ def read_event_body(event_path: Path) -> str | None:
     return body
 
 
-def resolve_pr_body() -> str | None:
+def read_pr_body_from_path(path: Path) -> str | None:
+    if not path.exists():
+        print(f"PR body file not found: {path}", file=sys.stderr)
+        return None
+    return path.read_text(encoding="utf-8")
+
+
+def resolve_pr_body(
+    *, cli_body: str | None = None, cli_body_path: Path | None = None
+) -> str | None:
+    if cli_body is not None:
+        return cli_body
+
+    if cli_body_path is not None:
+        return read_pr_body_from_path(cli_body_path)
+
     direct_body = os.environ.get("PR_BODY")
     if direct_body is not None:
         return direct_body
+
+    env_body_path_value = os.environ.get("PR_BODY_PATH")
+    if env_body_path_value:
+        body_from_path = read_pr_body_from_path(Path(env_body_path_value))
+        if body_from_path is not None:
+            return body_from_path
+        return None
 
     event_path_value = os.environ.get("GITHUB_EVENT_PATH")
     if not event_path_value:
@@ -153,7 +176,19 @@ def validate_pr_body(body: str | None) -> bool:
     return success
 
 
-def main() -> int:
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run governance gate checks")
+    parser.add_argument("--pr-body", help="PR本文を直接指定")
+    parser.add_argument(
+        "--pr-body-path",
+        type=Path,
+        help="PR本文が含まれるファイルパスを指定",
+    )
+    return parser.parse_args(list(argv))
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    args = parse_arguments(argv or ())
     repo_root = Path(__file__).resolve().parents[2]
     policy_path = repo_root / "governance" / "policy.yaml"
     forbidden_patterns = load_forbidden_patterns(policy_path)
@@ -171,7 +206,10 @@ def main() -> int:
         )
         return 1
 
-    body = resolve_pr_body()
+    body = resolve_pr_body(
+        cli_body=args.pr_body,
+        cli_body_path=args.pr_body_path,
+    )
     if body is None:
         return 1
     if not validate_pr_body(body):
@@ -181,4 +219,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(tuple(sys.argv[1:])))
