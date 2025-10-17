@@ -40,6 +40,7 @@ Priority Score: `number`
 - Priority Score: <!-- 例: 5 / prioritization.yaml#phase1 -->
 
 ## Docs matrix (FYI)
+
 - REQUIREMENTS: present?  [] yes / [] later
 - SPEC:         present?  [] yes / [] later
 - DESIGN:       present?  [] yes / [] later
