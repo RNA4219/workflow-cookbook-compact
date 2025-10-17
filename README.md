@@ -48,6 +48,7 @@ canary rules.
     - [`docs/IN-20250115-001.md`](docs/IN-20250115-001.md) …… インシデントログを参照し
       Birdseye カプセル要約で指示される `deps_out` を照合
 4. タスクごとに `TASK.codex.md` を複製して内容を埋め、エージェントに渡す
+   - 雛形との差分を確認したい場合は `examples/TASK.sample.md` を参照し、実在の値が埋め込まれたダミーサンプルと比較する
 5. リリースは `CHECKLISTS.md` をなぞり、差分は `CHANGELOG.md` に追記
 
 <!-- markdownlint-disable MD013 -->
