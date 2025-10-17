@@ -121,7 +121,14 @@ INTENT_PATTERN = re.compile(
     r"Intent\s*[：:]\s*INT-[0-9A-Z]+(?:-[0-9A-Z]+)*",
     re.IGNORECASE,
 )
-EVALUATION_PATTERN = re.compile(r"^#{2,6}\s*EVALUATION\b", re.IGNORECASE | re.MULTILINE)
+EVALUATION_HEADING_PATTERN = re.compile(
+    r"^#{2,6}\s*EVALUATION\b",
+    re.IGNORECASE | re.MULTILINE,
+)
+EVALUATION_ANCHOR_PATTERN = re.compile(
+    r"EVALUATION\.md#acceptance-criteria",
+    re.IGNORECASE,
+)
 PRIORITY_PATTERN = re.compile(r"Priority\s*Score\s*:\s*\d+(?:\.\d+)?", re.IGNORECASE)
 
 
@@ -132,7 +139,10 @@ def validate_pr_body(body: str | None) -> bool:
     if not INTENT_PATTERN.search(normalized_body):
         print("PR body must include 'Intent: INT-xxx'", file=sys.stderr)
         success = False
-    if not EVALUATION_PATTERN.search(normalized_body):
+    if not EVALUATION_HEADING_PATTERN.search(normalized_body):
+        print("PR must include an EVALUATION section heading", file=sys.stderr)
+        success = False
+    if not EVALUATION_ANCHOR_PATTERN.search(normalized_body):
         print("PR must reference EVALUATION (acceptance) anchor", file=sys.stderr)
         success = False
     if not PRIORITY_PATTERN.search(normalized_body):
