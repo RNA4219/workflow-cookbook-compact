@@ -214,6 +214,23 @@ def test_main_accepts_pr_body_env(monkeypatch, capsys):
     assert captured.err == ""
 
 
+def test_main_accepts_pr_body_path_argument(monkeypatch, tmp_path, capsys):
+    monkeypatch.setattr(check_governance_gate, "collect_changed_paths", lambda: [])
+    monkeypatch.delenv("PR_BODY", raising=False)
+    monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
+    body_path = tmp_path / "body.md"
+    body_path.write_text(
+        """Intent: INT-4242\n## EVALUATION\n- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)\nPriority Score: 2\n""",
+        encoding="utf-8",
+    )
+
+    exit_code = check_governance_gate.main(("--pr-body-path", str(body_path)))
+
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert captured.err == ""
+
+
 def test_main_requires_pr_body(monkeypatch, capsys):
     monkeypatch.setattr(check_governance_gate, "collect_changed_paths", lambda: [])
     monkeypatch.delenv("PR_BODY", raising=False)
