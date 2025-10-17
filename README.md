@@ -52,7 +52,8 @@ canary rules.
       Birdseye カプセルを再生成する。標準では直近変更ファイルから±2 hop の
       カプセルのみ更新し、今後導入予定の `--full` オプション指定時に
       全カプセルを再生成する（`GUARDRAILS.md` の
-      [鮮度管理](GUARDRAILS.md#%E9%AE%AE%E5%BA%A6%E7%AE%A1%E7%90%86staleness-handling)参照）。
+      [鮮度管理](GUARDRAILS.md#鮮度管理staleness-handling)
+      参照）。
 
       ```sh
       # 例: カプセル出力先と解析ルートを指定して再生成
@@ -74,10 +75,11 @@ canary rules.
 - [`GUARDRAILS.md`](GUARDRAILS.md) …… 行動指針と Birdseye 連携の制約を明示
 - [`HUB.codex.md`](HUB.codex.md) …… タスク分割と依存グラフの中核ハブを維持
 - [`CHECKLISTS.md`](CHECKLISTS.md) …… リリースとレビューフローのチェックリストを提供
-- [`.github/workflows/governance-gate.yml`](.github/workflows/governance-gate.yml)
+- [`governance-gate.yml`](.github/workflows/governance-gate.yml)
   …… Intent 検証 CI を常時有効化
-- Intent ゲートは [`tools/ci/check_governance_gate.py`](tools/ci/check_governance_gate.py)
-  により自動適用されるため、CI の設定だけで運用に組み込めます
+- Intent ゲートは
+  [`tools/ci/check_governance_gate.py`](tools/ci/check_governance_gate.py) により
+  自動適用されるため、CI の設定だけで運用に組み込めます
 
 <!-- markdownlint-disable MD013 -->
 ![lint](https://github.com/RNA4219/workflow-cookbook/actions/workflows/markdown.yml/badge.svg)
@@ -104,3 +106,15 @@ canary rules.
   明示すること。
 - 可能であれば `Priority Score: number` を追記し、`prioritization.yaml` の
   値を参照する。
+- ローカルでゲートを確認する場合は `PR_BODY` に PR 本文を渡してから
+  `python tools/ci/check_governance_gate.py` を実行する。
+
+  ```sh
+  PR_BODY=$(cat <<'EOF'
+  Intent: INT-123
+  ## EVALUATION
+  - [Acceptance Criteria](EVALUATION.md#acceptance-criteria)
+  Priority Score: 1
+  EOF
+  ) python tools/ci/check_governance_gate.py
+  ```
