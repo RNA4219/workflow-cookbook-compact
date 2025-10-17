@@ -126,7 +126,7 @@ EVALUATION_HEADING_PATTERN = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 EVALUATION_ANCHOR_PATTERN = re.compile(
-    r"EVALUATION\.md#acceptance-criteria",
+    r"(?:EVALUATION\.md)?#acceptance-criteria",
     re.IGNORECASE,
 )
 PRIORITY_PATTERN = re.compile(r"Priority\s*Score\s*:\s*\d+(?:\.\d+)?", re.IGNORECASE)

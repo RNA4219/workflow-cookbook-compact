@@ -82,6 +82,19 @@ Priority Score: 1
     assert captured.err == ""
 
 
+def test_validate_pr_body_accepts_local_evaluation_anchor(capsys):
+    body = """
+Intent: INT-900
+## EVALUATION
+- [Acceptance Criteria](#acceptance-criteria)
+Priority Score: 5
+"""
+
+    assert validate_pr_body(body) is True
+    captured = capsys.readouterr()
+    assert captured.err == ""
+
+
 def test_validate_pr_body_missing_intent(capsys):
     body = """
 ## EVALUATION
