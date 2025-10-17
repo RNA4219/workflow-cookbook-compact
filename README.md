@@ -74,8 +74,10 @@ canary rules.
 - [`GUARDRAILS.md`](GUARDRAILS.md) …… 行動指針と Birdseye 連携の制約を明示
 - [`HUB.codex.md`](HUB.codex.md) …… タスク分割と依存グラフの中核ハブを維持
 - [`CHECKLISTS.md`](CHECKLISTS.md) …… リリースとレビューフローのチェックリストを提供
-- [`.github/workflows/governance-gate.yml`](.github/workflows/governance-gate.yml) …… Intent 検証 CI を常時有効化
-- Intent ゲートは [`tools/ci/check_governance_gate.py`](tools/ci/check_governance_gate.py) により自動適用されるため、CI の設定だけで運用に組み込めます
+- [`.github/workflows/governance-gate.yml`](.github/workflows/governance-gate.yml)
+  …… Intent 検証 CI を常時有効化
+- Intent ゲートは [`tools/ci/check_governance_gate.py`](tools/ci/check_governance_gate.py)
+  により自動適用されるため、CI の設定だけで運用に組み込めます
 
 <!-- markdownlint-disable MD013 -->
 ![lint](https://github.com/RNA4219/workflow-cookbook/actions/workflows/markdown.yml/badge.svg)
