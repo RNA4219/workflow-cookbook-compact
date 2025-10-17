@@ -33,6 +33,12 @@ canary rules.
 ## 使い方（最短）
 
 1. これらのMDをリポジトリ直下に配置
+   - この5ファイルを別リポにコピー
+     - `BLUEPRINT.md`
+     - `RUNBOOK.md`
+     - `EVALUATION.md`
+     - `CHECKLISTS.md`
+     - `CHANGELOG.md`
 2. `BLUEPRINT.md` で要件と制約を1ページに集約
 3. 実行手順は `RUNBOOK.md`、評価基準は `EVALUATION.md` に記述し、
    以下で Birdseye の最小読込とタスク分割の前提を共有
@@ -44,6 +50,11 @@ canary rules.
     - [`tools/codemap/update.py`](tools/codemap/update.py) …… `python tools/codemap/update.py`
       で `codemap.update` を実行し Birdseye カプセルを再生成する
       （`GUARDRAILS.md` の[鮮度管理](GUARDRAILS.md#%E9%AE%AE%E5%BA%A6%E7%AE%A1%E7%90%86staleness-handling)参照）
+
+      ```sh
+      # 例: カプセル出力先と解析ルートを指定して再生成
+      python tools/codemap/update.py --caps docs/birdseye/caps --root .
+      ```
     - [`HUB.codex.md`](HUB.codex.md) …… 仕様集約とタスク分割ハブを整備し、Birdseye カプセルの依存関係を維持
     - [`docs/IN-20250115-001.md`](docs/IN-20250115-001.md) …… インシデントログを参照し
       Birdseye カプセル要約で指示される `deps_out` を照合
