@@ -106,3 +106,15 @@ canary rules.
   明示すること。
 - 可能であれば `Priority Score: number` を追記し、`prioritization.yaml` の
   値を参照する。
+- ローカルでゲートを確認する場合は `PR_BODY` に PR 本文を渡してから
+  `python tools/ci/check_governance_gate.py` を実行する。
+
+  ```sh
+  PR_BODY=$(cat <<'EOF'
+  Intent: INT-123
+  ## EVALUATION
+  - [Acceptance Criteria](EVALUATION.md#acceptance-criteria)
+  Priority Score: 1
+  EOF
+  ) python tools/ci/check_governance_gate.py
+  ```
