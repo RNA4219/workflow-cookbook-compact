@@ -34,6 +34,7 @@ def test_validate_pr_body_success(capsys):
     body = """
 Intent: INT-123
 ## EVALUATION
+- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
 Priority Score: 4.5 / 安全性強化
 """
 
@@ -46,6 +47,7 @@ def test_validate_pr_body_accepts_segmented_intent(capsys):
     body = """
 Intent: INT-2024-001
 ## EVALUATION
+- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
 Priority Score: 3
 """
 
@@ -58,6 +60,7 @@ def test_validate_pr_body_accepts_alphanumeric_segments(capsys):
     body = """
 Intent: INT-OPS-7A
 ## EVALUATION
+- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
 Priority Score: 2
 """
 
@@ -70,6 +73,7 @@ def test_validate_pr_body_accepts_fullwidth_colon(capsys):
     body = """
 Intent：INT-456
 ## EVALUATION
+- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
 Priority Score: 1
 """
 
@@ -81,6 +85,7 @@ Priority Score: 1
 def test_validate_pr_body_missing_intent(capsys):
     body = """
 ## EVALUATION
+- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
 Priority Score: 2
 """
 
@@ -97,24 +102,37 @@ Priority Score: 3
 
     assert validate_pr_body(body) is False
     captured = capsys.readouterr()
-    assert "PR must reference EVALUATION" in captured.err
+    assert "PR must include an EVALUATION section heading" in captured.err
+
+
+def test_validate_pr_body_missing_evaluation_anchor(capsys):
+    body = """
+Intent: INT-001
+## EVALUATION
+"""
+
+    assert validate_pr_body(body) is False
+    captured = capsys.readouterr()
+    assert "PR must reference EVALUATION (acceptance) anchor" in captured.err
 
 
 def test_validate_pr_body_requires_evaluation_heading(capsys):
     body = """
 Intent: INT-555
+- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
 Evaluation anchor is explained here without heading.
 """
 
     assert validate_pr_body(body) is False
     captured = capsys.readouterr()
-    assert "PR must reference EVALUATION" in captured.err
+    assert "PR must include an EVALUATION section heading" in captured.err
 
 
 def test_validate_pr_body_warns_without_priority_score(capsys):
     body = """
 Intent: INT-789
 ## EVALUATION
+- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
 """
 
     assert validate_pr_body(body) is True
@@ -127,6 +145,7 @@ def test_pr_template_contains_required_sections():
 
     assert "Intent:" in template
     assert "## EVALUATION" in template
+    assert "EVALUATION.md#acceptance-criteria" in template
 
 
 def test_load_forbidden_patterns(tmp_path):
@@ -171,7 +190,7 @@ def test_main_accepts_pr_body_env(monkeypatch, capsys):
     monkeypatch.setattr(check_governance_gate, "collect_changed_paths", lambda: [])
     monkeypatch.setenv(
         "PR_BODY",
-        """Intent: INT-999\n## EVALUATION\nPriority Score: 2\n""",
+        """Intent: INT-999\n## EVALUATION\n- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)\nPriority Score: 2\n""",
     )
     monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
 
