@@ -1,9 +1,0 @@
-# QA スタイル: 禁止用語
-extends: existence
-message: "禁止用語: '%s' は使用しないでください。"
-level: error
-ignorecase: true
-scope: text
-tokens:
-  - TBD
-  - WIP

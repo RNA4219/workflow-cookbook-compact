@@ -1,9 +1,0 @@
-# QA スタイル: 表記揺れの統一
-extends: substitution
-message: "表記ゆれ: '%s' は '%s' に統一してください。"
-level: warning
-ignorecase: true
-scope: text
-swap:
-  Github: GitHub
-  webhook: Webhook
