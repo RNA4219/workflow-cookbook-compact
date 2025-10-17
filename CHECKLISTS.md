@@ -17,6 +17,7 @@ next_review_due: 2025-11-14
 ## Release
 
 - 変更点の要約
+- CHANGELOG に Added / Changed / Fixed / Docs など必要最小の項目を追記
 - 受け入れ基準に対するエビデンス
 - 影響範囲の再確認
 - PR に `type:*` および `semver:*` ラベルを付与済み
