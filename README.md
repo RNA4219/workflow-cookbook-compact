@@ -52,7 +52,8 @@ canary rules.
       Birdseye カプセルを再生成する。標準では直近変更ファイルから±2 hop の
       カプセルのみ更新し、今後導入予定の `--full` オプション指定時に
       全カプセルを再生成する（`GUARDRAILS.md` の
-      [鮮度管理](GUARDRAILS.md#%E9%AE%AE%E5%BA%A6%E7%AE%A1%E7%90%86staleness-handling)参照）。
+      [鮮度管理](GUARDRAILS.md#鮮度管理staleness-handling)
+      参照）。
 
       ```sh
       # 例: カプセル出力先と解析ルートを指定して再生成
