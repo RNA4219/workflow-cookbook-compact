@@ -1,7 +1,7 @@
 name: spec-tasker
 on:
   pull_request:
-    types: [opened, synchronize, edited, reopened]
+    types: [opened, synchronize, edited, reopened, labeled]
 permissions:
   contents: read
   issues: write
@@ -15,33 +15,58 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Detect presence
+      - name: Load config (optional)
+        id: cfg
+        shell: bash
+        run: |
+          CONF=".github/spec-tasker.json"
+          if [ -f "$CONF" ]; then
+            echo "conf_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "conf_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Detect files
         id: detect
         shell: bash
         run: |
-          has_req=false;  for f in REQUIREMENTS.md docs/requirements.md; do [ -f "$f" ] && has_req=true;  done
-          has_spec=false; for f in SPEC.md         docs/spec.md;         do [ -f "$f" ] && has_spec=true; done
-          has_des=false;  for f in DESIGN.md       docs/design.md;       do [ -f "$f" ] && has_des=true;  done
-          echo "has_req=$has_req" >> "$GITHUB_OUTPUT"
-          echo "has_spec=$has_spec" >> "$GITHUB_OUTPUT"
-          echo "has_des=$has_des" >> "$GITHUB_OUTPUT"
+          has() { for f in "$@"; do [ -f "$f" ] && return 0; done; return 1; }
 
-      - name: Label PR (non-blocking)
-        if: always()
+          REQ=("REQUIREMENTS.md" "docs/requirements.md")
+          SPEC=("SPEC.md" "docs/spec.md")
+          DES=("DESIGN.md" "docs/design.md")
+
+          if [ "${{ steps.cfg.outputs.conf_exists }}" = "true" ]; then
+            mapfile -t REQ < <(jq -r '.requirements[]?' .github/spec-tasker.json)
+            mapfile -t SPEC < <(jq -r '.spec[]?'         .github/spec-tasker.json)
+            mapfile -t DES < <(jq -r '.design[]?'        .github/spec-tasker.json)
+          fi
+
+          has "${REQ[@]}";  echo "has_req=$?"  >> "$GITHUB_OUTPUT"
+          has "${SPEC[@]}"; echo "has_spec=$?" >> "$GITHUB_OUTPUT"
+          has "${DES[@]}";  echo "has_des=$?"  >> "$GITHUB_OUTPUT"
+
+          AUTO="false"
+          echo "${{ toJson(github.event.pull_request.labels) }}" | jq -r '.[].name' | grep -q '^auto-task$' && AUTO="true"
+          if [ "${{ steps.cfg.outputs.conf_exists }}" = "true" ] && jq -e '.auto_task_by_default==true' .github/spec-tasker.json >/dev/null 2>&1; then
+            AUTO="true"
+          fi
+          echo "auto_task=$AUTO" >> "$GITHUB_OUTPUT"
+
+      - name: Label PR
         uses: actions/github-script@v7
         with:
           script: |
-            const hasReq = '${{ steps.detect.outputs.has_req }}' === 'true';
-            const hasSpec = '${{ steps.detect.outputs.has_spec }}' === 'true';
-            const hasDes = '${{ steps.detect.outputs.has_des }}' === 'true';
-
+            const core = require('@actions/core');
             const add = async (labels) => github.rest.issues.addLabels({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
               labels,
             });
-
+            const hasReq = core.getInput('has_req') === '0';
+            const hasSpec = core.getInput('has_spec') === '0';
+            const hasDes = core.getInput('has_des') === '0';
             if (hasReq && !hasSpec) {
               await add(['needs-spec']);
             } else if (hasSpec && !hasDes) {
@@ -49,36 +74,82 @@ jobs:
             } else if (hasReq && hasSpec && hasDes) {
               await add(['needs-e2e-review']);
             }
+          has_req: ${{ steps.detect.outputs.has_req }}
+          has_spec: ${{ steps.detect.outputs.has_spec }}
+          has_des: ${{ steps.detect.outputs.has_des }}
 
-      - name: Create tasks (non-blocking)
-        if: always()
+      - name: Sticky summary comment (no spam)
         uses: actions/github-script@v7
         with:
           script: |
-            const has_req  = '${{ steps.detect.outputs.has_req }}'  === 'true';
-            const has_spec = '${{ steps.detect.outputs.has_spec }}' === 'true';
-            const has_des  = '${{ steps.detect.outputs.has_des }}'  === 'true';
+            const core = require('@actions/core');
+            const hasReq = core.getInput('has_req') === '0';
+            const hasSpec = core.getInput('has_spec') === '0';
+            const hasDes = core.getInput('has_des') === '0';
+            const badge = (state) => (state ? '✅' : '❌');
+            const body = [
+              '<!-- spec-tasker-sticky -->',
+              '**Spec Matrix**  ',
+              `REQUIREMENTS ${badge(hasReq)} / SPEC ${badge(hasSpec)} / DESIGN ${badge(hasDes)}`,
+              '',
+              '- 不足があればラベルを付与します（非ブロッキング）。',
+              '- Issue自動起票は **label: \`auto-task\`** 付きPRのみ。',
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            });
+            const mine = comments.find((c) => c.user?.type === 'Bot' && c.body?.includes('<!-- spec-tasker-sticky -->'));
+            if (mine) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: mine.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+          has_req: ${{ steps.detect.outputs.has_req }}
+          has_spec: ${{ steps.detect.outputs.has_spec }}
+          has_des: ${{ steps.detect.outputs.has_des }}
+
+      - name: Create issues (only when auto-task)
+        if: ${{ steps.detect.outputs.auto_task == 'true' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const core = require('@actions/core');
             const pr = context.payload.pull_request;
-            const mk = (title, body) => ({
+            const hasReq = core.getInput('has_req') === '0';
+            const hasSpec = core.getInput('has_spec') === '0';
+            const hasDes = core.getInput('has_des') === '0';
+            const mk = (title, body, labels = ['task', 'docs', 'spec-tasker']) => ({
               title,
               body,
-              labels: ['task', 'docs'],
+              labels,
               owner: context.repo.owner,
-              repo: context.repo.repo
+              repo: context.repo.repo,
             });
-
             const tasks = [];
-            if (has_req && !has_spec) {
+            if (hasReq && !hasSpec) {
               tasks.push(mk(`TASK: Create SPEC for PR #${pr.number}`,
                 `**目的**: 要件はあるが仕様が未整備。最小SPECを作成。\n\n- 参考: \`docs/spec.template.md\`\n- 関連PR: #${pr.number}`));
-            } else if (has_spec && !has_des) {
+            } else if (hasSpec && !hasDes) {
               tasks.push(mk(`TASK: Create DESIGN for PR #${pr.number}`,
                 `**目的**: 仕様はあるが設計が未整備。最小DESIGNを作成。\n\n- 参考: \`docs/design.template.md\`\n- 関連PR: #${pr.number}`));
-            } else if (has_req && has_spec && has_des) {
+            } else if (hasReq && hasSpec && hasDes) {
               tasks.push(mk(`TASK: E2E Review for PR #${pr.number}`,
-                `**目的**: 要件/仕様/設計の整合性を確認し、懸念点有無をチェック。\n\n- [ ] 要件→仕様の追跡性\n- [ ] 仕様→設計の追跡性\n- [ ] 受入想定（EVALUATION）に則った手動再現手順メモ\n- [ ] 主要非機能のメモ（性能/運用/セキュリティ 1行）\n\n- 関連PR: #${pr.number}`));
+                `**目的**: 要件/仕様/設計の整合性を確認。チェックリストを埋めて完了。\n\n- [ ] 要件→仕様 追跡性\n- [ ] 仕様→設計 追跡性\n- [ ] 受入想定の手動再現メモ\n- [ ] 非機能のメモ（性能/運用/セキュリティ）\n\n- 関連PR: #${pr.number}`));
             }
-
             for (const t of tasks) {
               const q = `repo:${context.repo.owner}/${context.repo.repo} is:issue is:open in:title "${t.title}"`;
               const existing = await github.rest.search.issuesAndPullRequests({ q });
@@ -86,24 +157,6 @@ jobs:
                 await github.rest.issues.create(t);
               }
             }
-
-      - name: Comment summary (optional)
-        if: always()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const has_req  = '${{ steps.detect.outputs.has_req }}'  === 'true';
-            const has_spec = '${{ steps.detect.outputs.has_spec }}' === 'true';
-            const has_des  = '${{ steps.detect.outputs.has_des }}'  === 'true';
-            const badge = (state) => (state ? '✅' : '❌');
-            const msg = [
-              `Spec Matrix: REQUIREMENTS ${badge(has_req)} / SPEC ${badge(has_spec)} / DESIGN ${badge(has_des)}`,
-              '不足がある場合は対応タスクを自動起票しています（非ブロッキング）。'
-            ].join('\n');
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: msg
-            });
-
+          has_req: ${{ steps.detect.outputs.has_req }}
+          has_spec: ${{ steps.detect.outputs.has_spec }}
+          has_des: ${{ steps.detect.outputs.has_des }}
