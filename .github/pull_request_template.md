@@ -35,5 +35,12 @@ Priority Score: `number`
 - [ ] 受入基準（EVALUATION）緑
 - [ ] CHECKLISTS 該当項目完了
 - [ ] CHANGELOG 追記
+- [ ] REQUIREMENTS（REQUIREMENTS.md or docs/requirements.md）がある（無ければ後追いで作る）
 - 禁止パス遵守チェック（governance/policy.yaml）: <!-- 例: OK / 対象外 / 詳細 -->
 - Priority Score: <!-- 例: 5 / prioritization.yaml#phase1 -->
+
+## Docs matrix (FYI)
+
+- REQUIREMENTS: present?  [] yes / [] later
+- SPEC:         present?  [] yes / [] later
+- DESIGN:       present?  [] yes / [] later
