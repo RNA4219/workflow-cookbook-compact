@@ -1,8 +1,8 @@
+# Pull Request テンプレート
+
 Intent: INT-___
 Links: [Acceptance Criteria](EVALUATION.md#acceptance-criteria)
-Priority Score: <number>
-
-# Pull Request テンプレート
+Priority Score: `number`
 
 ## 記入項目
 

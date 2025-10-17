@@ -53,7 +53,9 @@ SLO レポート生成ワークフローの自動化手順を整備する。
 
 ```bash
 ## Python
-ruff check docs/slo tools/reporting && mypy --strict tools/reporting && pytest tests/reporting -q
+ruff check docs/slo tools/reporting \
+  && mypy --strict tools/reporting \
+  && pytest tests/reporting -q
 
 ## TypeScript/Node
 pnpm lint --filter slo-dashboard && pnpm test --filter slo-dashboard

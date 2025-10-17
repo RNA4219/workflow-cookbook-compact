@@ -47,16 +47,18 @@ canary rules.
       と整合する最小読込ガードレールを確認
     - [`tools/codemap/README.md`](tools/codemap/README.md) …… Birdseye カプセル
       再生成前提と `codemap.update` の流れを把握
-    - [`tools/codemap/update.py`](tools/codemap/update.py) …… `python tools/codemap/update.py`
-      で `codemap.update` を実行し Birdseye カプセルを再生成する。
-      標準では直近変更ファイルから±2 hop のカプセルのみ更新し、
-      今後導入予定の `--full` オプション指定時に全カプセルを再生成する
-      （`GUARDRAILS.md` の[鮮度管理](GUARDRAILS.md#%E9%AE%AE%E5%BA%A6%E7%AE%A1%E7%90%86staleness-handling)参照）。
+    - [`tools/codemap/update.py`](tools/codemap/update.py) ……
+      `python tools/codemap/update.py` で `codemap.update` を実行し
+      Birdseye カプセルを再生成する。標準では直近変更ファイルから±2 hop の
+      カプセルのみ更新し、今後導入予定の `--full` オプション指定時に
+      全カプセルを再生成する（`GUARDRAILS.md` の
+      [鮮度管理](GUARDRAILS.md#%E9%AE%AE%E5%BA%A6%E7%AE%A1%E7%90%86staleness-handling)参照）。
 
       ```sh
       # 例: カプセル出力先と解析ルートを指定して再生成
       python tools/codemap/update.py --caps docs/birdseye/caps --root .
       ```
+
     - [`HUB.codex.md`](HUB.codex.md) …… 仕様集約とタスク分割ハブを整備し、Birdseye カプセルの依存関係を維持
     - [`docs/IN-20250115-001.md`](docs/IN-20250115-001.md) …… インシデントログを参照し
       Birdseye カプセル要約で指示される `deps_out` を照合
@@ -96,6 +98,7 @@ canary rules.
 
 - PR 本文に `Intent: INT-xxx`（例: `Intent: INT-123`）を含めること。
 - `EVALUATION` 見出し（例:
-  `[Acceptance Criteria](EVALUATION.md#acceptance-criteria)`）へのリンクを
-  本文に明示すること。
-- 可能であれば `Priority Score: <number>` を追記し、`prioritization.yaml` の値を参照する。
+  `[Acceptance Criteria](EVALUATION.md#acceptance-criteria)`）へのリンクを本文に
+  明示すること。
+- 可能であれば `Priority Score: number` を追記し、`prioritization.yaml` の
+  値を参照する。
