@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -38,6 +39,12 @@ def parse_args(argv: Iterable[str] | None = None) -> UpdateOptions:
     return UpdateOptions(targets=target_paths, emit=args.emit)
 
 
+def ensure_python_version() -> None:
+    if sys.version_info < (3, 11):
+        print("[ERROR] Python 3.11 or newer is required.")
+        raise SystemExit(1)
+
+
 def run_update(options: UpdateOptions) -> None:
     """Execute the codemap update workflow.
 
@@ -45,11 +52,31 @@ def run_update(options: UpdateOptions) -> None:
     """
     # TODO: Implement analysis and file emission logic.
     for target in options.targets:
+        if not target.exists():
+            print(f"[ERROR] {target}: missing target")
+            print(f"[TODO] Analyse {target}")
+            continue
+
+        missing_resources = []
+        index_path = target / "index.json"
+        if not index_path.exists():
+            missing_resources.append("index.json")
+        caps_path = target / "caps"
+        if not caps_path.exists():
+            missing_resources.append("caps")
+
+        if missing_resources:
+            for resource in missing_resources:
+                print(f"[ERROR] {target}: missing {resource}")
+        else:
+            print(f"[OK] {target}: resources ready")
+
         print(f"[TODO] Analyse {target}")
     print(f"[TODO] Emit artefacts: {options.emit}")
 
 
 def main(argv: Iterable[str] | None = None) -> int:
+    ensure_python_version()
     options = parse_args(argv)
     run_update(options)
     return 0
