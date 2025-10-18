@@ -85,6 +85,8 @@ canary rules.
 
 #### 言語別 CI テストセット（鉄板構成）
 
+<!-- markdownlint-disable MD013 -->
+
 | 言語 | カテゴリ | コマンド | 目的 |
 | :--- | :--- | :--- | :--- |
 | Rust | Format | `cargo fmt --all -- --check` | コード整形確認 |
@@ -137,7 +139,6 @@ canary rules.
 | Pre-commit Hooks | Lint/Format 再現 | `.pre-commit-config.yaml` → `pre-commit-hooks`（YAML/EOF/WS） + `psf/black` などを追加 |
 | Artifact Upload | テスト・レポート共有 | ジョブ末尾で `actions/upload-artifact@v4` → `if: always()` + `path: logs/*` |
 
-<!-- markdownlint-disable MD013 -->
 ![lint](https://github.com/RNA4219/workflow-cookbook/actions/workflows/markdown.yml/badge.svg)
 ![links](https://github.com/RNA4219/workflow-cookbook/actions/workflows/links.yml/badge.svg)
 ![lead_time_p95_hours](https://img.shields.io/badge/lead__time__p95__hours-72h-blue)
