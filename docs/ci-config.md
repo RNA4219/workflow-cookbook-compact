@@ -2,7 +2,8 @@
 
 ## 自動キャンセル設定
 
-すべての GitHub Actions ワークフローには、同一ブランチ/PR 上で最新の実行だけを保持するための `concurrency` ブロックを追加しています。
+すべての GitHub Actions ワークフローには、
+同一ブランチ/PR 上で最新の実行だけを保持するための `concurrency` ブロックを追加しています。
 
 ```yaml
 concurrency:
