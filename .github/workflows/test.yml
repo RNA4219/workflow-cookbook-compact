@@ -41,7 +41,7 @@ jobs:
             echo "{\"name\":\"lint\",\"status\":\"skip\",\"duration_ms\":0}" >> workflow-cookbook/logs/test.jsonl
           fi
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: ${{ always() }}
         with: { name: test-logs-${{ github.job }}, path: 'workflow-cookbook/logs/*' }
 
   typecheck:
@@ -73,7 +73,7 @@ jobs:
             echo "{\"name\":\"typecheck\",\"status\":\"skip\",\"duration_ms\":0}" >> workflow-cookbook/logs/test.jsonl
           fi
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: ${{ always() }}
         with: { name: test-logs-${{ github.job }}, path: 'workflow-cookbook/logs/*' }
 
   unit:
@@ -158,7 +158,7 @@ jobs:
           echo "{\"name\":\"python::backend\",\"status\":\"$s\",\"duration_ms\":$(( $(date +%s%3N)-start ))}" >> ../workflow-cookbook/logs/test.jsonl
 
       - name: Upload logs
-        if: always()
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with: { name: test-logs-${{ github.job }}, path: 'workflow-cookbook/logs/*' }
 
@@ -192,13 +192,13 @@ jobs:
             echo "{\"name\":\"build\",\"status\":\"skip\",\"duration_ms\":0}" >> workflow-cookbook/logs/test.jsonl
           fi
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: ${{ always() }}
         with:
           name: build-output
           path: dist/**
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: ${{ always() }}
         with: { name: test-logs-${{ github.job }}, path: 'workflow-cookbook/logs/*' }
 
   e2e:
@@ -222,7 +222,7 @@ jobs:
             echo "{\"name\":\"e2e\",\"status\":\"$s\",\"duration_ms\":$(( $(date +%s%3N)-start ))}" >> workflow-cookbook/logs/test.jsonl
           fi
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: ${{ always() }}
         with: { name: test-logs-${{ github.job }}, path: 'workflow-cookbook/logs/*' }
 
   report:
