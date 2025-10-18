@@ -42,7 +42,7 @@ jobs:
           fi
       - uses: actions/upload-artifact@v4
         if: always()
-        with: { name: test-logs-${{ github.job }}, path: workflow-cookbook/logs/* }
+        with: { name: test-logs-${{ github.job }}, path: 'workflow-cookbook/logs/*' }
 
   typecheck:
     runs-on: ubuntu-24.04
@@ -74,7 +74,7 @@ jobs:
           fi
       - uses: actions/upload-artifact@v4
         if: always()
-        with: { name: test-logs-${{ github.job }}, path: workflow-cookbook/logs/* }
+        with: { name: test-logs-${{ github.job }}, path: 'workflow-cookbook/logs/*' }
 
   unit:
     runs-on: ubuntu-24.04
@@ -160,7 +160,7 @@ jobs:
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
-        with: { name: test-logs-${{ github.job }}, path: workflow-cookbook/logs/* }
+        with: { name: test-logs-${{ github.job }}, path: 'workflow-cookbook/logs/*' }
 
   build:
     needs: [lint, typecheck, unit]
@@ -199,7 +199,7 @@ jobs:
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         if: always()
-        with: { name: test-logs-${{ github.job }}, path: workflow-cookbook/logs/* }
+        with: { name: test-logs-${{ github.job }}, path: 'workflow-cookbook/logs/*' }
 
   e2e:
     needs: [build]
@@ -223,7 +223,7 @@ jobs:
           fi
       - uses: actions/upload-artifact@v4
         if: always()
-        with: { name: test-logs-${{ github.job }}, path: workflow-cookbook/logs/* }
+        with: { name: test-logs-${{ github.job }}, path: 'workflow-cookbook/logs/*' }
 
   report:
     needs: [lint, typecheck, unit, build, e2e]
