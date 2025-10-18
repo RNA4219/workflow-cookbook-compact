@@ -17,11 +17,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: mkdir -p workflow-cookbook/logs
+      - name: Detect npm lockfiles
+        id: npm-lock
+        run: |
+          set -Eeuo pipefail
+          paths=$(find . -name package-lock.json -print)
+          if [ -n "$paths" ]; then
+            {
+              echo "has-lock=true"
+              echo 'paths<<EOF'
+              echo "$paths"
+              echo 'EOF'
+            } >>"$GITHUB_OUTPUT"
+          else
+            echo "has-lock=false" >>"$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-node@v4
+        if: ${{ steps.npm-lock.outputs.has-lock == 'true' }}
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: '**/package-lock.json'
+          cache-dependency-path: ${{ steps.npm-lock.outputs.paths }}
+      - uses: actions/setup-node@v4
+        if: ${{ steps.npm-lock.outputs.has-lock != 'true' }}
+        with:
+          node-version: '22'
       - name: ESLint (if exists)
         run: |
           set -Eeuo pipefail
@@ -42,11 +62,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: mkdir -p workflow-cookbook/logs
+      - name: Detect npm lockfiles
+        id: npm-lock
+        run: |
+          set -Eeuo pipefail
+          paths=$(find . -name package-lock.json -print)
+          if [ -n "$paths" ]; then
+            {
+              echo "has-lock=true"
+              echo 'paths<<EOF'
+              echo "$paths"
+              echo 'EOF'
+            } >>"$GITHUB_OUTPUT"
+          else
+            echo "has-lock=false" >>"$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-node@v4
+        if: ${{ steps.npm-lock.outputs.has-lock == 'true' }}
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: '**/package-lock.json'
+          cache-dependency-path: ${{ steps.npm-lock.outputs.paths }}
+      - uses: actions/setup-node@v4
+        if: ${{ steps.npm-lock.outputs.has-lock != 'true' }}
+        with:
+          node-version: '22'
       - name: TypeScript (if exists)
         run: |
           set -Eeuo pipefail
@@ -68,11 +108,31 @@ jobs:
       - uses: actions/checkout@v4
       - run: mkdir -p workflow-cookbook/logs
 
+      - name: Detect npm lockfiles
+        id: npm-lock
+        run: |
+          set -Eeuo pipefail
+          paths=$(find . -name package-lock.json -print)
+          if [ -n "$paths" ]; then
+            {
+              echo "has-lock=true"
+              echo 'paths<<EOF'
+              echo "$paths"
+              echo 'EOF'
+            } >>"$GITHUB_OUTPUT"
+          else
+            echo "has-lock=false" >>"$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-node@v4
+        if: ${{ steps.npm-lock.outputs.has-lock == 'true' }}
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: '**/package-lock.json'
+          cache-dependency-path: ${{ steps.npm-lock.outputs.paths }}
+      - uses: actions/setup-node@v4
+        if: ${{ steps.npm-lock.outputs.has-lock != 'true' }}
+        with:
+          node-version: '22'
 
       - name: Node unit (repo root)
         if: ${{ hashFiles('package.json') != '' }}
@@ -149,11 +209,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: mkdir -p workflow-cookbook/logs dist
+      - name: Detect npm lockfiles
+        id: npm-lock
+        run: |
+          set -Eeuo pipefail
+          paths=$(find . -name package-lock.json -print)
+          if [ -n "$paths" ]; then
+            {
+              echo "has-lock=true"
+              echo 'paths<<EOF'
+              echo "$paths"
+              echo 'EOF'
+            } >>"$GITHUB_OUTPUT"
+          else
+            echo "has-lock=false" >>"$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-node@v4
+        if: ${{ steps.npm-lock.outputs.has-lock == 'true' }}
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: '**/package-lock.json'
+          cache-dependency-path: ${{ steps.npm-lock.outputs.paths }}
+      - uses: actions/setup-node@v4
+        if: ${{ steps.npm-lock.outputs.has-lock != 'true' }}
+        with:
+          node-version: '22'
       - name: Build (if exists)
         run: |
           set -Eeuo pipefail
