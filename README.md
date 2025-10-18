@@ -108,6 +108,8 @@ canary rules.
 | Node.js/TS | Test | `npm test` / `vitest run` / `jest --ci` | ユニットテスト |
 | Node.js/TS | Build | `npm run build` | 本番ビルド |
 | Node.js/TS | Security | `npm audit --audit-level=moderate` | 依存脆弱性 |
+
+> CI 設定全体と最新実行のみを保持する自動キャンセル構成は、[`docs/ci-config.md`](docs/ci-config.md) を参照してください。
 | Node.js/TS (任意) | Coverage | `npm run coverage` | カバレッジ |
 | Node.js/TS | Docs | `typedoc` / `markdownlint` | API/MD構文確認 |
 | Go | Format | `gofmt -l .` | 整形確認 |
