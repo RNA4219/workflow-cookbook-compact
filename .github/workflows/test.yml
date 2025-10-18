@@ -17,11 +17,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: mkdir -p workflow-cookbook/logs
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: '**/package-lock.json'
+      - name: Cache npm dependencies
+        if: ${{ hashFiles('**/package-lock.json') != '' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       - name: ESLint (if exists)
         run: |
           set -Eeuo pipefail
@@ -42,11 +49,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: mkdir -p workflow-cookbook/logs
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: '**/package-lock.json'
+      - name: Cache npm dependencies
+        if: ${{ hashFiles('**/package-lock.json') != '' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       - name: TypeScript (if exists)
         run: |
           set -Eeuo pipefail
@@ -67,13 +81,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: mkdir -p workflow-cookbook/logs
-
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: '**/package-lock.json'
-
+      - name: Cache npm dependencies
+        if: ${{ hashFiles('**/package-lock.json') != '' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       - name: Node unit (repo root)
         if: ${{ hashFiles('package.json') != '' }}
         run: |
@@ -149,11 +168,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: mkdir -p workflow-cookbook/logs dist
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: '**/package-lock.json'
+      - name: Cache npm dependencies
+        if: ${{ hashFiles('**/package-lock.json') != '' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       - name: Build (if exists)
         run: |
           set -Eeuo pipefail
