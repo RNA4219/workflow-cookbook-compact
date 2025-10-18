@@ -35,3 +35,10 @@ jobs:
             if (!/Priority\s*Score\s*:\s*\d+(\.\d+)?/i.test(body)) {
               core.warning("Consider adding 'Priority Score: <number>' based on prioritization.yaml")
             }
+
+  codeowners_soft_gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: CODEOWNERS gate (soft)
+        run: echo "::warning title=CODEOWNERS::Approval pending (non-blocking)"
+        continue-on-error: true
