@@ -80,6 +80,62 @@ canary rules.
 - Intent ゲートは
   [`tools/ci/check_governance_gate.py`](tools/ci/check_governance_gate.py) により
   自動適用されるため、CI の設定だけで運用に組み込めます
+- SRC の主要言語に応じて、以下の CI テストセットを組み合わせると、導入直後から
+  最低限の品質・安全・可搬性が確保できます
+
+#### 言語別 CI テストセット（鉄板構成）
+
+| 言語 | カテゴリ | コマンド | 目的 |
+| :--- | :--- | :--- | :--- |
+| Rust | Format | `cargo fmt --all -- --check` | コード整形確認 |
+| Rust | Lint | `cargo clippy --all-targets --all-features -D warnings` | 警告・アンチパターン検出 |
+| Rust | Test | `cargo test --all-features` | 単体・統合テスト |
+| Rust | Build | `cargo build --release` | リリースビルド確認 |
+| Rust | Security | `cargo audit` / `cargo deny check` | 依存脆弱性・ライセンス確認 |
+| Rust | Docs | `cargo doc -D warnings` | ドキュメント構文確認 |
+| Rust (任意) | Coverage | `cargo llvm-cov` | カバレッジ測定 |
+| Python | Format | `black --check .` | コード整形確認 |
+| Python | Lint | `ruff check .` / `flake8 .` / `pylint src/` | コード品質 |
+| Python | Typing | `mypy src/` | 型整合性 |
+| Python | Test | `pytest --maxfail=1 --disable-warnings -q` | 単体・統合テスト |
+| Python | Security | `bandit -r src/` / `pip-audit` | 静的セキュリティ解析 |
+| Python | Coverage | `pytest --cov=src` | カバレッジ |
+| Python | Docs | `pydocstyle src/` | docstring 構文確認 |
+| Node.js/TS | Lint | `eslint .` / `tsc --noEmit` | コード・型検査 |
+| Node.js/TS | Format | `prettier --check .` | 整形検証 |
+| Node.js/TS | Test | `npm test` / `vitest run` / `jest --ci` | ユニットテスト |
+| Node.js/TS | Build | `npm run build` | 本番ビルド |
+| Node.js/TS | Security | `npm audit --audit-level=moderate` | 依存脆弱性 |
+| Node.js/TS (任意) | Coverage | `npm run coverage` | カバレッジ |
+| Node.js/TS | Docs | `typedoc` / `markdownlint` | API/MD構文確認 |
+| Go | Format | `gofmt -l .` | 整形確認 |
+| Go | Lint | `golangci-lint run` | 静的解析 |
+| Go | Vet | `go vet ./...` | 構文・型安全検査 |
+| Go | Test | `go test -v ./...` | 単体テスト |
+| Go | Build | `go build ./...` | ビルド保証 |
+| Go | Security | `gosec ./...` | 脆弱性スキャン |
+| Go (任意) | Coverage | `go test -cover ./...` | カバレッジ測定 |
+| Java | Format | `mvn formatter:validate` / `spotless:check` | 整形確認 |
+| Java | Lint | `mvn checkstyle:check` / `spotbugs:check` | 静的解析 |
+| Java | Test | `mvn test` / `gradle test` | 単体テスト |
+| Java | Coverage | `mvn jacoco:report` | カバレッジ |
+| Java | Security | `mvn dependency-check:check` | 依存脆弱性 |
+| Java | Build | `mvn package` / `gradle build` | 本番ビルド |
+| C/C++ | Format | `clang-format --dry-run -Werror` | 整形確認 |
+| C/C++ | Lint | `cppcheck --enable=all` | 静的解析 |
+| C/C++ | Build | `cmake . && make` / `meson compile` | ビルド確認 |
+| C/C++ | Test | `ctest --output-on-failure` / `gtest` | 単体テスト |
+| C/C++ | Security | `clang --analyze` / `cppcheck --addon=cert` | セキュリティ |
+| C/C++ | Coverage | `lcov` / `gcov` | カバレッジ測定 |
+
+#### 共通モジュール4種（全リポ共通）
+
+| モジュール | 目的 | 設定例 |
+| :--- | :--- | :--- |
+| CodeQL | 静的解析・脆弱性検出 | `uses: github/codeql-action/init@v3` + `languages: python,javascript,go,rust` → `analyze` |
+| Dependabot | 依存更新の自動PR | `.github/dependabot.yml` → `package-ecosystem: github-actions/npm/pip` + `schedule: weekly` |
+| Pre-commit Hooks | Lint/Format 再現 | `.pre-commit-config.yaml` → `pre-commit-hooks`（YAML/EOF/WS） + `psf/black` などを追加 |
+| Artifact Upload | テスト・レポート共有 | ジョブ末尾で `actions/upload-artifact@v4` → `if: always()` + `path: logs/*` |
 
 <!-- markdownlint-disable MD013 -->
 ![lint](https://github.com/RNA4219/workflow-cookbook/actions/workflows/markdown.yml/badge.svg)
