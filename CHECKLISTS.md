@@ -21,6 +21,7 @@ next_review_due: 2025-11-14
 - 受け入れ基準に対するエビデンス
 - 影響範囲の再確認
 - PR に `type:*` および `semver:*` ラベルを付与済み
+- [Security Review Checklist](docs/security/Security_Review_Checklist.md) に沿って準備→実装→レビューの各フェーズを完了し、リリース判定と証跡を残す
 
 ## Hygiene
 
