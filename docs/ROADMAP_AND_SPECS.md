@@ -49,10 +49,10 @@
   - `governance/policy.yaml` の `ci.required_jobs` を基準に、`CHECKLISTS.md` の[Daily](../CHECKLISTS.md#daily)で稼働状況をモニタ。
 
 ## 参照クイックリンク
-- [docs/ci-config.md](ci-config.md)：再利用 CI ジョブの設定プリセットと分岐条件。更新時は `CHECKLISTS.md` の[Daily](../CHECKLISTS.md#daily)で要件整合を確認。
-- [docs/interfaces.md](interfaces.md)：エージェント I/O 契約とハンドシェイク仕様。変更後は `docs/CONTRACTS.md` と `RUNBOOK.md` の[Execute](../RUNBOOK.md#execute)を突き合わせ。
-- [docs/INCIDENT_TEMPLATE.md](INCIDENT_TEMPLATE.md)：インシデント報告テンプレートと補足フロー。記録手順の改定は `RUNBOOK.md` の[Confirm](../RUNBOOK.md#confirm)と `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)で整合性を確認。
-- [docs/security/Security_Review_Checklist.md](security/Security_Review_Checklist.md)：セキュリティレビュー項目とトレーサビリティ。更新時は `SECURITY.md` と `docs/security/SAC.md` で証跡を同期。
+- [docs/ci-config.md](ci-config.md)：CI プリセットの分岐条件と再利用手順を集約。**利用シーン**：CI 設定変更前に `CHECKLISTS.md` の[Daily](../CHECKLISTS.md#daily)で運用要件をクロスチェック。
+- [docs/interfaces.md](interfaces.md)：機能境界と受け渡し契約をテーブル化。**利用シーン**：境界整理や責務調整時に `docs/CONTRACTS.md` と `RUNBOOK.md` の[Execute](../RUNBOOK.md#execute)を並行確認。
+- [docs/INCIDENT_TEMPLATE.md](INCIDENT_TEMPLATE.md)：インシデント報告テンプレートとエスカレーション導線を定義。**利用シーン**：インシデント対応の初動で `RUNBOOK.md` の[Confirm](../RUNBOOK.md#confirm)と `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)を併用。
+- [docs/security/Security_Review_Checklist.md](security/Security_Review_Checklist.md)：セキュリティ審査項目と証跡収集ポイントを整理。**利用シーン**：リリース前審査で `SECURITY.md`・`docs/security/SAC.md`・`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)を同期。
 
 Guardrails 連動資料は行動原則と更新判断の基準を担い、本節は運用ドキュメントの即時参照に特化するため、改訂時は前述の整合チェック先と `GUARDRAILS.md` の[実装原則](../GUARDRAILS.md#実装原則)の適用範囲を併せて確認する。
 
