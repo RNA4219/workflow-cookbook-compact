@@ -158,12 +158,19 @@ jobs:
 
 #### 共通モジュール4種（全リポ共通）
 
-| モジュール | 目的 | 設定例 |
-| :--- | :--- | :--- |
-| CodeQL | 静的解析・脆弱性検出 | `uses: github/codeql-action/init@v3` + `languages: python,javascript,go,rust` → `analyze` |
-| Dependabot | 依存更新の自動PR | `.github/dependabot.yml` → `package-ecosystem: github-actions/npm/pip` + `schedule: weekly` |
-| Pre-commit Hooks | Lint/Format 再現 | `.pre-commit-config.yaml` → `pre-commit-hooks`（YAML/EOF/WS） + `psf/black` などを追加 |
-| Artifact Upload | テスト・レポート共有 | ジョブ末尾で `actions/upload-artifact@v4` → `if: always()` + `path: logs/*` |
+| 領域/モジュール | 目的・役割 | 主要仕様書 | 備考 |
+| :--- | :--- | :--- | :--- |
+| CodeQL | 静的解析・脆弱性検出を CI に組み込む | [docs/spec.md](docs/spec.md)<br>[docs/ci-config.md](docs/ci-config.md) | `github/codeql-action` ワークフローで SAST ゲートを維持 |
+| Dependabot | 依存更新の自動 PR を定期化する | [docs/requirements.md](docs/requirements.md)<br>[docs/spec.md](docs/spec.md) | 週次スケジュールで依存差分を検知し CI と連動 |
+| Pre-commit Hooks | Lint / Format をローカルで再現する | [docs/design.md](docs/design.md)<br>[docs/requirements.md](docs/requirements.md) | `.pre-commit-config.yaml` でチーム基準を固定 |
+| Artifact Upload | テスト結果やログを共有する | [docs/ci-config.md](docs/ci-config.md)<br>[EVALUATION.md](EVALUATION.md#acceptance-criteria) | CI 実行痕跡をアーカイブしてレビューへ提示 |
+| `examples/` | レシピ参照実装と設計・仕様の整合を確認する | [docs/design.md](docs/design.md)<br>[docs/spec.md](docs/spec.md) | サンプル更新時は Birdseye 同期[^birdseye] |
+| `styles/` | QA ルールによる表記統一・禁止用語を管理する | [docs/design.md](docs/design.md)<br>[docs/requirements.md](docs/requirements.md) | `styles/qa/QA.yml` の用語ルールを適用[^styles] |
+| `tools/` | ドキュメント同期と検証スクリプトを運用する | [docs/design.md](docs/design.md)<br>[RUNBOOK.md](RUNBOOK.md#execute) | `tools/codemap/update.py` で Birdseye を再生成[^birdseye] |
+| `docs/security/` | セキュリティレビューと SAC 手順を集約する | [docs/security/Security_Review_Checklist.md](docs/security/Security_Review_Checklist.md)<br>[docs/security/SAC.md](docs/security/SAC.md) | リリース審査の証跡を更新 |
+
+[^birdseye]: `python tools/codemap/update.py --caps docs/birdseye/caps --root .` で Birdseye インデックスとカプセルを更新し、必要に応じて `--full` で全再生成する。詳細は [tools/codemap/README.md](tools/codemap/README.md#実行手順) と [GUARDRAILS.md](GUARDRAILS.md#鮮度管理staleness-handling) を参照。
+[^styles]: `styles/qa/QA.yml` の禁止用語・表記揺れルールをレビューで適用し、検知結果を `CHECKLISTS.md` のリリース手順へ反映する。
 
 ![lint](https://github.com/RNA4219/workflow-cookbook/actions/workflows/markdown.yml/badge.svg)
 ![links](https://github.com/RNA4219/workflow-cookbook/actions/workflows/links.yml/badge.svg)
