@@ -60,7 +60,7 @@
 - [docs/ADR/README.md](ADR/README.md)：設計判断の記録・改訂フローを統括。**利用シーン**：設計変更 PR に更新・新規 ADR を添付し、レビューテンプレと連携。
 - [docs/security/Security_Review_Checklist.md](security/Security_Review_Checklist.md)：セキュリティ審査項目と証跡収集ポイントを整理。**利用シーン**：リリース前審査で `SECURITY.md`・`docs/security/SAC.md`・`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)を同期。
 - [CHANGELOG.md](../CHANGELOG.md)：リリース差分と意思決定の履歴を集約し、更新ルールを一元管理。**利用シーン**：`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)完了後に `README.md` の[使い方（最短）](../README.md#使い方最短)手順と照合してガバナンス記録を反映。
-- [README.md](../README.md#変更履歴の更新ルール)：CHANGELOG の更新手順とレビュー観点を整理。**利用シーン**：リリース前の履歴整備確認や `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)チェック締め前に記録要件を再確認し、同セクションと連携する。
+- [README.md](../README.md#変更履歴の更新ルール)：`CHANGELOG.md` の更新タイミング・書式・`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)および `governance/policy.yaml` との突合手順を整理。**利用シーン**：リリース前の履歴整備確認で記録要件を再確認し、チェックリストとガバナンス要求を同時に満たす。
 - [EVALUATION.md#Test Outline](../EVALUATION.md#test-outline) / [tests/](../tests/)：評価指標とテストケース集を束ねた TDD 前提の検証ハブ。**利用シーン**：テスト追加前のチェックで指標・ケース網羅を見直し、Birdseye カプセル同期の要否を判断して TDD フローを開始。
 
 Guardrails 連動資料は行動原則と更新判断の基準を担い、本節は運用ドキュメントの即時参照に特化するため、改訂時は前述の整合チェック先と `GUARDRAILS.md` の[実装原則](../GUARDRAILS.md#実装原則)の適用範囲を併せて確認する。
