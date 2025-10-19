@@ -14,8 +14,8 @@
 | リリース判定 | [CHECKLISTS.md](../CHECKLISTS.md) | 日次・リリース・衛生のチェック項目。 | リリース前に `EVALUATION.md` の[Verification Checklist](../EVALUATION.md#verification-checklist)と突き合わせ。 |
 | 依存グラフ | [docs/birdseye/index.json](birdseye/index.json) / [caps/*](birdseye/caps/) | ノード一覧とカプセルで Birdseye トポロジを提供。 | `codemap.update` で再生成し、`GUARDRAILS.md` の[鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling)に従って鮮度を監視。 |
 | ガバナンス | [governance/policy.yaml](../governance/policy.yaml) / [prioritization.yaml](../governance/prioritization.yaml) / [metrics.yaml](../governance/metrics.yaml) | セルフモディフィケーション制御、優先度算出基準、定常メトリクス。 | `HUB.codex.md` の優先度判定および `CHECKLISTS.md` の衛生チェックで参照。 |
+| 設計判断 | [docs/ADR/README.md](ADR/README.md) | ADR 一覧と作成手順、判断変更時のレビュー連携を統括。 | 設計変更 PR で更新・新規 ADR を提出し、レビューテンプレに添付して承認後にマージ。 |
 | 仕様 | [docs/spec.md](spec.md) | レシピ仕様の原則と更新手続きを集約。 | テンプレ更新時に `TASK.codex.md` の[Task Seed Template](../TASK.codex.md#task-seed-template)と整合性を確認。 |
-| 設計判断 | [docs/ADR/README.md](ADR/README.md) | 設計判断の記録・参照用途。 | 設計変更 PR で ADR を更新し、レビューへ添付する手順を徹底。 |
 | 設計 | [docs/design.md](design.md) | ディレクトリ構成とアーキテクチャ意図を整理。 | 設計レビューで `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)項目と照合。 |
 | 要件 | [docs/requirements.md](requirements.md) | 要件トレーサビリティと受入観点を提示。 | ガバナンス確認で `EVALUATION.md` の[Acceptance Criteria](../EVALUATION.md#acceptance-criteria)とリンクを確認。 |
 | I/O 契約 | [docs/CONTRACTS.md](CONTRACTS.md) | 外部連携の I/O 契約と feature detection の扱いを定義。 | 拡張実装時に `RUNBOOK.md` の[Execute](../RUNBOOK.md#execute)手順と突き合わせ。 |
