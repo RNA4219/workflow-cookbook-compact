@@ -77,11 +77,34 @@ canary rules.
 - [`CHECKLISTS.md`](CHECKLISTS.md) …… リリースとレビューフローのチェックリストを提供
 - [`governance-gate.yml`](.github/workflows/governance-gate.yml)
   …… Intent 検証 CI を常時有効化
+- [`docs/security/SAC.md`](docs/security/SAC.md) …… セキュリティ非機能要件を契約として明文化
+- [`reusable/python-ci.yml`](.github/workflows/reusable/python-ci.yml) /
+  [`reusable/security-ci.yml`](.github/workflows/reusable/security-ci.yml)
+  …… 他リポから `workflow_call` で利用できる最小CIセット
 - Intent ゲートは
   [`tools/ci/check_governance_gate.py`](tools/ci/check_governance_gate.py) により
   自動適用されるため、CI の設定だけで運用に組み込めます
 - SRC の主要言語に応じて、以下の CI テストセットを組み合わせると、導入直後から
   最低限の品質・安全・可搬性が確保できます
+
+### 再利用CIの呼び出し例（下流リポ側）
+
+```yaml
+name: example CI
+on: [push, pull_request]
+jobs:
+  python:
+    uses: RNA4219/workflow-cookbook/.github/workflows/reusable/python-ci.yml@v0.1
+    with:
+      python-version: '3.11'
+  security:
+    uses: RNA4219/workflow-cookbook/.github/workflows/reusable/security-ci.yml@v0.1
+    with:
+      python-version: '3.11'
+    secrets: inherit
+  governance:
+    uses: RNA4219/workflow-cookbook/.github/workflows/governance-gate.yml@v0.1
+```
 
 #### 言語別 CI テストセット（鉄板構成）
 
@@ -143,9 +166,9 @@ canary rules.
 
 ![lint](https://github.com/RNA4219/workflow-cookbook/actions/workflows/markdown.yml/badge.svg)
 ![links](https://github.com/RNA4219/workflow-cookbook/actions/workflows/links.yml/badge.svg)
-![lead_time_p95_hours](https://img.shields.io/badge/lead__time__p95__hours-72h-blue)
-![mttr_p95_minutes](https://img.shields.io/badge/mttr__p95__minutes-60m-blue)
-![change_failure_rate_max](https://img.shields.io/badge/change__failure__rate__max-0.10-blue)
+![lead_time_p95_hours](https://img.shields.io/badge/lead__time__p95__hours-24h-blue)
+![mttr_p95_minutes](https://img.shields.io/badge/mttr__p95__minutes-30m-blue)
+![change_failure_rate_max](https://img.shields.io/badge/change__failure__rate__max-0.20-blue)
 <!-- markdownlint-enable MD013 -->
 
 > バッジ値は `governance/policy.yaml` の `slo` と同期。更新時は同ファイルの値を修正し、上記3つのバッジ表示を揃える。
