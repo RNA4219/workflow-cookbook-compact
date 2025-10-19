@@ -84,7 +84,7 @@ next_review_due: 2025-11-14
 - `docs/INCIDENT_TEMPLATE.md`: 検知/影響/5Whys/再発防止/タイムラインのインシデント雛形
 - `SECURITY.md`: 脆弱性報告窓口と連絡手順
 - `CODEOWNERS`: `/governance/**` とインシデント雛形を QA 管轄とする宣言
-- `LICENSE`: OSS としての配布条件（MIT）
+- `LICENSE`: OSS としての配布条件（Apache-2.0）
 - `.github/release-drafter.yml`: リリースノート自動整形のテンプレート
 - `.github/workflows/release-drafter.yml`: Release Drafter の CI 設定
 
