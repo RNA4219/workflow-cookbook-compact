@@ -78,6 +78,7 @@ canary rules.
 - [`governance-gate.yml`](.github/workflows/governance-gate.yml)
   …… Intent 検証 CI を常時有効化
 - [`docs/security/SAC.md`](docs/security/SAC.md) …… セキュリティ非機能要件を契約として明文化
+- [`docs/security/Security_Review_Checklist.md`](docs/security/Security_Review_Checklist.md) …… 準備→実装→レビューで実施するセキュリティ審査手順を提供
 - [`reusable/python-ci.yml`](.github/workflows/reusable/python-ci.yml) /
   [`reusable/security-ci.yml`](.github/workflows/reusable/security-ci.yml)
   …… 他リポから `workflow_call` で利用できる最小CIセット
