@@ -56,6 +56,7 @@
 - [docs/ci-config.md](ci-config.md)：CI プリセットの分岐条件と再利用手順を集約。**利用シーン**：CI 設定変更前に `CHECKLISTS.md` の[Daily](../CHECKLISTS.md#daily)で運用要件をクロスチェック。
 - [docs/interfaces.md](interfaces.md)：機能境界と受け渡し契約をテーブル化。**利用シーン**：境界整理や責務調整時に `docs/CONTRACTS.md` と `RUNBOOK.md` の[Execute](../RUNBOOK.md#execute)を並行確認。
 - [docs/INCIDENT_TEMPLATE.md](INCIDENT_TEMPLATE.md)：インシデント報告テンプレートとエスカレーション導線を定義。**利用シーン**：インシデント対応の初動で `RUNBOOK.md` の[Confirm](../RUNBOOK.md#confirm)と `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)を併用。
+- [docs/ADR/README.md](ADR/README.md)：設計判断の記録・改訂フローを統括。**利用シーン**：設計変更 PR に更新・新規 ADR を添付し、レビューテンプレと連携。
 - [docs/security/Security_Review_Checklist.md](security/Security_Review_Checklist.md)：セキュリティ審査項目と証跡収集ポイントを整理。**利用シーン**：リリース前審査で `SECURITY.md`・`docs/security/SAC.md`・`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)を同期。
 - [CHANGELOG.md](../CHANGELOG.md)：リリース差分と意思決定の履歴を集約し、更新ルールを一元管理。**利用シーン**：`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)完了後に `README.md` の[使い方（最短）](../README.md#使い方最短)手順と照合してガバナンス記録を反映。
 - [README.md](../README.md#変更履歴の更新ルール)：CHANGELOG の更新手順とレビュー観点を整理。**利用シーン**：リリース前の履歴整備確認や `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)チェック締め前に記録要件を再確認し、同セクションと連携する。
