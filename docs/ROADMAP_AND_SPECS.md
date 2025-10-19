@@ -54,7 +54,7 @@
 
 ## 参照クイックリンク
 - [docs/ci-config.md](ci-config.md)：CI プリセットの分岐条件と再利用手順を集約。**利用シーン**：CI 設定変更前に `CHECKLISTS.md` の[Daily](../CHECKLISTS.md#daily)で運用要件をクロスチェック。
-- [docs/birdseye/index.json](birdseye/index.json) / [birdseye/caps/](birdseye/caps/) / [tools/codemap/update.py](../tools/codemap/update.py)：Birdseye トポロジの鮮度維持に必要な生成物とスクリプトを束ねて確認。**利用シーン**：1. `generated_at` タイムスタンプを最新化。2. `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)で差分を照合。3. [tools/codemap/README.md#実行手順](../tools/codemap/README.md#実行手順)を参照し再生成。
+- [docs/birdseye/index.json](birdseye/index.json) / [birdseye/caps/](birdseye/caps/) / [tools/codemap/README.md#実行手順](../tools/codemap/README.md#実行手順)：Birdseye トポロジーの生成結果と運用手順を一括参照。**利用シーン**：1. `generated_at` を確認し鮮度閾値を超えた場合は同期対象にする。2. README の手順通り `python tools/codemap/update.py` を実行し `caps/*` を再生成。3. `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)と `GUARDRAILS.md` の[鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling)を突き合わせて差分と期限を監視。
 - [docs/interfaces.md](interfaces.md)：機能境界と受け渡し契約をテーブル化。**利用シーン**：境界整理や責務調整時に `docs/CONTRACTS.md` と `RUNBOOK.md` の[Execute](../RUNBOOK.md#execute)を並行確認。
 - [docs/INCIDENT_TEMPLATE.md](INCIDENT_TEMPLATE.md)：インシデント報告テンプレートとエスカレーション導線を定義。**利用シーン**：インシデント対応の初動で `RUNBOOK.md` の[Confirm](../RUNBOOK.md#confirm)と `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)を併用。
 - [docs/ADR/README.md](ADR/README.md)：設計判断の記録・改訂フローを統括。**利用シーン**：設計変更 PR に更新・新規 ADR を添付し、レビューテンプレと連携。
