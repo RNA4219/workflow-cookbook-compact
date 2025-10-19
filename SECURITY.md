@@ -14,5 +14,6 @@ next_review_due: 2025-11-14
 - 公開方針: 影響評価と修正完了後に公開。重大案件はCVE取得を検討
 
 ## Architecture Contract
+
 上流の非機能要件やヘッダ、ネットワーク制約は [docs/security/SAC.md](docs/security/SAC.md) を参照してください。
 
