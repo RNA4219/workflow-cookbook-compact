@@ -13,10 +13,23 @@
 | ガバナンス | [governance/policy.yaml](../governance/policy.yaml) / [prioritization.yaml](../governance/prioritization.yaml) / [metrics.yaml](../governance/metrics.yaml) | セルフモディフィケーション制御、優先度算出基準、定常メトリクス。 | `HUB.codex.md` の優先度判定および `CHECKLISTS.md` の衛生チェックで参照。 |
 
 ## 実装ディレクトリ↔仕様対応
-- `docs/birdseye/` → `GUARDRAILS.md` の[Birdseye 指針](../GUARDRAILS.md#birdseye--minimal-context-intake-guardrails鳥観図最小読込)と `tools/codemap/README.md` の[実行手順](../tools/codemap/README.md#実行手順)で生成ルールを維持。
-- `tools/codemap/` → Birdseye 再生成 CLI。`docs/birdseye/` の更新後は `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)で差分確認。
-- `governance/` → 改定時は `EVALUATION.md` の[Acceptance Criteria](../EVALUATION.md#acceptance-criteria)と連動し、禁止パスや優先度重みを更新。
-- `tests/` → テストアウトラインは `EVALUATION.md` の[Test Outline](../EVALUATION.md#test-outline)に反映し、Birdseye カプセルの `tests` フィールドを最新化。
+| ディレクトリ | 紐付く仕様ドキュメント | 備考 |
+| :-- | :-- | :-- |
+| `docs/birdseye/` | [GUARDRAILS.md](../GUARDRAILS.md#birdseye--minimal-context-intake-guardrails鳥観図最小読込)<br>[tools/codemap/README.md](../tools/codemap/README.md#実行手順) | Birdseye トポロジーを生成し鮮度を保つ[^birdseye] |
+| `docs/security/` | [SECURITY.md](../SECURITY.md)<br>[security/Security_Review_Checklist.md](security/Security_Review_Checklist.md) | セキュリティレビューと SAC を同期[^security] |
+| `examples/` | [design.md](design.md)<br>[spec.md](spec.md) | レシピの参照実装と設計・仕様を突き合わせる |
+| `styles/` | [design.md](design.md)<br>[requirements.md](requirements.md) | QA ルールに基づく表記統一・禁止用語チェック[^styles] |
+| `tools/` | [design.md](design.md)<br>[../RUNBOOK.md](../RUNBOOK.md#execute) | ドキュメント同期用スクリプトと運用手順を連結 |
+| `tools/codemap/` | [tools/codemap/README.md](../tools/codemap/README.md)<br>[../CHECKLISTS.md](../CHECKLISTS.md#hygiene) | Birdseye 再生成 CLI と衛生チェックを担保[^codemap] |
+| `governance/` | [../EVALUATION.md](../EVALUATION.md#acceptance-criteria)<br>[../governance/policy.yaml](../governance/policy.yaml) | 受入基準と禁止パス・優先度設定を同期[^governance] |
+| `tests/` | [../EVALUATION.md](../EVALUATION.md#test-outline)<br>[birdseye/caps/](birdseye/caps/) | テストアウトラインと Birdseye カプセルを連携更新[^tests] |
+
+[^birdseye]: `python tools/codemap/update.py` で `docs/birdseye/index.json` と `caps/*` を再生成し、`GUARDRAILS.md` の鮮度管理基準を維持する。
+[^security]: レビュー結果と是正策は `docs/security/SAC.md` に記録し、チェックリストでトレースする。
+[^styles]: `styles/qa/QA.yml` の用語統一・禁止用語ルールをレビュー時に適用する。
+[^codemap]: CLI 実行後は `CHECKLISTS.md` の Hygiene セクションで差分確認を行う。
+[^governance]: 方針改定時は `EVALUATION.md` の Acceptance Criteria と照合し、必要に応じて優先度・禁止パスを更新する。
+[^tests]: テスト追加時は `EVALUATION.md` の Test Outline と Birdseye カプセルの `tests` フィールドを更新する。
 
 ## ロードマップ
 - **Guardrails 更新の定期レビュー**
