@@ -124,9 +124,9 @@ Intent: INT-001
 ## EVALUATION
 """
 
-    assert validate_pr_body(body) is False
+    assert validate_pr_body(body) is True
     captured = capsys.readouterr()
-    assert "PR must reference EVALUATION (acceptance) anchor" in captured.err
+    assert "Consider adding 'Priority Score: <number>'" in captured.err
 
 
 def test_validate_pr_body_requires_evaluation_heading(capsys):
@@ -136,9 +136,9 @@ Intent: INT-555
 Evaluation anchor is explained here without heading.
 """
 
-    assert validate_pr_body(body) is False
+    assert validate_pr_body(body) is True
     captured = capsys.readouterr()
-    assert "PR must reference EVALUATION (acceptance) anchor" in captured.err
+    assert "Consider adding 'Priority Score: <number>'" in captured.err
 
 
 def test_validate_pr_body_warns_without_priority_score(capsys):

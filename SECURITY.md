@@ -5,7 +5,6 @@ status: active   # draft|active|deprecated
 last_reviewed_at: 2025-10-14
 next_review_due: 2025-11-14
 ---
-
 # Security Policy
 
 - 連絡先: [security@example.com](mailto:security@example.com)
