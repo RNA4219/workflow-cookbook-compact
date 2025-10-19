@@ -164,7 +164,8 @@ def validate_pr_body(body: str | None) -> bool:
         success = False
     has_evaluation_heading = bool(EVALUATION_HEADING_PATTERN.search(normalized_body))
     has_evaluation_anchor = bool(EVALUATION_ANCHOR_PATTERN.search(normalized_body))
-    if not has_evaluation_heading or not has_evaluation_anchor:
+    has_evaluation_reference = has_evaluation_heading or has_evaluation_anchor
+    if not has_evaluation_reference:
         print("PR must reference EVALUATION (acceptance) anchor", file=sys.stderr)
         success = False
     if not PRIORITY_PATTERN.search(normalized_body):
