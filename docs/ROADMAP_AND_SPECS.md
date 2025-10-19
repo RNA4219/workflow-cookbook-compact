@@ -57,6 +57,7 @@
 - [docs/interfaces.md](interfaces.md)：機能境界と受け渡し契約をテーブル化。**利用シーン**：境界整理や責務調整時に `docs/CONTRACTS.md` と `RUNBOOK.md` の[Execute](../RUNBOOK.md#execute)を並行確認。
 - [docs/INCIDENT_TEMPLATE.md](INCIDENT_TEMPLATE.md)：インシデント報告テンプレートとエスカレーション導線を定義。**利用シーン**：インシデント対応の初動で `RUNBOOK.md` の[Confirm](../RUNBOOK.md#confirm)と `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)を併用。
 - [docs/security/Security_Review_Checklist.md](security/Security_Review_Checklist.md)：セキュリティ審査項目と証跡収集ポイントを整理。**利用シーン**：リリース前審査で `SECURITY.md`・`docs/security/SAC.md`・`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)を同期。
+- [CHANGELOG.md](../CHANGELOG.md)：リリース差分と意思決定の履歴を集約し、更新ルールを一元管理。**利用シーン**：`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)完了後に `README.md` の[使い方（最短）](../README.md#使い方最短)手順と照合してガバナンス記録を反映。
 
 Guardrails 連動資料は行動原則と更新判断の基準を担い、本節は運用ドキュメントの即時参照に特化するため、改訂時は前述の整合チェック先と `GUARDRAILS.md` の[実装原則](../GUARDRAILS.md#実装原則)の適用範囲を併せて確認する。
 
