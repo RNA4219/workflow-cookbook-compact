@@ -67,6 +67,12 @@ canary rules.
    - 雛形との差分を確認したい場合は `examples/TASK.sample.md` を参照し、実在の値が埋め込まれたダミーサンプルと比較する
 5. リリースは `CHECKLISTS.md` をなぞり、差分は `CHANGELOG.md` に追記
 
+## 変更履歴の更新ルール
+
+- **更新タイミング**: `CHECKLISTS.md` の [Release](CHECKLISTS.md#release) セクションが完了し、レビューで承認された直後に [`CHANGELOG.md`](CHANGELOG.md) を更新する。ガバナンス判断を反映する際は `RUNBOOK.md` の [Execute](RUNBOOK.md#execute) の確認手順と照らし、リリース記録と意思決定の整合を保つ。
+- **記載形式**: [`CHANGELOG.md`](CHANGELOG.md) はセマンティックバージョニングに従い `## x.y.z - YYYY-MM-DD` 形式の見出しと `### Added` などのカテゴリ小見出しで差分を記述する。最新リリースを先頭に追加し、過去の履歴との可読性を保つ。
+- **チェックリスト・ガバナンス整合**: 追記前に `CHECKLISTS.md` の [Release](CHECKLISTS.md#release) チェック項目と [`governance/policy.yaml`](governance/policy.yaml) の要求事項を突き合わせ、SLO や禁止パスの更新要否を確認する。必要に応じて `SECURITY.md` や関連チェックリストへのリンクも併記し、監査証跡を揃える。
+
 ### 最小導入セット
 
 - [`BLUEPRINT.md`](BLUEPRINT.md) …… Intent と仕様全体の骨子を提示
