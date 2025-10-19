@@ -48,6 +48,14 @@
   - `ci-config.md` の設定例を `README.md` の[再利用CIの呼び出し例](../README.md#再利用ciの呼び出し例下流リポ側)と整合させる。
   - `governance/policy.yaml` の `ci.required_jobs` を基準に、`CHECKLISTS.md` の[Daily](../CHECKLISTS.md#daily)で稼働状況をモニタ。
 
+## 参照クイックリンク
+- [docs/ci-config.md](ci-config.md)：再利用 CI ジョブの設定プリセットと分岐条件。更新時は `CHECKLISTS.md` の[Daily](../CHECKLISTS.md#daily)で要件整合を確認。
+- [docs/interfaces.md](interfaces.md)：エージェント I/O 契約とハンドシェイク仕様。変更後は `docs/CONTRACTS.md` と `RUNBOOK.md` の[Execute](../RUNBOOK.md#execute)を突き合わせ。
+- [docs/INCIDENT_TEMPLATE.md](INCIDENT_TEMPLATE.md)：インシデント報告テンプレートと補足フロー。記録手順の改定は `RUNBOOK.md` の[Confirm](../RUNBOOK.md#confirm)と `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)で整合性を確認。
+- [docs/security/Security_Review_Checklist.md](security/Security_Review_Checklist.md)：セキュリティレビュー項目とトレーサビリティ。更新時は `SECURITY.md` と `docs/security/SAC.md` で証跡を同期。
+
+Guardrails 連動資料は行動原則と更新判断の基準を担い、本節は運用ドキュメントの即時参照に特化するため、改訂時は前述の整合チェック先と `GUARDRAILS.md` の[実装原則](../GUARDRAILS.md#実装原則)の適用範囲を併せて確認する。
+
 ## 更新フロー
 1. **Guardrails ドキュメント改訂**
    - 方針変更は `BLUEPRINT.md` の[Constraints / Assumptions](../BLUEPRINT.md#3-constraints--assumptions)で前提を更新後、`GUARDRAILS.md` の[実装原則](../GUARDRAILS.md#実装原則)と[生成物に関する要求](../GUARDRAILS.md#生成物に関する要求出力契約)へ反映。
