@@ -69,9 +69,12 @@ canary rules.
 
 ## 変更履歴の更新ルール
 
-- **更新タイミング**: `CHECKLISTS.md` の [Release](CHECKLISTS.md#release) セクションが完了し、レビューで承認された直後に [`CHANGELOG.md`](CHANGELOG.md) を更新する。ガバナンス判断を反映する際は `RUNBOOK.md` の [Execute](RUNBOOK.md#execute) の確認手順と照らし、リリース記録と意思決定の整合を保つ。
-- **記載形式**: [`CHANGELOG.md`](CHANGELOG.md) はセマンティックバージョニングに従い `## x.y.z - YYYY-MM-DD` 形式の見出しと `### Added` などのカテゴリ小見出しで差分を記述する。最新リリースを先頭に追加し、過去の履歴との可読性を保つ。
-- **チェックリスト・ガバナンス整合**: 追記前に `CHECKLISTS.md` の [Release](CHECKLISTS.md#release) チェック項目と [`governance/policy.yaml`](governance/policy.yaml) の要求事項を突き合わせ、SLO や禁止パスの更新要否を確認する。必要に応じて `SECURITY.md` や関連チェックリストへのリンクも併記し、監査証跡を揃える。
+- **更新タイミング**: リリース判定が `CHECKLISTS.md` の [Release](CHECKLISTS.md#release) を通過し、レビュー承認で確定した直後に [`CHANGELOG.md`](CHANGELOG.md) を更新する。承認前に書き始めないことで、記録の正確性と監査性を確保する。
+- **記載形式**: [`CHANGELOG.md`](CHANGELOG.md) ではセマンティックバージョニングに従い、`## x.y.z - YYYY-MM-DD` の見出し配下へ `### Added`・`### Changed` などのカテゴリ小見出しを用いて差分を整理する。最新リリースを先頭に追記し、既存節の体裁を崩さない。
+- **突合手順**:
+  1. `CHECKLISTS.md` の [Release](CHECKLISTS.md#release) を順に確認し、完了済みチェック項目と未了項目を照合する。
+  2. チェックリストに記録した内容を [`CHANGELOG.md`](CHANGELOG.md) の該当リリース節へ反映し、必要に応じて `RUNBOOK.md` や関連資料の更新有無をメモする。
+  3. 反映後に再度チェックリストへ戻り、記録済みであることをコメントまたは添付リンクで明示してリリース完了とする。
 
 ### 最小導入セット
 
