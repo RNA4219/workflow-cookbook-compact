@@ -1,0 +1,69 @@
+{
+  "generated_at": "2025-02-18T00:00:00Z",
+  "curation_notes": "Top-level entrypoints and governance documents for Workflow Cookbook agents. Update after reshaping index.json or governance flows.",
+  "nodes": [
+    {
+      "id": "README.md",
+      "role": "overview",
+      "reason": "Bootstrap instructions and repository map for any new agent run.",
+      "caps": "docs/birdseye/caps/README.md.json",
+      "last_verified_at": "2025-02-18T00:00:00Z"
+    },
+    {
+      "id": "HUB.codex.md",
+      "role": "navigation",
+      "reason": "Central hub describing automated task fan-out and coordination model.",
+      "caps": "docs/birdseye/caps/HUB.codex.md.json",
+      "last_verified_at": "2025-02-18T00:00:00Z"
+    },
+    {
+      "id": "GUARDRAILS.md",
+      "role": "policy",
+      "reason": "Mandatory behavior guardrails and operational constraints for all automations.",
+      "caps": "docs/birdseye/caps/GUARDRAILS.md.json",
+      "last_verified_at": "2025-02-18T00:00:00Z"
+    },
+    {
+      "id": "BLUEPRINT.md",
+      "role": "requirements",
+      "reason": "System-level contracts and IO definitions referenced across specs and tasks.",
+      "caps": "docs/birdseye/caps/BLUEPRINT.md.json",
+      "last_verified_at": "2025-02-18T00:00:00Z"
+    },
+    {
+      "id": "RUNBOOK.md",
+      "role": "operations",
+      "reason": "Standard operating procedures for execution and validation flows.",
+      "caps": "docs/birdseye/caps/RUNBOOK.md.json",
+      "last_verified_at": "2025-02-18T00:00:00Z"
+    },
+    {
+      "id": "EVALUATION.md",
+      "role": "quality",
+      "reason": "Acceptance criteria and QA scope for releases and automation outputs.",
+      "caps": "docs/birdseye/caps/EVALUATION.md.json",
+      "last_verified_at": "2025-02-18T00:00:00Z"
+    },
+    {
+      "id": "docs/ROADMAP_AND_SPECS.md",
+      "role": "roadmap",
+      "reason": "Forward-looking scope, milestones, and in-flight specifications.",
+      "caps": "docs/birdseye/caps/docs.ROADMAP_AND_SPECS.md.json",
+      "last_verified_at": "2025-02-18T00:00:00Z"
+    },
+    {
+      "id": "docs/BIRDSEYE.md",
+      "role": "reference",
+      "reason": "Guardrails-facing entrypoint for Birdseye usage, links, and escalation steps.",
+      "caps": null,
+      "last_verified_at": "2025-02-18T00:00:00Z"
+    },
+    {
+      "id": "docs/birdseye/index.json",
+      "role": "index",
+      "reason": "Machine-readable adjacency map backing all Birdseye lookups.",
+      "caps": "docs/birdseye/caps/docs.birdseye.index.json.json",
+      "last_verified_at": "2025-02-18T00:00:00Z"
+    }
+  ]
+}
