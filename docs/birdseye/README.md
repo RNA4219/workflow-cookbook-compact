@@ -28,14 +28,14 @@ Guardrails が要求する「自動再生成＋鮮度確認」を満たすため
 
 ```bash
 python tools/codemap/update.py \
-  --targets docs/birdseye/index.json \
+  --targets docs/birdseye/index.json,docs/birdseye/hot.json \
   --emit index+caps
 ```
 
 1. 対象ノード（`--targets`）に今回更新したファイルや重要エントリをカンマ区切りで列挙します。
    Birdseye を再生成する場合は `docs/birdseye/` 配下を明示してください。
 2. `--emit` で出力対象を指定します。現在は `index+caps` が標準です。
-3. `index.json` を更新すると `hot.json` も同一ターゲットで自動同期されます。
+3. `docs/birdseye/index.json` と `docs/birdseye/hot.json` を同一ターゲットで指定すると、両データセットの鮮度が揃います。
    出力後は `index.json.generated_at` / `hot.json.generated_at` / 各カプセルの `last_verified_at`
    が最新コミットに追随しているか確認します。
 4. 差分をレビューし、`docs/BIRDSEYE.md` のフォールバック情報と矛盾がないことをチェックしてからコミットします。
