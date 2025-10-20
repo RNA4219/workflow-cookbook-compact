@@ -285,6 +285,9 @@ def run_update(options: UpdateOptions) -> UpdateReport:
                 if cap_data.get("deps_in") != expected_in:
                     cap_data["deps_in"] = expected_in
                     updated = True
+                if cap_data.get("generated_at") != timestamp:
+                    cap_data["generated_at"] = timestamp
+                    updated = True
                 if updated:
                     _maybe_write(
                         cap_path,

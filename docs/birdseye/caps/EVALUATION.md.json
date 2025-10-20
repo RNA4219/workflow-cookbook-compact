@@ -22,5 +22,6 @@
   "risks": [],
   "tests": [
     "手動: Acceptance Criteria が最新インシデント要件を満たすかPRレビューで確認"
-  ]
+  ],
+  "generated_at": "2025-10-20T17:28:28Z"
 }

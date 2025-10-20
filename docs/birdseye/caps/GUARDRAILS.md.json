@@ -25,5 +25,6 @@
   "risks": [
     "Birdseye更新が遅れるとガードレール遵守が困難"
   ],
-  "tests": []
+  "tests": [],
+  "generated_at": "2025-10-20T17:28:28Z"
 }

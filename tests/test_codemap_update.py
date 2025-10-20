@@ -162,6 +162,64 @@ def test_run_update_limits_caps_to_two_hop_scope(tmp_path, monkeypatch):
         assert refreshed["deps_in"] == deps_in
 
 
+def test_run_update_refreshes_caps_generated_at(tmp_path, monkeypatch):
+    edges = [
+        ["alpha.md", "beta.md"],
+        ["beta.md", "gamma.md"],
+        ["gamma.md", "delta.md"],
+        ["delta.md", "epsilon.md"],
+    ]
+    expected_deps = {
+        "alpha.md": (["beta.md"], []),
+        "beta.md": (["gamma.md"], ["alpha.md"]),
+        "gamma.md": (["delta.md"], ["beta.md"]),
+        "delta.md": (["epsilon.md"], ["gamma.md"]),
+        "epsilon.md": ([], ["delta.md"]),
+    }
+    base_timestamp = "2024-12-31T23:59:00Z"
+    caps_payloads = {}
+    for cap_id, (deps_out, deps_in) in expected_deps.items():
+        payload = _caps_payload(cap_id, deps_out=deps_out, deps_in=deps_in)
+        payload["generated_at"] = base_timestamp
+        caps_payloads[cap_id] = payload
+
+    root, _, _, cap_paths = _prepare_birdseye(
+        tmp_path,
+        edges=edges,
+        caps_payloads=caps_payloads,
+        hot_entries=[],
+    )
+
+    frozen_now = datetime(2025, 1, 5, tzinfo=timezone.utc)
+    monkeypatch.setattr(update, "utc_now", lambda: frozen_now)
+
+    report = update.run_update(
+        update.UpdateOptions(targets=(cap_paths["beta.md"],), emit="caps", dry_run=False)
+    )
+
+    expected_timestamp = "2025-01-05T00:00:00Z"
+    expected_caps = {
+        cap_paths[cap_id]
+        for cap_id in ("alpha.md", "beta.md", "gamma.md", "delta.md")
+    }
+
+    assert set(report.planned_writes) == expected_caps
+    assert set(report.performed_writes) == expected_caps
+
+    for cap_id in ("alpha.md", "beta.md", "gamma.md", "delta.md"):
+        refreshed = json.loads(cap_paths[cap_id].read_text(encoding="utf-8"))
+        assert refreshed["generated_at"] == expected_timestamp
+        expected_out, expected_in = expected_deps[cap_id]
+        assert refreshed["deps_out"] == expected_out
+        assert refreshed["deps_in"] == expected_in
+
+    untouched = json.loads(cap_paths["epsilon.md"].read_text(encoding="utf-8"))
+    assert untouched["generated_at"] == base_timestamp
+    expected_out, expected_in = expected_deps["epsilon.md"]
+    assert untouched["deps_out"] == expected_out
+    assert untouched["deps_in"] == expected_in
+
+
 def test_run_update_accepts_caps_directory_target(tmp_path, monkeypatch):
     caps_payloads = {
         cap_id: _caps_payload(cap_id)

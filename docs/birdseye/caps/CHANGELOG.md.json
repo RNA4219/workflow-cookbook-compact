@@ -18,5 +18,6 @@
   "risks": [],
   "tests": [
     "手動: 新リリース記載後にREADME/policy.yamlとの整合を確認"
-  ]
+  ],
+  "generated_at": "2025-10-20T17:28:28Z"
 }
