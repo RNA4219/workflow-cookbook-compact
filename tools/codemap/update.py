@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
+from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -25,6 +27,25 @@ class UpdateReport:
     performed_writes: tuple[Path, ...]
 
 
+def _derive_targets_from_since(reference: str) -> tuple[Path, ...]:
+    result = subprocess.run(
+        ["git", "diff", "--name-only", f"{reference}...HEAD"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    targets: list[Path] = []
+    for line in result.stdout.splitlines():
+        candidate = line.strip()
+        if not candidate:
+            continue
+        path = Path(candidate)
+        if path.parts[:2] != ("docs", "birdseye"):
+            continue
+        targets.append(path)
+    return tuple(dict.fromkeys(targets))
+
+
 def parse_args(argv: Iterable[str] | None = None) -> UpdateOptions:
     parser = argparse.ArgumentParser(
         description="Regenerate Birdseye index and capsules.",
@@ -32,8 +53,14 @@ def parse_args(argv: Iterable[str] | None = None) -> UpdateOptions:
     parser.add_argument(
         "--targets",
         type=str,
-        required=True,
         help="Comma-separated list of Birdseye resources to analyse.",
+    )
+    parser.add_argument(
+        "--since",
+        type=str,
+        nargs="?",
+        const="main",
+        help="Derive targets from git diff since the given reference (default: main).",
     )
     parser.add_argument(
         "--emit",
@@ -48,10 +75,21 @@ def parse_args(argv: Iterable[str] | None = None) -> UpdateOptions:
         help="Compute updates without writing to disk.",
     )
     args = parser.parse_args(list(argv) if argv is not None else None)
-    target_paths = tuple(Path(value.strip()) for value in args.targets.split(",") if value.strip())
-    if not target_paths:
-        parser.error("--targets must contain at least one path")
-    return UpdateOptions(targets=target_paths, emit=args.emit, dry_run=args.dry_run)
+    target_paths: list[Path] = []
+    if args.targets:
+        target_paths.extend(
+            Path(value.strip()) for value in args.targets.split(",") if value.strip()
+        )
+    if args.since:
+        try:
+            derived = _derive_targets_from_since(args.since)
+        except subprocess.CalledProcessError as exc:
+            parser.error(f"Failed to resolve git diff for --since: {exc}")
+        target_paths.extend(derived)
+    unique_targets = tuple(dict.fromkeys(target_paths))
+    if not unique_targets:
+        parser.error("Specify --targets, --since, or both")
+    return UpdateOptions(targets=unique_targets, emit=args.emit, dry_run=args.dry_run)
 
 
 def ensure_python_version() -> None:
@@ -119,8 +157,12 @@ def run_update(options: UpdateOptions) -> UpdateReport:
     performed: set[Path] = set()
     timestamp = _format_timestamp(utc_now())
 
+    grouped: dict[Path, list[Path]] = {}
     for target in options.targets:
         root = _resolve_root(target)
+        grouped.setdefault(root, []).append(target)
+
+    for root, root_targets in grouped.items():
         index_path = root / "index.json"
         caps_dir = root / "caps"
         hot_path = root / "hot.json"
@@ -152,6 +194,21 @@ def run_update(options: UpdateOptions) -> UpdateReport:
         for values in graph_in.values():
             values.sort()
 
+        caps_state: dict[str, tuple[Path, dict[str, Any], str]] = {}
+        cap_path_lookup: dict[Path, str] = {}
+        if emit_caps:
+            for cap_path in sorted(caps_dir.glob("*.json")):
+                if not cap_path.is_file():
+                    continue
+                cap_data, cap_original = _load_json(cap_path)
+                if not isinstance(cap_data, dict):
+                    continue
+                cap_id = cap_data.get("id")
+                if not isinstance(cap_id, str):
+                    continue
+                caps_state[cap_id] = (cap_path, cap_data, cap_original)
+                cap_path_lookup[cap_path.resolve()] = cap_id
+
         if emit_index:
             if index_data.get("generated_at") != timestamp:
                 index_data["generated_at"] = timestamp
@@ -178,16 +235,45 @@ def run_update(options: UpdateOptions) -> UpdateReport:
                         dry_run=options.dry_run,
                     )
 
-        if emit_caps:
-            for cap_path in sorted(caps_dir.glob("*.json")):
-                if not cap_path.is_file():
+        if emit_caps and caps_state:
+            focus_nodes: set[str] = set()
+            root_resolved = root.resolve()
+            index_resolved = (root / "index.json").resolve()
+            caps_dir_resolved = caps_dir.resolve()
+            hot_resolved = (root / "hot.json").resolve()
+            for candidate in root_targets:
+                resolved = candidate.resolve()
+                if resolved in {
+                    root_resolved,
+                    index_resolved,
+                    caps_dir_resolved,
+                    hot_resolved,
+                }:
+                    focus_nodes = set(caps_state)
+                    break
+                cap_id = cap_path_lookup.get(resolved)
+                if cap_id:
+                    focus_nodes.add(cap_id)
+            if not focus_nodes:
+                focus_nodes = set(caps_state)
+            seen: set[str] = set()
+            queue: deque[tuple[str, int]] = deque((node, 0) for node in focus_nodes)
+            while queue:
+                node, distance = queue.popleft()
+                if node in seen or distance > 2:
                     continue
-                cap_data, cap_original = _load_json(cap_path)
-                if not isinstance(cap_data, dict):
+                seen.add(node)
+                if distance == 2:
                     continue
-                cap_id = cap_data.get("id")
-                if not isinstance(cap_id, str):
-                    continue
+                for neighbour in graph_out.get(node, []):
+                    if neighbour not in seen:
+                        queue.append((neighbour, distance + 1))
+                for neighbour in graph_in.get(node, []):
+                    if neighbour not in seen:
+                        queue.append((neighbour, distance + 1))
+            nodes_to_refresh = sorted(node for node in seen if node in caps_state)
+            for cap_id in nodes_to_refresh:
+                cap_path, cap_data, cap_original = caps_state[cap_id]
                 expected_out = _sorted_unique(graph_out.get(cap_id, []))
                 expected_in = _sorted_unique(graph_in.get(cap_id, []))
                 updated = False

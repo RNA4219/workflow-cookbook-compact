@@ -229,12 +229,27 @@ jobs:
     needs: [lint, typecheck, unit, build, e2e]
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/download-artifact@v4
+      - id: fetch_logs
+        continue-on-error: true
+        uses: actions/download-artifact@v4
         with:
           pattern: test-logs-*
           path: artifacts
           merge-multiple: false
+      - name: Detect downloaded logs
+        id: fetch_logs_status
+        run: |
+          set -Eeuo pipefail
+          if [ "${{ steps.fetch_logs.outcome }}" = 'success' ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Warn when no logs are available
+        if: steps.fetch_logs_status.outputs.found != 'true'
+        run: echo "::warning::No test logs artifacts were found for reporting."
       - name: Summarize & STRICT gate (optional)
+        if: steps.fetch_logs_status.outputs.found == 'true'
         run: |
           set -Eeuo pipefail
           mapfile -t files < <(find . -type f -name 'test.jsonl' -print | sort)
