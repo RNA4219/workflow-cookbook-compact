@@ -26,19 +26,28 @@
 
 ## 主要カテゴリと代表 ADR
 
-ADR は判断の粒度に応じて以下のカテゴリに整理し、同一カテゴリの判断は代表 ADR 番号を起点に連番で管理します。更新時は `CHECKLISTS.md` の[Release](../../CHECKLISTS.md#release)を参照し、レビューテンプレに ADR と関連資料を添付してください。
+ADR は判断の粒度に応じて以下のカテゴリに整理し、同一カテゴリの判断は代表 ADR 番号を起点に連番で管理します。
+更新時は `CHECKLISTS.md` の[Release](../../CHECKLISTS.md#release)を参照し、レビューテンプレに ADR と関連資料を添付してください。
 
+<!-- markdownlint-disable-next-line MD033 -->
 <a id="adr-core-policy"></a>
 ### 基盤方針（代表: ADR-001）
 
-アーキテクチャ全体の前提・制約を定義します。`BLUEPRINT.md` の[Constraints / Assumptions](../../BLUEPRINT.md#3-constraints--assumptions)と同期し、変更時は本テンプレートで根拠と影響範囲を明記してください。
+アーキテクチャ全体の前提・制約を定義します。
+`BLUEPRINT.md` の[Constraints / Assumptions][blueprint-constraints]と同期し、変更時は本テンプレートで根拠と影響範囲を明記してください。
 
+<!-- markdownlint-disable-next-line MD033 -->
 <a id="adr-milestone-dod"></a>
 ### マイルストーン DoD（代表: ADR-010）
 
-ロードマップ上の主要マイルストーンに対する Done の判断基準を管理します。`CHECKLISTS.md` の[Release](../../CHECKLISTS.md#release)で確認した証跡を PR に添付し、ADR へ反映してください。
+ロードマップ上の主要マイルストーンに対する Done の判断基準を管理します。
+`CHECKLISTS.md` の[Release][checklists-release]で確認した証跡を PR に添付し、ADR へ反映してください。
 
+<!-- markdownlint-disable-next-line MD033 -->
 <a id="adr-operations-governance"></a>
 ### 運用ガバナンス（代表: ADR-020）
 
 セキュリティ・SLO など運用統制方針の変更を記録します。`SECURITY.md` や `RUNBOOK.md` を更新した場合は、その差分へのリンクを ADR と併せてレビューに提出してください。
+
+[blueprint-constraints]: ../../BLUEPRINT.md#3-constraints--assumptions
+[checklists-release]: ../../CHECKLISTS.md#release
