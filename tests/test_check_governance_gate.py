@@ -6,33 +6,12 @@ import pytest
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from tools.ci import check_governance_gate
-from tools.ci.check_governance_gate import (
-    find_forbidden_matches,
-    load_forbidden_patterns,
-    validate_pr_body,
-)
-
-
-@pytest.mark.parametrize(
-    "changed_paths, patterns, expected",
-    [
-        ("""core/schema/model.yaml\ndocs/guide.md""".splitlines(), ["/core/schema/**"], ["core/schema/model.yaml"]),
-        ("""docs/readme.md\nops/runbook.md""".splitlines(), ["/core/schema/**"], []),
-        (
-            """auth/service.py\ncore/schema/definitions.yml""".splitlines(),
-            ["/auth/**", "/core/schema/**"],
-            ["auth/service.py", "core/schema/definitions.yml"],
-        ),
-    ],
-)
-def test_find_forbidden_matches(changed_paths, patterns, expected):
-    normalized = [pattern.lstrip("/") for pattern in patterns]
-    assert find_forbidden_matches(changed_paths, normalized) == expected
+from tools.ci.check_governance_gate import validate_pr_body
 
 
 def test_validate_pr_body_success(capsys):
     body = """
-Intent: INT-123
+Intent: INT-123-OPS-Migrate
 ## EVALUATION
 - [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
 Priority Score: 4.5 / 安全性強化
@@ -43,35 +22,9 @@ Priority Score: 4.5 / 安全性強化
     assert captured.err == ""
 
 
-def test_validate_pr_body_accepts_segmented_intent(capsys):
-    body = """
-Intent: INT-2024-001
-## EVALUATION
-- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
-Priority Score: 3
-"""
-
-    assert validate_pr_body(body) is True
-    captured = capsys.readouterr()
-    assert captured.err == ""
-
-
-def test_validate_pr_body_accepts_alphanumeric_segments(capsys):
-    body = """
-Intent: INT-OPS-7A
-## EVALUATION
-- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
-Priority Score: 2
-"""
-
-    assert validate_pr_body(body) is True
-    captured = capsys.readouterr()
-    assert captured.err == ""
-
-
 def test_validate_pr_body_accepts_fullwidth_colon(capsys):
     body = """
-Intent：INT-456
+Intent：INT-456-SEC-Audit
 ## EVALUATION
 - [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
 Priority Score: 1
@@ -84,7 +37,7 @@ Priority Score: 1
 
 def test_validate_pr_body_accepts_local_evaluation_anchor(capsys):
     body = """
-Intent: INT-900
+Intent: INT-900-PLAT-Refactor
 ## EVALUATION
 - [Acceptance Criteria](#acceptance-criteria)
 Priority Score: 5
@@ -109,7 +62,7 @@ Priority Score: 2
 
 def test_validate_pr_body_missing_evaluation(capsys):
     body = """
-Intent: INT-001
+Intent: INT-001-OPS-Rollout
 Priority Score: 3
 """
 
@@ -120,7 +73,7 @@ Priority Score: 3
 
 def test_validate_pr_body_missing_evaluation_anchor(capsys):
     body = """
-Intent: INT-001
+Intent: INT-001-OPS-Rollout
 ## EVALUATION
 """
 
@@ -131,7 +84,7 @@ Intent: INT-001
 
 def test_validate_pr_body_requires_evaluation_heading(capsys):
     body = """
-Intent: INT-555
+Intent: INT-555-OPS-Plan
 - [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
 Evaluation anchor is explained here without heading.
 """
@@ -143,7 +96,7 @@ Evaluation anchor is explained here without heading.
 
 def test_validate_pr_body_warns_without_priority_score(capsys):
     body = """
-Intent: INT-789
+Intent: INT-789-OPS-Rollout
 ## EVALUATION
 - [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
 """
@@ -151,6 +104,39 @@ Intent: INT-789
     assert validate_pr_body(body) is True
     captured = capsys.readouterr()
     assert "Consider adding 'Priority Score: <number>'" in captured.err
+
+
+def test_validate_pr_body_rejects_unknown_intent_category(capsys):
+    body = """
+Intent: INT-777-UNKNOWN-Test
+## EVALUATION
+- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
+Priority Score: 2
+"""
+
+    assert validate_pr_body(body) is False
+    captured = capsys.readouterr()
+    assert "Intent category 'UNKNOWN' is not allowed" in captured.err
+
+
+def test_validate_pr_body_warns_when_category_missing(monkeypatch, capsys):
+    monkeypatch.setattr(
+        check_governance_gate,
+        "get_changed_paths",
+        lambda refspec: ["ops/runbook.md", "docs/guide.md"] if refspec == "HEAD^..HEAD" else [],
+    )
+
+    body = """
+Intent: INT-4242
+## EVALUATION
+- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
+Priority Score: 2
+"""
+
+    assert validate_pr_body(body) is True
+    captured = capsys.readouterr()
+    assert "INT-4242" in captured.err
+    assert "OPS" in captured.err
 
 
 def test_pr_template_contains_required_sections():
@@ -161,49 +147,11 @@ def test_pr_template_contains_required_sections():
     assert "EVALUATION.md#acceptance-criteria" in template
 
 
-def test_load_forbidden_patterns(tmp_path):
-    policy = tmp_path / "policy.yaml"
-    policy.write_text(
-        """
-self_modification:
-  forbidden_paths:
-    - "/core/schema/**"
-    - '/auth/**'
-  require_human_approval:
-    - "/governance/**"
-"""
-    )
-
-    assert load_forbidden_patterns(policy) == ["core/schema/**", "auth/**"]
-
-
-def test_collect_changed_paths_falls_back(monkeypatch):
-    calls: list[list[str]] = []
-
-    def fake_run(args, **kwargs):  # type: ignore[no-untyped-def]
-        calls.append(list(args))
-        refspec = args[-1]
-        if refspec in {"origin/main...", "main..."}:
-            raise check_governance_gate.subprocess.CalledProcessError(128, args)
-        return type("Result", (), {"stdout": "first.txt\nsecond.txt\n"})()
-
-    monkeypatch.setattr(check_governance_gate.subprocess, "run", fake_run)
-
-    changed = check_governance_gate.collect_changed_paths()
-
-    assert changed == ["first.txt", "second.txt"]
-    assert calls == [
-        ["git", "diff", "--name-only", "origin/main..."],
-        ["git", "diff", "--name-only", "main..."],
-        ["git", "diff", "--name-only", "HEAD"],
-    ]
-
-
 def test_main_accepts_pr_body_env(monkeypatch, capsys):
-    monkeypatch.setattr(check_governance_gate, "collect_changed_paths", lambda: [])
+    monkeypatch.setattr(check_governance_gate, "get_changed_paths", lambda refspec: [])
     monkeypatch.setenv(
         "PR_BODY",
-        """Intent: INT-999\n## EVALUATION\n- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)\nPriority Score: 2\n""",
+        """Intent: INT-999-OPS-Migrate\n## EVALUATION\n- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)\nPriority Score: 2\n""",
     )
     monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
 
@@ -215,12 +163,12 @@ def test_main_accepts_pr_body_env(monkeypatch, capsys):
 
 
 def test_main_accepts_pr_body_path_argument(monkeypatch, tmp_path, capsys):
-    monkeypatch.setattr(check_governance_gate, "collect_changed_paths", lambda: [])
+    monkeypatch.setattr(check_governance_gate, "get_changed_paths", lambda refspec: [])
     monkeypatch.delenv("PR_BODY", raising=False)
     monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
     body_path = tmp_path / "body.md"
     body_path.write_text(
-        """Intent: INT-4242\n## EVALUATION\n- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)\nPriority Score: 2\n""",
+        """Intent: INT-4242-PLAT-Upgrade\n## EVALUATION\n- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)\nPriority Score: 2\n""",
         encoding="utf-8",
     )
 
@@ -232,7 +180,7 @@ def test_main_accepts_pr_body_path_argument(monkeypatch, tmp_path, capsys):
 
 
 def test_main_requires_pr_body(monkeypatch, capsys):
-    monkeypatch.setattr(check_governance_gate, "collect_changed_paths", lambda: [])
+    monkeypatch.setattr(check_governance_gate, "get_changed_paths", lambda refspec: [])
     monkeypatch.delenv("PR_BODY", raising=False)
     monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
 

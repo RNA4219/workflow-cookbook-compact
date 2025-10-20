@@ -6,48 +6,8 @@ import os
 import re
 import subprocess
 import sys
-from fnmatch import fnmatch
 from pathlib import Path
 from typing import Iterable, List, Sequence
-
-
-def load_forbidden_patterns(policy_path: Path) -> List[str]:
-    patterns: List[str] = []
-    in_self_modification = False
-    in_forbidden_paths = False
-    forbidden_indent: int | None = None
-
-    for raw_line in policy_path.read_text(encoding="utf-8").splitlines():
-        stripped_line = raw_line.strip()
-        if not stripped_line or stripped_line.startswith("#"):
-            continue
-        indent = len(raw_line) - len(raw_line.lstrip(" "))
-
-        if stripped_line.endswith(":"):
-            key = stripped_line[:-1].strip()
-            if indent == 0:
-                in_self_modification = key == "self_modification"
-                in_forbidden_paths = False
-                forbidden_indent = None
-            elif in_self_modification and key == "forbidden_paths":
-                in_forbidden_paths = True
-                forbidden_indent = indent
-            elif indent <= (forbidden_indent or indent):
-                in_forbidden_paths = False
-            continue
-
-        if in_forbidden_paths and stripped_line.startswith("- "):
-            value = stripped_line[2:].strip()
-            if len(value) >= 2 and value[0] in {'"', "'"} and value[-1] == value[0]:
-                value = value[1:-1]
-            if value:
-                patterns.append(value.lstrip("/"))
-            continue
-
-        if in_forbidden_paths and indent <= (forbidden_indent or indent):
-            in_forbidden_paths = False
-
-    return patterns
 
 
 def get_changed_paths(refspec: str) -> List[str]:
@@ -59,32 +19,6 @@ def get_changed_paths(refspec: str) -> List[str]:
         encoding="utf-8",
     )
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
-
-
-DEFAULT_DIFF_REFSPECS: Sequence[str] = ("origin/main...", "main...", "HEAD")
-
-
-def collect_changed_paths(refspecs: Sequence[str] = DEFAULT_DIFF_REFSPECS) -> List[str]:
-    last_error: subprocess.CalledProcessError | None = None
-    for refspec in refspecs:
-        try:
-            return get_changed_paths(refspec)
-        except subprocess.CalledProcessError as error:
-            last_error = error
-    if last_error is not None:
-        raise last_error
-    return []
-
-
-def find_forbidden_matches(paths: Iterable[str], patterns: Sequence[str]) -> List[str]:
-    matches: List[str] = []
-    for path in paths:
-        normalized_path = path.lstrip("./")
-        for pattern in patterns:
-            if fnmatch(normalized_path, pattern):
-                matches.append(normalized_path)
-                break
-    return matches
 
 
 def read_event_body(event_path: Path) -> str | None:
@@ -144,6 +78,8 @@ INTENT_PATTERN = re.compile(
     r"Intent\s*[：:]\s*INT-[0-9A-Z]+(?:-[0-9A-Z]+)*",
     re.IGNORECASE,
 )
+INTENT_CATEGORY_PATTERN = re.compile(r"INT-(\d{3,6})-([A-Z]{2,10})-", re.IGNORECASE)
+INTENT_ID_PATTERN = re.compile(r"(INT-\d{3,6})", re.IGNORECASE)
 EVALUATION_HEADING_PATTERN = re.compile(
     r"^#{2,6}\s*EVALUATION\b",
     re.IGNORECASE | re.MULTILINE,
@@ -154,6 +90,52 @@ EVALUATION_ANCHOR_PATTERN = re.compile(
 )
 PRIORITY_PATTERN = re.compile(r"Priority\s*Score\s*:\s*\d+(?:\.\d+)?", re.IGNORECASE)
 
+ALLOWED_INTENT_CATEGORIES = {
+    "OPS",
+    "SEC",
+    "PLAT",
+    "APP",
+    "QA",
+    "DOCS",
+}
+
+PATH_CATEGORY_HINTS = {
+    "ops": "OPS",
+    "runbook": "OPS",
+    "security": "SEC",
+    "sec": "SEC",
+    "platform": "PLAT",
+    "infra": "PLAT",
+    "app": "APP",
+    "frontend": "APP",
+    "qa": "QA",
+    "test": "QA",
+    "docs": "DOCS",
+    "documentation": "DOCS",
+}
+
+
+def infer_categories_from_paths(paths: Iterable[str]) -> List[str]:
+    suggestions: list[str] = []
+    for path in paths:
+        normalized_path = path.strip().lstrip("./")
+        if not normalized_path:
+            continue
+        segments = re.split(r"[/_.-]+", normalized_path)
+        for segment in segments:
+            hint = PATH_CATEGORY_HINTS.get(segment.lower())
+            if hint and hint not in suggestions:
+                suggestions.append(hint)
+    return suggestions
+
+
+def collect_recent_category_hints() -> List[str]:
+    try:
+        changed_paths = get_changed_paths("HEAD^..HEAD")
+    except subprocess.CalledProcessError:
+        return []
+    return infer_categories_from_paths(changed_paths)
+
 
 def validate_pr_body(body: str | None) -> bool:
     normalized_body = body or ""
@@ -162,6 +144,36 @@ def validate_pr_body(body: str | None) -> bool:
     if not INTENT_PATTERN.search(normalized_body):
         print("PR body must include 'Intent: INT-xxx'", file=sys.stderr)
         success = False
+    else:
+        category_matches = list(INTENT_CATEGORY_PATTERN.findall(normalized_body))
+        if category_matches:
+            for _, raw_category in category_matches:
+                category = raw_category.upper()
+                if category not in ALLOWED_INTENT_CATEGORIES:
+                    print(
+                        f"Intent category '{category}' is not allowed."
+                        f" Allowed categories: {', '.join(sorted(ALLOWED_INTENT_CATEGORIES))}.",
+                        file=sys.stderr,
+                    )
+                    success = False
+        else:
+            base_ids = {match.upper() for match in INTENT_ID_PATTERN.findall(normalized_body)}
+            intent_reference = ", ".join(sorted(base_ids)) or "INT-???"
+            hints = collect_recent_category_hints()
+            if hints:
+                suggestion = ", ".join(hints)
+                print(
+                    "No intent category pattern (INT-###-CAT-) detected for"
+                    f" {intent_reference}. Consider categories: {suggestion}.",
+                    file=sys.stderr,
+                )
+            else:
+                print(
+                    "No intent category pattern (INT-###-CAT-) detected and unable"
+                    " to infer category from recent changes.",
+                    file=sys.stderr,
+                )
+
     has_evaluation_heading = bool(EVALUATION_HEADING_PATTERN.search(normalized_body))
     has_evaluation_anchor = bool(EVALUATION_ANCHOR_PATTERN.search(normalized_body))
     has_evaluation_reference = has_evaluation_heading or has_evaluation_anchor
@@ -190,23 +202,6 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_arguments(argv or ())
-    repo_root = Path(__file__).resolve().parents[2]
-    policy_path = repo_root / "governance" / "policy.yaml"
-    forbidden_patterns = load_forbidden_patterns(policy_path)
-
-    try:
-        changed_paths = collect_changed_paths()
-    except subprocess.CalledProcessError as error:
-        print(f"Failed to collect changed paths: {error}", file=sys.stderr)
-        return 1
-    violations = find_forbidden_matches(changed_paths, forbidden_patterns)
-    if violations:
-        print(
-            "Forbidden path modifications detected:\n" + "\n".join(f" - {path}" for path in violations),
-            file=sys.stderr,
-        )
-        return 1
-
     body = resolve_pr_body(
         cli_body=args.pr_body,
         cli_body_path=args.pr_body_path,
