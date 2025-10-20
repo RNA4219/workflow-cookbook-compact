@@ -24,7 +24,8 @@
 
 ## 4. 運用ルール
 
-1. すべての PR は `.github/pull_request_template.md` の Intent Metadata テーブルを埋め、`Intent: INT-xxx` と EVALUATION アンカー、Priority Score を明示する。
+1. すべての PR は `.github/pull_request_template.md` の Intent Metadata テーブルを埋める。
+   `Intent: INT-xxx` と EVALUATION アンカー、Priority Score を明示する。
 2. `INT Logs` セクションでは Intent の承認・変更履歴を時系列で記録し、日付・概要・関係者を箇条書きで残す。
 3. Intent 番号は `governance/policy.yaml` の禁止パスに抵触しない作業のみ紐づけ、逸脱する場合は事前に承認を得る。
 4. Priority Score の算定根拠は `governance/prioritization.yaml` を参照し、該当セクションをコメントで示す。
