@@ -1,9 +1,12 @@
 # Roadmap & Specs ハブ
 
+<!-- markdownlint-disable MD013 -->
+
 本書は仕様・運用資料を横断的に束ねる更新ハブであり、各ドキュメントの役割と連携経路を即座に確認できます。タスク着手前やレビュー時、リリース判定前など節目の判断で参照し、関係資料の鮮度と整合を維持してください。
 代表ドキュメントは `BLUEPRINT.md`・`RUNBOOK.md`・`CHECKLISTS.md`・`EVALUATION.md` を中心に、`HUB.codex.md` や `SECURITY.md` など運用基盤資料が支えます。いずれかを更新する際は本ハブと相互リンクを再点検し、全資料の記述差異がないよう同期してください。
 
 ## 上位ドキュメント索引
+
 | レイヤ | ドキュメント | 主要内容 | 関連ワークフロー |
 | :-- | :-- | :-- | :-- |
 | 骨子 | [BLUEPRINT.md](../BLUEPRINT.md) | 課題・スコープ・I/O 契約を1ページに集約。 | 設計着手前にインテントを固め、`HUB.codex.md` の[入力ファイル分類](../HUB.codex.md#2-入力ファイル分類)へ渡す。 |
@@ -12,7 +15,7 @@
 | 行動指針 | [GUARDRAILS.md](../GUARDRAILS.md) | 行動原則と Birdseye 読込手順を規定。 | 「[Birdseye / Minimal Context Intake Guardrails](../GUARDRAILS.md#birdseye--minimal-context-intake-guardrails鳥観図最小読込)」を参照し、タスク分割前に対象ノードを確定。 |
 | タスク統制 | [HUB.codex.md](../HUB.codex.md) | 仕様・運用ドキュメントを束ね、タスク化を自動分配。 | `TASK.*` シード生成時に [入力ファイル分類](../HUB.codex.md#2-入力ファイル分類)を参照。 |
 | リリース判定 | [CHECKLISTS.md](../CHECKLISTS.md) | 日次・リリース・衛生のチェック項目。 | リリース前に `EVALUATION.md` の[Verification Checklist](../EVALUATION.md#verification-checklist)と突き合わせ。 |
-| セキュリティ方針 | [SECURITY.md](../SECURITY.md) / [security/SAC.md](security/SAC.md) | セキュリティ連絡窓口・SAC 原則・適用範囲を統合。 | セキュリティレビュー準備で [security/Security_Review_Checklist.md](security/Security_Review_Checklist.md) と `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)を突合。 |
+| セキュリティ統制 | [SECURITY.md](../SECURITY.md) / [security/SAC.md](security/SAC.md) | 報告窓口と SAC 原則の適用範囲・是正判断を集約。 | セキュリティレビュー準備で [security/Security_Review_Checklist.md](security/Security_Review_Checklist.md) と `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)を突合し、対応責務を同期。 |
 | 依存グラフ | [docs/birdseye/index.json](birdseye/index.json) / [caps/*](birdseye/caps/) | ノード一覧とカプセルで Birdseye トポロジを提供。 | `codemap.update` で再生成し、`GUARDRAILS.md` の[鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling)に従って鮮度を監視。 |
 | ガバナンス | [governance/policy.yaml](../governance/policy.yaml) / [prioritization.yaml](../governance/prioritization.yaml) / [metrics.yaml](../governance/metrics.yaml) | セルフモディフィケーション制御、優先度算出基準、定常メトリクス。 | `HUB.codex.md` の優先度判定および `CHECKLISTS.md` の衛生チェックで参照。 |
 | 設計判断 | [docs/ADR/README.md](ADR/README.md) | ADR 一覧と作成手順、判断変更時のレビュー連携を統括。 | 設計変更 PR で更新・新規 ADR を提出し、レビューテンプレに添付して承認後にマージ。 |
@@ -22,19 +25,19 @@
 | I/O 契約 | [docs/CONTRACTS.md](CONTRACTS.md) | 外部連携の I/O 契約と feature detection の扱いを定義。 | 拡張実装時に `RUNBOOK.md` の[Execute](../RUNBOOK.md#execute)手順と突き合わせ。 |
 | 境界定義 | [docs/interfaces.md](interfaces.md) | 機能境界・受け渡し契約をテーブル形式で管理。 | 並行開発時に責務衝突を避けるため、機能追加ごとに更新してレビューへ添付。 |
 | セキュリティ審査 | [docs/security/Security_Review_Checklist.md](security/Security_Review_Checklist.md) | リリース前セキュリティチェック項目をフェーズ別に整理。 | 審査会議前に `SECURITY.md` と照合し、`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)と結果を同期。 |
-| セキュリティ運用 | [SECURITY.md](../SECURITY.md) / [docs/security/SAC.md](security/SAC.md) | 連絡窓口・SAC 運用原則と是正フローを集約。 | `docs/security/Security_Review_Checklist.md` と `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)で突合し、審査結果とエスカレーションを同期。 |
 
 ## 実装ディレクトリ↔仕様対応
+
 | ディレクトリ | 紐付く仕様ドキュメント | 備考 |
 | :-- | :-- | :-- |
-| `docs/birdseye/` | [GUARDRAILS.md](../GUARDRAILS.md#birdseye--minimal-context-intake-guardrails鳥観図最小読込)<br>[tools/codemap/README.md](../tools/codemap/README.md#実行手順) | Birdseye トポロジーを生成し鮮度を保つ[^birdseye] |
-| `docs/security/` | [SECURITY.md](../SECURITY.md)<br>[security/Security_Review_Checklist.md](security/Security_Review_Checklist.md) | セキュリティレビューと SAC を同期[^security] |
-| `examples/` | [design.md](design.md)<br>[spec.md](spec.md) | レシピの参照実装と設計・仕様を突き合わせる |
-| `styles/` | [design.md](design.md)<br>[requirements.md](requirements.md) | QA ルールに基づく表記統一・禁止用語チェック[^styles] |
-| `tools/` | [design.md](design.md)<br>[../RUNBOOK.md](../RUNBOOK.md#execute) | ドキュメント同期用スクリプトと運用手順を連結 |
-| `tools/codemap/` | [tools/codemap/README.md](../tools/codemap/README.md)<br>[../CHECKLISTS.md](../CHECKLISTS.md#hygiene) | Birdseye 再生成 CLI と衛生チェックを担保[^codemap] |
-| `governance/` | [../EVALUATION.md](../EVALUATION.md#acceptance-criteria)<br>[../governance/policy.yaml](../governance/policy.yaml) | 受入基準と禁止パス・優先度設定を同期[^governance] |
-| `tests/` | [../EVALUATION.md](../EVALUATION.md#test-outline)<br>[birdseye/caps/](birdseye/caps/) | テストアウトラインと Birdseye カプセルを連携更新[^tests] |
+| `docs/birdseye/` | [GUARDRAILS.md](../GUARDRAILS.md#birdseye--minimal-context-intake-guardrails鳥観図最小読込) / [tools/codemap/README.md](../tools/codemap/README.md#実行手順) | Birdseye トポロジーを生成し鮮度を保つ[^birdseye] |
+| `docs/security/` | [SECURITY.md](../SECURITY.md) / [security/Security_Review_Checklist.md](security/Security_Review_Checklist.md) | セキュリティレビューと SAC を同期[^security] |
+| `examples/` | [design.md](design.md) / [spec.md](spec.md) | レシピの参照実装と設計・仕様を突き合わせる |
+| `styles/` | [design.md](design.md) / [requirements.md](requirements.md) | QA ルールに基づく表記統一・禁止用語チェック[^styles] |
+| `tools/` | [design.md](design.md) / [../RUNBOOK.md](../RUNBOOK.md#execute) | ドキュメント同期用スクリプトと運用手順を連結 |
+| `tools/codemap/` | [tools/codemap/README.md](../tools/codemap/README.md) / [../CHECKLISTS.md](../CHECKLISTS.md#hygiene) | Birdseye 再生成 CLI と衛生チェックを担保[^codemap] |
+| `governance/` | [../EVALUATION.md](../EVALUATION.md#acceptance-criteria) / [../governance/policy.yaml](../governance/policy.yaml) | 受入基準と禁止パス・優先度設定を同期[^governance] |
+| `tests/` | [../EVALUATION.md](../EVALUATION.md#test-outline) / [birdseye/caps/](birdseye/caps/) | テストアウトラインと Birdseye カプセルを連携更新[^tests] |
 
 [^birdseye]: `python tools/codemap/update.py` で `docs/birdseye/index.json` と `caps/*` を再生成し、`GUARDRAILS.md` の鮮度管理基準を維持する。
 [^security]: レビュー結果と是正策は `docs/security/SAC.md` に記録し、チェックリストでトレースする。
@@ -44,6 +47,7 @@
 [^tests]: テスト追加時は `EVALUATION.md` の Test Outline と Birdseye カプセルの `tests` フィールドを更新する。
 
 ## ロードマップ
+
 - **Guardrails 更新の定期レビュー**
   - [GUARDRAILS.md](../GUARDRAILS.md) の `next_review_due` を起点に方針を棚卸し。
   - 更新内容は `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release) でレビューし、`HUB.codex.md` の[Rules](../HUB.codex.md#rules)へ波及。
@@ -69,6 +73,7 @@
 Guardrails 連動資料は行動原則と更新判断の基準を担い、本節は運用ドキュメントの即時参照に特化するため、改訂時は前述の整合チェック先と `GUARDRAILS.md` の[実装原則](../GUARDRAILS.md#実装原則)の適用範囲を併せて確認する。
 
 ## 更新フロー
+
 1. **Guardrails ドキュメント改訂**
    - 方針変更は `BLUEPRINT.md` の[Constraints / Assumptions](../BLUEPRINT.md#3-constraints--assumptions)で前提を更新後、`GUARDRAILS.md` の[実装原則](../GUARDRAILS.md#実装原則)と[生成物に関する要求](../GUARDRAILS.md#生成物に関する要求出力契約)へ反映。
    - 改訂後、`EVALUATION.md` の[Acceptance Criteria](../EVALUATION.md#acceptance-criteria)および `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)で相互リンクを確認。
@@ -76,3 +81,5 @@ Guardrails 連動資料は行動原則と更新判断の基準を担い、本節
    - `GUARDRAILS.md` の[鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling)に沿って再生成条件を判定。
    - `tools/codemap/README.md` の[実行手順](../tools/codemap/README.md#実行手順)通り `python tools/codemap/update.py` を実行し、`docs/birdseye/index.json` と `caps/*` を更新。
    - ツール未整備時は `GUARDRAILS.md` の[codemap 未実装時の暫定手順](../GUARDRAILS.md#codemap-未実装時の暫定手順)に従って手動更新を依頼し、結果を `HUB.codex.md` の[Output Contract](../HUB.codex.md#output-contract)へ反映。
+
+<!-- markdownlint-enable MD013 -->

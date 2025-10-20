@@ -69,8 +69,12 @@ canary rules.
 
 ## 変更履歴の更新ルール
 
-- **更新タイミング**: リリース判定が `CHECKLISTS.md` の [Release](CHECKLISTS.md#release) を通過し、レビュー承認で確定した直後に [`CHANGELOG.md`](CHANGELOG.md) を更新する。承認前に書き始めないことで、記録の正確性と監査性を確保する。
-- **記載形式**: [`CHANGELOG.md`](CHANGELOG.md) ではセマンティックバージョニングに従い、`## x.y.z - YYYY-MM-DD` の見出し配下へ `### Added`・`### Changed` などのカテゴリ小見出しを用いて差分を整理する。最新リリースを先頭に追記し、既存節の体裁を崩さない。
+- **更新タイミング**:
+  リリース判定が `CHECKLISTS.md` の [Release](CHECKLISTS.md#release) を通過し、レビュー承認で確定した直後に [`CHANGELOG.md`](CHANGELOG.md)
+  を更新する。承認前に書き始めないことで、記録の正確性と監査性を確保する。
+- **記載形式**:
+  [`CHANGELOG.md`](CHANGELOG.md) ではセマンティックバージョニングに従い、`## x.y.z - YYYY-MM-DD` の見出し配下へ `### Added`・
+  `### Changed` などのカテゴリ小見出しを用いて差分を整理する。最新リリースを先頭に追記し、既存節の体裁を崩さない。
 - **突合手順**:
   1. `CHECKLISTS.md` の [Release](CHECKLISTS.md#release) を順に確認し、完了済みチェック項目と未了項目を照合する。
   2. チェックリストに記録した内容を [`CHANGELOG.md`](CHANGELOG.md) の該当リリース節へ反映し、必要に応じて `RUNBOOK.md` や関連資料の更新有無をメモする。
@@ -169,14 +173,14 @@ jobs:
 
 | 領域/モジュール | 目的・役割 | 主要仕様書 | 備考 |
 | :--- | :--- | :--- | :--- |
-| CodeQL | 静的解析・脆弱性検出を CI に組み込む | [docs/spec.md](docs/spec.md)<br>[docs/ci-config.md](docs/ci-config.md) | `github/codeql-action` ワークフローで SAST ゲートを維持 |
-| Dependabot | 依存更新の自動 PR を定期化する | [docs/requirements.md](docs/requirements.md)<br>[docs/spec.md](docs/spec.md) | 週次スケジュールで依存差分を検知し CI と連動 |
-| Pre-commit Hooks | Lint / Format をローカルで再現する | [docs/design.md](docs/design.md)<br>[docs/requirements.md](docs/requirements.md) | `.pre-commit-config.yaml` でチーム基準を固定 |
-| Artifact Upload | テスト結果やログを共有する | [docs/ci-config.md](docs/ci-config.md)<br>[EVALUATION.md](EVALUATION.md#acceptance-criteria) | CI 実行痕跡をアーカイブしてレビューへ提示 |
-| `examples/` | レシピ参照実装と設計・仕様の整合を確認する | [docs/design.md](docs/design.md)<br>[docs/spec.md](docs/spec.md) | サンプル更新時は Birdseye 同期[^birdseye] |
-| `styles/` | QA ルールによる表記統一・禁止用語を管理する | [docs/design.md](docs/design.md)<br>[docs/requirements.md](docs/requirements.md) | `styles/qa/QA.yml` の用語ルールを適用[^styles] |
-| `tools/` | ドキュメント同期と検証スクリプトを運用する | [docs/design.md](docs/design.md)<br>[RUNBOOK.md](RUNBOOK.md#execute) | `tools/codemap/update.py` で Birdseye を再生成[^birdseye] |
-| `docs/security/` | セキュリティレビューと SAC 手順を集約する | [docs/security/Security_Review_Checklist.md](docs/security/Security_Review_Checklist.md)<br>[docs/security/SAC.md](docs/security/SAC.md) | リリース審査の証跡を更新 |
+| CodeQL | 静的解析・脆弱性検出を CI に組み込む | [docs/spec.md](docs/spec.md) / [docs/ci-config.md](docs/ci-config.md) | `github/codeql-action` ワークフローで SAST ゲートを維持 |
+| Dependabot | 依存更新の自動 PR を定期化する | [docs/requirements.md](docs/requirements.md) / [docs/spec.md](docs/spec.md) | 週次スケジュールで依存差分を検知し CI と連動 |
+| Pre-commit Hooks | Lint / Format をローカルで再現する | [docs/design.md](docs/design.md) / [docs/requirements.md](docs/requirements.md) | `.pre-commit-config.yaml` でチーム基準を固定 |
+| Artifact Upload | テスト結果やログを共有する | [docs/ci-config.md](docs/ci-config.md) / [EVALUATION.md](EVALUATION.md#acceptance-criteria) | CI 実行痕跡をアーカイブしてレビューへ提示 |
+| `examples/` | レシピ参照実装と設計・仕様の整合を確認する | [docs/design.md](docs/design.md) / [docs/spec.md](docs/spec.md) | サンプル更新時は Birdseye 同期[^birdseye] |
+| `styles/` | QA ルールによる表記統一・禁止用語を管理する | [docs/design.md](docs/design.md) / [docs/requirements.md](docs/requirements.md) | `styles/qa/QA.yml` の用語ルールを適用[^styles] |
+| `tools/` | ドキュメント同期と検証スクリプトを運用する | [docs/design.md](docs/design.md) / [RUNBOOK.md](RUNBOOK.md#execute) | `tools/codemap/update.py` で Birdseye を再生成[^birdseye] |
+| `docs/security/` | セキュリティレビューと SAC 手順を集約する | [docs/security/Security_Review_Checklist.md](docs/security/Security_Review_Checklist.md) / [docs/security/SAC.md](docs/security/SAC.md) | リリース審査の証跡を更新 |
 
 [^birdseye]: `python tools/codemap/update.py --caps docs/birdseye/caps --root .` で Birdseye インデックスとカプセルを更新し、必要に応じて `--full` で全再生成する。詳細は [tools/codemap/README.md](tools/codemap/README.md#実行手順) と [GUARDRAILS.md](GUARDRAILS.md#鮮度管理staleness-handling) を参照。
 [^styles]: `styles/qa/QA.yml` の禁止用語・表記揺れルールをレビューで適用し、検知結果を `CHECKLISTS.md` のリリース手順へ反映する。
