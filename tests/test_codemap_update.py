@@ -162,6 +162,67 @@ def test_run_update_limits_caps_to_two_hop_scope(tmp_path, monkeypatch):
         assert refreshed["deps_in"] == deps_in
 
 
+def test_run_update_accepts_caps_directory_target(tmp_path, monkeypatch):
+    caps_payloads = {
+        cap_id: _caps_payload(cap_id)
+        for cap_id in ("alpha.md", "beta.md", "gamma.md", "delta.md", "epsilon.md")
+    }
+    root_base = tmp_path / "docs" / "birdseye"
+    root, index_path, hot_path, cap_paths = _prepare_birdseye(
+        tmp_path,
+        edges=[
+            ["alpha.md", "beta.md"],
+            ["beta.md", "gamma.md"],
+            ["gamma.md", "delta.md"],
+            ["delta.md", "epsilon.md"],
+        ],
+        caps_payloads=caps_payloads,
+        hot_entries=["alpha.md"],
+        root=root_base,
+    )
+
+    monkeypatch.chdir(tmp_path)
+
+    frozen_now = datetime(2025, 1, 4, tzinfo=timezone.utc)
+    monkeypatch.setattr(update, "utc_now", lambda: frozen_now)
+
+    report = update.run_update(
+        update.UpdateOptions(targets=(Path("docs/birdseye/caps"),), emit="index+caps", dry_run=False)
+    )
+
+    expected_timestamp = "2025-01-04T00:00:00Z"
+    expected_caps = {
+        Path("docs/birdseye/caps") / f"{cap_id}.json"
+        for cap_id in ("alpha.md", "beta.md", "gamma.md", "delta.md", "epsilon.md")
+    }
+    expected_writes = expected_caps | {
+        Path("docs/birdseye/index.json"),
+        Path("docs/birdseye/hot.json"),
+    }
+
+    assert report.generated_at == expected_timestamp
+    assert set(report.planned_writes) == expected_writes
+    assert set(report.performed_writes) == expected_writes
+
+    refreshed_index = json.loads(index_path.read_text(encoding="utf-8"))
+    assert refreshed_index["generated_at"] == expected_timestamp
+
+    refreshed_hot = json.loads(hot_path.read_text(encoding="utf-8"))
+    assert refreshed_hot["generated_at"] == expected_timestamp
+
+    expected_deps = {
+        "alpha.md": (["beta.md"], []),
+        "beta.md": (["gamma.md"], ["alpha.md"]),
+        "gamma.md": (["delta.md"], ["beta.md"]),
+        "delta.md": (["epsilon.md"], ["gamma.md"]),
+        "epsilon.md": ([], ["delta.md"]),
+    }
+    for cap_id, (deps_out, deps_in) in expected_deps.items():
+        refreshed = json.loads(cap_paths[cap_id].read_text(encoding="utf-8"))
+        assert refreshed["deps_out"] == deps_out
+        assert refreshed["deps_in"] == deps_in
+
+
 def test_parse_args_supports_since_and_limits_scope(tmp_path, monkeypatch):
     caps_payloads = {
         cap_id: _caps_payload(cap_id, deps_out=["stale"], deps_in=["old"])
