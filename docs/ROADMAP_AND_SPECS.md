@@ -59,35 +59,16 @@
   - `governance/policy.yaml` の `ci.required_jobs` を基準に、`CHECKLISTS.md` の[Daily](../CHECKLISTS.md#daily)で稼働状況をモニタ。
 
 ## 参照クイックリンク
-
-- [docs/ci-config.md](ci-config.md)：CI プリセットの分岐条件と再利用手順を集約。
-  **利用シーン**：CI 設定変更前に `CHECKLISTS.md` の[Daily](../CHECKLISTS.md#daily)で運用要件をクロスチェック。
-- [docs/birdseye/index.json](birdseye/index.json) / [birdseye/caps/](birdseye/caps/) /
-  [tools/codemap/README.md#実行手順](../tools/codemap/README.md#実行手順)：Birdseye トポロジーの生成結果と運用手順を一括参照。
-  **利用シーン**：
-  1. `generated_at` を確認し鮮度閾値を超えた場合は同期対象にする。
-  2. README の手順通り `python tools/codemap/update.py` を実行し `caps/*` を再生成する。
-  3. `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)と `GUARDRAILS.md` の[鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling)
-     を突き合わせて差分と期限を監視する。
-- [docs/interfaces.md](interfaces.md)：機能境界と受け渡し契約をテーブル化。
-  **利用シーン**：境界整理や責務調整時に `docs/CONTRACTS.md` と `RUNBOOK.md` の[Execute](../RUNBOOK.md#execute)を並行確認。
-- [docs/INCIDENT_TEMPLATE.md](INCIDENT_TEMPLATE.md)：インシデント報告テンプレートとエスカレーション導線を定義。
-  **利用シーン**：
-  1. `RUNBOOK.md` の[Confirm](../RUNBOOK.md#confirm)を基点にメトリクス照合・記録更新・運用チャネル報告を完了する。
-  2. `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)で未完了項目を洗い出す。
-- [docs/ADR/README.md](ADR/README.md)：設計判断の記録・改訂フローを統括。
-  **利用シーン**：設計変更 PR に更新・新規 ADR を添付し、レビューテンプレと連携。
-- [docs/security/Security_Review_Checklist.md](security/Security_Review_Checklist.md)：セキュリティ審査項目と証跡収集ポイントを整理。
-  **利用シーン**：リリース前審査で `SECURITY.md`・`docs/security/SAC.md`・`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)を同期。
-- [CHANGELOG.md](../CHANGELOG.md)：リリース差分と意思決定の履歴を集約し、更新ルールを一元管理。
-  **利用シーン**：
-  1. `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)完了後に `README.md` の[使い方（最短）](../README.md#使い方最短)手順と照合する。
-  2. ガバナンス記録への反映を確認する。
-- [README.md](../README.md#変更履歴の更新ルール)：`CHANGELOG.md` の更新トリガー・書式・`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)を用いた
-  突合フローを整理。
-  **利用シーン**：リリース確定後にチェックリスト→変更履歴→再確認の流れを短時間でなぞり、記録漏れを防ぐ。
-- [EVALUATION.md#Test Outline](../EVALUATION.md#test-outline) / [tests/](../tests/)：評価指標とテストケース集を束ねた TDD 前提の検証ハブ。
-  **利用シーン**：テスト追加前のチェックで指標・ケース網羅を見直し、Birdseye カプセル同期の要否を判断して TDD フローを開始。
+- [docs/ci-config.md](ci-config.md)：CI プリセットの分岐条件と再利用手順を集約。**利用シーン**：CI 設定変更前に `CHECKLISTS.md` の[Daily](../CHECKLISTS.md#daily)で運用要件をクロスチェック。
+- [docs/birdseye/index.json](birdseye/index.json) / [birdseye/caps/](birdseye/caps/) / [tools/codemap/README.md#実行手順](../tools/codemap/README.md#実行手順)：Birdseye トポロジーの生成結果と運用手順を一括参照。**利用シーン**：1. `generated_at` を確認し鮮度閾値を超えた場合は同期対象にする。2. README の手順通り `python tools/codemap/update.py` を実行し `caps/*` を再生成。3. `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)と `GUARDRAILS.md` の[鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling)を突き合わせて差分と期限を監視。
+- [docs/interfaces.md](interfaces.md)：機能境界と受け渡し契約をテーブル化。**利用シーン**：境界整理や責務調整時に `docs/CONTRACTS.md` と `RUNBOOK.md` の[Execute](../RUNBOOK.md#execute)を並行確認。
+- [docs/INCIDENT_TEMPLATE.md](INCIDENT_TEMPLATE.md)：インシデント報告テンプレートとエスカレーション導線を定義。**利用シーン**：インシデント対応の初動で `RUNBOOK.md` の[Confirm](../RUNBOOK.md#confirm)を基点にメトリクス照合・記録更新・運用チャネル報告を完了し、`CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)で未完了項目を洗い出す。
+- [docs/ADR/README.md](ADR/README.md)：設計判断の記録・改訂フローを統括。**利用シーン**：設計変更 PR に更新・新規 ADR を添付し、レビューテンプレと連携。
+- [docs/security/Security_Review_Checklist.md](security/Security_Review_Checklist.md)：セキュリティ審査項目と証跡収集ポイントを整理。**利用シーン**：リリース前審査で `SECURITY.md`・`docs/security/SAC.md`・`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)を同期。
+- [SECURITY.md](../SECURITY.md) / [docs/security/SAC.md](security/SAC.md)：報告窓口の連絡経路と SAC 拘束事項を統合し、対応判断の前提条件を提示。**利用シーン**：セキュリティ審査で通知窓口と拘束条件を共有し、インシデント初動前の前提確認で運用責務の充足を判定。
+- [CHANGELOG.md](../CHANGELOG.md)：リリース差分と意思決定の履歴を集約し、更新ルールを一元管理。**利用シーン**：`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)完了後に `README.md` の[使い方（最短）](../README.md#使い方最短)手順と照合してガバナンス記録を反映。
+- [README.md](../README.md#変更履歴の更新ルール)：`CHANGELOG.md` の更新トリガー・書式・`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)を用いた突合フローを整理。**利用シーン**：リリース確定後にチェックリスト→変更履歴→再確認の流れを短時間でなぞり、記録漏れを防ぐ。
+- [EVALUATION.md#Test Outline](../EVALUATION.md#test-outline) / [tests/](../tests/)：評価指標とテストケース集を束ねた TDD 前提の検証ハブ。**利用シーン**：テスト追加前のチェックで指標・ケース網羅を見直し、Birdseye カプセル同期の要否を判断して TDD フローを開始。
 
 Guardrails 連動資料は行動原則と更新判断の基準を担い、本節は運用ドキュメントの即時参照に特化するため、改訂時は前述の整合チェック先と `GUARDRAILS.md` の[実装原則](../GUARDRAILS.md#実装原則)の適用範囲を併せて確認する。
 
