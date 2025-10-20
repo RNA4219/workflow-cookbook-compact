@@ -18,20 +18,20 @@ Birdseye の生成・更新は `tools/codemap/update.py` を介して行いま�
 
 ```bash
 python tools/codemap/update.py \
-  --targets README.md GUARDRAILS.md HUB.codex.md \
-  --emit index caps hot
+  --targets docs/birdseye/index.json,docs/birdseye/hot.json \
+  --emit index+caps
 ```
 
-1. 対象ノード（`--targets`）に今回更新したファイルや重要エントリを列挙します。
-2. `--emit` で出力対象を指定します。ホットリストを更新する場合は `hot` を含め、`index.json` と同じターゲットで再生成します。
-3. 出力後は `index.json.generated_at` / `hot.json.generated_at` / 各カプセルの `last_verified_at` が最新コミットに追随しているか確認します。
+1. 対象ノード（`--targets`）に今回更新したファイルや重要エントリをカンマ区切りで列挙します。
+2. `--emit` で出力対象を指定します。現在は `index+caps` が標準です。
+3. `index.json` を更新すると `hot.json` も同一ターゲットで自動同期されます。出力後は `index.json.generated_at` / `hot.json.generated_at` / 各カプセルの `last_verified_at` が最新コミットに追随しているか確認します。
 4. 差分をレビューし、`docs/BIRDSEYE.md` のフォールバック情報と矛盾がないことをチェックしてからコミットします。
 
 > 手動編集が必要な場合でも、Birdseye スキーマ（`id` / `role` / `caps` / `edges` など）とパス命名規則（`/` を `.` に置換）を崩さないでください。
 
 ## ホットリストと鮮度管理
 
-- `docs/birdseye/hot.json` には `refresh_command` と `index_snapshot` を記載し、`index.json` の再生成フローと同期させています。
+- `docs/birdseye/hot.json` は `index.json` の再生成時に自動同期され、`refresh_command` と `index_snapshot` で更新履歴を追跡します。
 - ノードごとの `last_verified_at` は、対象カプセルの確認日または再生成日を記録します。`GUARDRAILS.md` の [鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling) に従い、日付が古いノードは優先的に再生成してください。
 - ホットリストの構成は `README.md` / `GUARDRAILS.md` / `HUB.codex.md` など主要導線を中心に選定し、Katamari リポジトリのホットリスト形式を参考に `edges` を明示しています。
 - `docs/BIRDSEYE.md` ではホットリストの概要と Edges を人間が参照できるように再掲しているため、変更時は両ドキュメントの整合性を確認します。
