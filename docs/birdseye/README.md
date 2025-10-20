@@ -17,7 +17,7 @@ Birdseye は、エージェントがリポジトリ全体を最小トークン�
    ```bash
    python tools/codemap/update.py --targets README.md GUARDRAILS.md --emit index caps hot
    ```
-   
+
 2. 生成された JSON を確認し、`generated_at` や `last_verified_at` が最新コミットを反映しているかチェックする。
 3. 差分をレビューし、Guardrails の要求（型・lint・テスト）に照らして問題が無いことを確認してからコミットする。
 
