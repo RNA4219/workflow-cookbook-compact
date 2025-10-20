@@ -31,6 +31,7 @@ ADR は判断の粒度に応じて以下のカテゴリに整理し、同一カ�
 
 <!-- markdownlint-disable-next-line MD033 -->
 <a id="adr-core-policy"></a>
+
 ### 基盤方針（代表: ADR-001）
 
 アーキテクチャ全体の前提・制約を定義します。
@@ -38,6 +39,7 @@ ADR は判断の粒度に応じて以下のカテゴリに整理し、同一カ�
 
 <!-- markdownlint-disable-next-line MD033 -->
 <a id="adr-milestone-dod"></a>
+
 ### マイルストーン DoD（代表: ADR-010）
 
 ロードマップ上の主要マイルストーンに対する Done の判断基準を管理します。
@@ -45,6 +47,7 @@ ADR は判断の粒度に応じて以下のカテゴリに整理し、同一カ�
 
 <!-- markdownlint-disable-next-line MD033 -->
 <a id="adr-operations-governance"></a>
+
 ### 運用ガバナンス（代表: ADR-020）
 
 セキュリティ・SLO など運用統制方針の変更を記録します。`SECURITY.md` や `RUNBOOK.md` を更新した場合は、その差分へのリンクを ADR と併せてレビューに提出してください。
