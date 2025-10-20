@@ -156,9 +156,11 @@ Intent: INT-789
 def test_pr_template_contains_required_sections():
     template = Path(".github/pull_request_template.md").read_text(encoding="utf-8")
 
-    assert "Intent:" in template
-    assert "## EVALUATION" in template
-    assert "EVALUATION.md#acceptance-criteria" in template
+    assert "## Intent Metadata" in template
+    assert "| Intent ID | INT-___ |" in template
+    assert "| EVALUATION Anchor | [Acceptance Criteria](../EVALUATION.md#acceptance-criteria) |" in template
+    assert "| Priority Score |" in template
+    assert "## INT Logs" in template
 
 
 def test_load_forbidden_patterns(tmp_path):

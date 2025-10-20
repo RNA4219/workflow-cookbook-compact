@@ -1,17 +1,21 @@
 # Pull Request テンプレート
 
-Intent: INT-___
-Links: [Acceptance Criteria](EVALUATION.md#acceptance-criteria)
-Priority Score: `number`
+> **必須**: `Intent: INT-xxx` と `EVALUATION` のアンカーを本文に含めないと CI が失敗します。
+
+## Intent Metadata
+
+| 項目 | 記入例 |
+| --- | --- |
+| Intent ID | INT-___ |
+| EVALUATION Anchor | [Acceptance Criteria](../EVALUATION.md#acceptance-criteria) |
+| Priority Score | `number` |
 
 ## 記入項目
 
-> **必須**: `Intent: INT-xxx` と `EVALUATION` のアンカーを本文に含めないと CI が失敗します。
-
 ### 概要
 
-- Intent: INT-123 <!-- 必ず INT-123 の形式で記載。必ず実際の Intent 番号に置き換えてください -->
 - 種別: feature / fix / chore / docs
+- 主要変更点: <!-- 箇条書きで記載 -->
 
 ### リンク
 
@@ -20,9 +24,8 @@ Priority Score: `number`
 
 ## EVALUATION
 
-- 検収条件の見出し/アンカー:
-  - [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
-  - 受入条件の見出しアンカーを指定
+- 受入条件リンク: [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
+- 補足: <!-- 必要に応じて記載 -->
 
 ### リスクとロールバック
 
@@ -38,6 +41,11 @@ Priority Score: `number`
 - [ ] REQUIREMENTS（REQUIREMENTS.md or docs/requirements.md）がある（無ければ後追いで作る）
 - 禁止パス遵守チェック（governance/policy.yaml）: <!-- 例: OK / 対象外 / 詳細 -->
 - Priority Score: <!-- 例: 5 / prioritization.yaml#phase1 -->
+
+## INT Logs
+
+- YYYY-MM-DD: <!-- Intentの経緯や承認ログを箇条書きで記載 -->
+- YYYY-MM-DD: <!-- 追加の更新履歴 -->
 
 ## Docs matrix (FYI)
 
