@@ -1,8 +1,8 @@
 # codemap ツール
 
 `codemap.update` は Birdseye のインデックスおよびカプセルを再生成するコマンドです。
-現行の `run_update` は指定ターゲットにかかわらず全カプセルの依存関係を再計算し、
-更新後は Birdseye のトポロジーが一貫した状態に揃います。以下の手順で最新化します。
+現行の `run_update` は指定したターゲットを起点に ±2 hop のカプセルを探索し、
+該当範囲の依存関係を再計算して Birdseye のトポロジーを同期します。以下の手順で最新化します。
 
 ## 依存
 
@@ -24,6 +24,8 @@
 
    - `--since` を指定すると `git diff --name-only <参照>...HEAD` を用いて Birdseye 配下の変更ファイルから対象を自動推定します。参照を省略すると `main` が使われます。
    - `--targets` には再生成したい Birdseye リソースをカンマ区切りで指定します。
+     ルート（`docs/birdseye/`）や `index.json` / `hot.json` / `caps/` ディレクトリを含めると、全カプセルを更新対象として扱います。
+     明示的にターゲットを限定することで、±2 hop のカプセル範囲を利用者が制御できます。
    - `--emit` には出力したい成果物（`index` / `caps` / `index+caps`）を指定します。
 3. 実行後、以下の成果物が更新されます。
    - `docs/birdseye/index.json`
@@ -42,5 +44,6 @@ Birdseye ドキュメント（`docs/BIRDSEYE.md` / `docs/birdseye/README.md`）�
 
 ### Birdseye 再生成の観点
 
-- `run_update` は常に全カプセルの `deps_in` / `deps_out` を再計算します。部分的な入力であっても依存関係の不整合は残りません。
+- `run_update` はターゲット起点に ±2 hop までのカプセルを同期し、範囲内の `deps_in` / `deps_out` を再計算します。部分的な入力でも局所的な依存関係は整合します。
+- ルート（`docs/birdseye/`）や `index.json` / `hot.json` / `caps/` ディレクトリをターゲットに含めた場合は全カプセルを更新します。
 - `docs/birdseye/index.json` を更新する際は、同一ルートにある `hot.json` も `generated_at` が揃うよう自動で書き換えられます。
