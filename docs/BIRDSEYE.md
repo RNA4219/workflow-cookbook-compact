@@ -47,7 +47,7 @@ Birdseye は、Workflow Cookbook の知識マップを統合的に参照する�
 - `docs/birdseye/index.json`: hop 抽出の基盤データ。`hot.json` と同じターゲットで更新。
 - `tools/codemap/README.md`: `codemap.update` の契約とパラメータ。
 
-ホットリストの `generated_at` と各 `last_verified_at` は、`index.json` 再生成のたびに同じターゲットで更新し、鮮度を揃えてください。
+ホットリストの `generated_at` は、`index.json` 再生成のたびに同じターゲットで更新し、鮮度を揃えてください。必要に応じてホットリスト項目の `last_verified_at` を更新対象に含めます。
 
 ## Birdseye 更新手順
 
@@ -62,9 +62,9 @@ Birdseye は、Workflow Cookbook の知識マップを統合的に参照する�
    ```
 
 3. `docs/birdseye/index.json.generated_at` と `docs/birdseye/hot.json.generated_at` が最新コミットに追随しているか確認します。
-4. `docs/birdseye/index.json` と `docs/birdseye/hot.json` の差分が `generated_at` とホットリスト各ノードの
-   `last_verified_at` だけに留まっているか `git diff` で確認します。
-5. ホットリスト各ノードの `last_verified_at` が最新状態を示しているか点検し、必要に応じて値を更新したうえで差分をレビューします。
+4. `docs/birdseye/hot.json` の `refresh_command` と `index_snapshot` が現行手順を反映しているか点検します。
+   `index.json` と `hot.json` を同一ターゲットで再生成し、両者の鮮度を揃えてください。
+5. ホットリスト項目に `last_verified_at` を保持している場合は、対象ノードの最新確認日を反映しているか確認します。
 6. `GUARDRAILS.md` の [鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling) に従って、必要に応じて人間へ再生成依頼またはインシデント共有を行います。
 
 ## フォールバック運用
