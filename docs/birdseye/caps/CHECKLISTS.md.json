@@ -6,7 +6,12 @@
   "deps_out": [
     "EVALUATION.md"
   ],
-  "deps_in": ["README.md", "HUB.codex.md", "GUARDRAILS.md"],
+  "deps_in": [
+    "GUARDRAILS.md",
+    "HUB.codex.md",
+    "README.md",
+    "docs/INCIDENT_TEMPLATE.md"
+  ],
   "risks": [],
   "tests": [
     "手動: Daily/Release/Hygiene の各項目を週次レビューで更新漏れがないか確認"
