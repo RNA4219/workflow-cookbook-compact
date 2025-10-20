@@ -2,8 +2,8 @@
 intent_id: INT-001
 owner: your-handle
 status: active   # draft|active|deprecated
-last_reviewed_at: 2025-10-14
-next_review_due: 2025-11-14
+last_reviewed_at: 2025-10-21
+next_review_due: 2025-11-21
 ---
 
 # Runbook
@@ -27,12 +27,16 @@ next_review_due: 2025-11-14
 - QA メトリクス収集と確認
   - `python tools/perf/collect_metrics.py --suite qa --output .ga/qa-metrics.json` を実行し、最新の QA メトリクスを取得する。
   - `.ga/qa-metrics.json` はリポジトリルート配下に生成される。CI で Metrics Harvest が検出できるようファイル名・パスを変更しない。
-  - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8')); print({k: data[k] for k in ('compress_ratio', 'semantic_retention')})` で、
+  - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8'));
+     print({k: data[k] for k in ('compress_ratio', 'semantic_retention')})` で、
     `compress_ratio` と `semantic_retention` の値を抽出する。
-  - 合格レンジ: `compress_ratio` は `0.55` 以上 `0.75` 以下、`semantic_retention` は `0.93` 以上。外れた場合は直近成功値との差分を記録し、再現条件を含めて共有する。
+  - 合格レンジ: `compress_ratio` は `0.55` 以上 `0.75` 以下、`semantic_retention` は `0.93` 以上。
+    外れた場合は直近成功値との差分を記録し、再現条件を含めて共有する。
 - 失敗兆候と一次対応
-  - `.ga/qa-metrics.json` が生成されない / 壊れている: `python tools/perf/collect_metrics.py --help` でオプションを再確認し、再実行前にキャッシュディレクトリを削除。
-  - メトリクス値が合格レンジ外: Chainlit ログ（例: `~/.chainlit/logs/*.log`）で入力プロンプトやレスポンス異常を確認し、必要に応じて再試行ジョブをトリガー。
+  - `.ga/qa-metrics.json` が生成されない / 壊れている: `python tools/perf/collect_metrics.py --help` で、
+    オプションを再確認し、再実行前にキャッシュディレクトリを削除。
+  - メトリクス値が合格レンジ外: Chainlit ログ（例: `~/.chainlit/logs/*.log`）で入力プロンプトやレスポンス異常を確認し、
+    必要に応じて再試行ジョブをトリガー。
   - コマンドエラーやタイムアウト: 依存ライブラリ不足の警告を確認し、仮想環境へ不足モジュールを再インストールしてから再実行。
 
 ## Confirm
