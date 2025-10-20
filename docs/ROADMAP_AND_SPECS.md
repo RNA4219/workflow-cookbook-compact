@@ -22,6 +22,7 @@
 | I/O 契約 | [docs/CONTRACTS.md](CONTRACTS.md) | 外部連携の I/O 契約と feature detection の扱いを定義。 | 拡張実装時に `RUNBOOK.md` の[Execute](../RUNBOOK.md#execute)手順と突き合わせ。 |
 | 境界定義 | [docs/interfaces.md](interfaces.md) | 機能境界・受け渡し契約をテーブル形式で管理。 | 並行開発時に責務衝突を避けるため、機能追加ごとに更新してレビューへ添付。 |
 | セキュリティ審査 | [docs/security/Security_Review_Checklist.md](security/Security_Review_Checklist.md) | リリース前セキュリティチェック項目をフェーズ別に整理。 | 審査会議前に `SECURITY.md` と照合し、`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)と結果を同期。 |
+| セキュリティ運用 | [SECURITY.md](../SECURITY.md) / [docs/security/SAC.md](security/SAC.md) | 連絡窓口・SAC 運用原則と是正フローを集約。 | `docs/security/Security_Review_Checklist.md` と `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)で突合し、審査結果とエスカレーションを同期。 |
 
 ## 実装ディレクトリ↔仕様対応
 | ディレクトリ | 紐付く仕様ドキュメント | 備考 |
