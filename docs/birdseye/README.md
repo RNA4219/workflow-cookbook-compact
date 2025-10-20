@@ -24,7 +24,8 @@ python tools/codemap/update.py \
 
 1. 対象ノード（`--targets`）に今回更新したファイルや重要エントリをカンマ区切りで列挙します。
 2. `--emit` で出力対象を指定します。現在は `index+caps` が標準です。
-3. `index.json` を更新すると `hot.json` も同一ターゲットで自動同期されます。出力後は `index.json.generated_at` / `hot.json.generated_at` / 各カプセルの `last_verified_at` が最新コミットに追随しているか確認します。
+3. `index.json` を更新すると `hot.json` も同一ターゲットで自動同期されます。
+   出力後は `index.json.generated_at` / `hot.json.generated_at` / 各カプセルの `last_verified_at` が最新コミットに追随しているか確認します。
 4. 差分をレビューし、`docs/BIRDSEYE.md` のフォールバック情報と矛盾がないことをチェックしてからコミットします。
 
 > 手動編集が必要な場合でも、Birdseye スキーマ（`id` / `role` / `caps` / `edges` など）とパス命名規則（`/` を `.` に置換）を崩さないでください。

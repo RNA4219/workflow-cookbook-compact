@@ -1,6 +1,7 @@
 # Birdseye リファレンス
 
-Birdseye は、Workflow Cookbook の知識マップ（`index.json` / `caps/*.json` / `hot.json`）を統合的に参照するための仕組みです。本書は Guardrails からのフォールバック参照起点として、Edges・ホットリスト・更新手順を 1 か所に整理します。
+Birdseye は、Workflow Cookbook の知識マップ（`index.json` / `caps/*.json` / `hot.json`）を統合的に参照するための仕組みです。
+本書は Guardrails からのフォールバック参照起点として、Edges・ホットリスト・更新手順を 1 か所に整理します。
 
 ## Edges（主要ノードの隣接関係）
 
