@@ -16,6 +16,8 @@
 - `ADR-<連番>.md` とし、連番は昇順で管理
 - PR内の主要な設計判断ごとに1ファイル
 
+<!-- markdownlint-disable-next-line MD033 -->
+<a id="レビューフロー"></a>
 レビューフロー:
 
 1. PR内でテンプレを埋める
@@ -34,23 +36,25 @@ ADR は判断の粒度に応じて以下のカテゴリに整理し、同一カ�
 
 ### 基盤方針（代表: ADR-001）
 
-アーキテクチャ全体の前提・制約を定義します。
-`BLUEPRINT.md` の[Constraints / Assumptions][blueprint-constraints]と同期し、変更時は本テンプレートで根拠と影響範囲を明記してください。
+- **ADR-001 基盤方針**：アーキテクチャ全体の前提・制約を定義します。`BLUEPRINT.md` の[Constraints / Assumptions][blueprint-constraints]と同期し、判断変更時は根拠と影響範囲を本テンプレートで明記してください。
+  - 更新手順：`CHECKLISTS.md` の[Release][checklists-release]で証跡を確認し、本書の[レビューフロー](#レビューフロー)に従って [PR テンプレート][pr-template]へ ADR 番号・関連資料リンクを追記します。
 
 <!-- markdownlint-disable-next-line MD033 -->
 <a id="adr-milestone-dod"></a>
 
 ### マイルストーン DoD（代表: ADR-010）
 
-ロードマップ上の主要マイルストーンに対する Done の判断基準を管理します。
-`CHECKLISTS.md` の[Release][checklists-release]で確認した証跡を PR に添付し、ADR へ反映してください。
+- **ADR-010 マイルストーン DoD**：ロードマップ上の主要マイルストーンに対する Done 判断基準を管理します。各マイルストーンの指標と証跡を整理し、進捗レポートと一緒に維持してください。
+  - 更新手順：`CHECKLISTS.md` の[Release][checklists-release]で確認したエビデンスを添付し、本書の[レビューフロー](#レビューフロー)と [PR テンプレート][pr-template]で共有してからマージします。
 
 <!-- markdownlint-disable-next-line MD033 -->
 <a id="adr-operations-governance"></a>
 
 ### 運用ガバナンス（代表: ADR-020）
 
-セキュリティ・SLO など運用統制方針の変更を記録します。`SECURITY.md` や `RUNBOOK.md` を更新した場合は、その差分へのリンクを ADR と併せてレビューに提出してください。
+- **ADR-020 運用ガバナンス**：セキュリティ・SLO など運用統制方針の変更を記録します。`SECURITY.md` や `RUNBOOK.md` の差分を連携し、統制判断の履歴を保持してください。
+  - 更新手順：`CHECKLISTS.md` の[Release][checklists-release]で統制結果を確認したうえで、本書の[レビューフロー](#レビューフロー)と [PR テンプレート][pr-template]に差分リンクと影響範囲を記述します。
 
 [blueprint-constraints]: ../../BLUEPRINT.md#3-constraints--assumptions
 [checklists-release]: ../../CHECKLISTS.md#release
+[pr-template]: ../../.github/pull_request_template.md
