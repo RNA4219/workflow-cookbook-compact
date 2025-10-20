@@ -62,7 +62,7 @@ Birdseye は、Workflow Cookbook の知識マップを統合的に参照する�
 
 3. `docs/birdseye/index.json.generated_at` と `docs/birdseye/hot.json.generated_at` が最新コミットに追随しているか確認します。
 4. `docs/birdseye/hot.json` の `refresh_command` と `index_snapshot` が現行手順を反映しているか点検します。
-   `hot.json` は上記コマンドで `index` 出力に内包されるため、個別の `hot` オプション指定は不要です。
+   `index.json` と `hot.json` を同一ターゲットで再生成し、両者の鮮度を揃えてください。
 5. JSON の `last_verified_at` を更新し、`git diff` で差分をレビューします。
 6. `GUARDRAILS.md` の [鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling) に従って、必要に応じて人間へ再生成依頼またはインシデント共有を行います。
 

@@ -61,7 +61,7 @@ canary rules.
       python tools/codemap/update.py --since --emit index+caps
 
       # 例: Birdseye リソースを明示的に指定（従来挙動）
-      python tools/codemap/update.py --targets docs/birdseye/index.json --emit index+caps
+      python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps
       ```
 
     - [`HUB.codex.md`](HUB.codex.md) …… 仕様集約とタスク分割ハブを整備し、Birdseye カプセルの依存関係を維持
