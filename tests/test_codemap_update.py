@@ -60,7 +60,31 @@ def _prepare_birdseye(tmp_path, *, edges, caps_payloads, hot_entries, root=None)
         cap_paths[cap_id] = cap_path
         _write_json(cap_path, payload)
     hot_path = root / "hot.json"
-    _write_json(hot_path, {"generated_at": "2024-01-01T00:00:00Z", "entries": hot_entries})
+    hot_nodes = [
+        {
+            "id": "README.md",
+            "role": "bootstrap",
+            "reason": "Birdseye エントリーポイントのサンプル",
+            "caps": "docs/birdseye/caps/README.md.json",
+            "edges": ["GUARDRAILS.md", "docs/birdseye/index.json"],
+            "last_verified_at": "2024-01-01T00:00:00Z",
+        },
+        {
+            "id": "GUARDRAILS.md",
+            "role": "policy",
+            "reason": "運用ガイドラインのサンプル",
+            "caps": "docs/birdseye/caps/GUARDRAILS.md.json",
+            "edges": ["README.md", "docs/birdseye/index.json"],
+            "last_verified_at": "2024-01-01T00:00:00Z",
+        },
+    ]
+    _write_json(
+        hot_path,
+        {
+            "generated_at": "2024-01-01T00:00:00Z",
+            "nodes": hot_nodes,
+        },
+    )
     return root, index_path, hot_path, cap_paths
 
 
@@ -117,6 +141,39 @@ def test_run_update_refreshes_metadata_and_dependencies(tmp_path, monkeypatch, d
 
     refreshed_hot = json.loads(hot_path.read_text(encoding="utf-8"))
     assert refreshed_hot["generated_at"] == expected_timestamp
+
+
+def test_run_update_preserves_hot_nodes_structure(tmp_path, monkeypatch):
+    caps_payloads = {
+        "alpha.md": _caps_payload("alpha.md", deps_in=["obsolete"]),
+        "beta.md": _caps_payload("beta.md", deps_out=["stale"]),
+    }
+    root, _, hot_path, _ = _prepare_birdseye(
+        tmp_path,
+        edges=[["alpha.md", "beta.md"], ["beta.md", "alpha.md"]],
+        caps_payloads=caps_payloads,
+        hot_entries=["alpha.md"],
+    )
+
+    baseline_hot = json.loads(hot_path.read_text(encoding="utf-8"))
+
+    frozen_now = datetime(2025, 1, 1, 12, 0, tzinfo=timezone.utc)
+    monkeypatch.setattr(update, "utc_now", lambda: frozen_now)
+
+    report = update.run_update(
+        update.UpdateOptions(targets=(root,), emit="index+caps", dry_run=False)
+    )
+
+    expected_timestamp = "2025-01-01T12:00:00Z"
+    assert report.generated_at == expected_timestamp
+
+    refreshed_hot = json.loads(hot_path.read_text(encoding="utf-8"))
+    assert refreshed_hot["generated_at"] == expected_timestamp
+    assert refreshed_hot["nodes"] == baseline_hot["nodes"]
+    assert all(
+        node["last_verified_at"] == "2024-01-01T00:00:00Z"
+        for node in refreshed_hot["nodes"]
+    )
 
 
 def test_run_update_limits_caps_to_two_hop_scope(tmp_path, monkeypatch):
