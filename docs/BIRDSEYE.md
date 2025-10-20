@@ -52,7 +52,8 @@ Birdseye は、Workflow Cookbook の知識マップを統合的に参照する�
 ## Birdseye 更新手順
 
 1. 変更対象や鮮度が落ちたノードを整理し、`codemap.update` のターゲットに指定します。
-2. 以下を実行し、カンマ区切りで指定した `index.json` と `hot.json` を同時にターゲットへ指定しつつ、`index` と `caps` を出力します。
+2. 以下を実行し、カンマ区切りで指定した `index.json` と `hot.json` を同時にターゲットへ指定しつつ、`index` を出力します
+   （`caps` も自動生成されますが追加の手作業は不要です）。
 
    ```bash
    python tools/codemap/update.py \
@@ -61,9 +62,9 @@ Birdseye は、Workflow Cookbook の知識マップを統合的に参照する�
    ```
 
 3. `docs/birdseye/index.json.generated_at` と `docs/birdseye/hot.json.generated_at` が最新コミットに追随しているか確認します。
-4. `docs/birdseye/hot.json` の `refresh_command` と `index_snapshot` が現行手順を反映しているか点検します。
-   `index.json` と `hot.json` を同一ターゲットで再生成し、両者の鮮度を揃えてください。
-5. ホットリスト各ノードの `last_verified_at` が最新状態を示しているか確認し、必要に応じて更新したうえで `git diff` をレビューします。
+4. `docs/birdseye/index.json` と `docs/birdseye/hot.json` の差分が `generated_at` とホットリスト各ノードの
+   `last_verified_at` だけに留まっているか `git diff` で確認します。
+5. ホットリスト各ノードの `last_verified_at` が最新状態を示しているか点検し、必要に応じて値を更新したうえで差分をレビューします。
 6. `GUARDRAILS.md` の [鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling) に従って、必要に応じて人間へ再生成依頼またはインシデント共有を行います。
 
 ## フォールバック運用

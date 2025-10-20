@@ -37,15 +37,15 @@ python tools/codemap/update.py \
 2. `--emit` で出力対象を指定します。現在は `index+caps` が標準です。
 3. `docs/birdseye/index.json` と `docs/birdseye/hot.json` を同一ターゲットで指定すると、両データセットの鮮度が揃います。
    出力後は `index.json.generated_at` と `hot.json.generated_at`、およびホットリスト各ノードの
-   `last_verified_at` が最新コミットに追随しているか確認します。
+   `last_verified_at` のみを点検し、鮮度が最新コミットに追随していることを確認します。
 4. 差分をレビューし、`docs/BIRDSEYE.md` のフォールバック情報と矛盾がないことをチェックしてからコミットします。
 
 > 手動編集が必要な場合でも、Birdseye スキーマ（`id`・`role`・`caps`・`edges` など）とパス命名規則（`/` を `.` に置換）を崩さないでください。
 
 ## ホットリストと鮮度管理
 
-- `docs/birdseye/hot.json` は `index.json` の再生成時に自動同期され、`refresh_command` と `index_snapshot`
-  で更新履歴を追跡します。
+- `docs/birdseye/hot.json` は `index.json` の再生成時に自動同期されます。手動確認は `generated_at`
+  と各ノードの `last_verified_at` に限定し、鮮度の遅延がないか点検します。
 - ノードごとの `last_verified_at` は対象カプセルの確認日または再生成日を記録します。
   `GUARDRAILS.md` の [鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling) に従い、
   日付が古いノードは優先的に再生成してください。
