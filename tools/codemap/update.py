@@ -108,6 +108,8 @@ def _format_timestamp(moment: datetime) -> str:
 
 def _resolve_root(target: Path) -> Path:
     if target.is_dir():
+        if target.name == "caps":
+            return target.parent
         return target
     if target.parent.name == "caps":
         return target.parent.parent
