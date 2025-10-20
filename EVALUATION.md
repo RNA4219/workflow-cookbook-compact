@@ -17,7 +17,8 @@ next_review_due: 2025-11-14
 
 ## KPIs
 
-- 例）処理時間、成功率、エラー率、再実行回数（[ADR-021: メトリクスと可観測性の統合](docs/ADR/ADR-021-metrics-observability.md) に準拠）
+- compress_ratio: 85%〜115% を許容レンジとし、tools/perf/collect_metrics.py の圧縮統計から週次集計。
+- semantic_retention: 95%以上を維持し、tools/perf/collect_metrics.py のレビューログ解析出力をスプリントごとに確認。
 
 ## Test Outline
 
