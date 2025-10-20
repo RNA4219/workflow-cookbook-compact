@@ -8,7 +8,11 @@
   ],
   "deps_in": [
     "GUARDRAILS.md",
-    "tools/codemap/"
+    "HUB.codex.md",
+    "README.md",
+    "tools/codemap/",
+    "tools/codemap/README.md",
+    "tools/codemap/update.py"
   ],
   "risks": [
     "生成が古いとBirdseye探索の経路が誤る"

@@ -1,3 +1,4 @@
+# 可観測性の指標定義は ADR-021 を参照: docs/ADR/ADR-021-metrics-observability.md
 review_latency: 平均レビュー完了時間(h)
 reopen_rate: 再修正率(%)
 spec_completeness: 要件/仕様/設計が揃ったPR比率(%)
