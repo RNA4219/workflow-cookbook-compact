@@ -1,21 +1,34 @@
 # Birdseye リファレンス
 
-Birdseye は、Workflow Cookbook の知識マップ（`index.json` / `caps/*.json` / `hot.json`）を統合的に参照するための仕組みです。
+Birdseye は、Workflow Cookbook の知識マップを統合的に参照する仕組みです。
+`index.json`・`caps/*.json`・`hot.json` を併せて読み解くことで、主要ノードの関係性と鮮度を一元確認できます。
 本書は Guardrails からのフォールバック参照起点として、Edges・ホットリスト・更新手順を 1 か所に整理します。
 
 ## Edges（主要ノードの隣接関係）
 
 `docs/birdseye/index.json` の `edges` から、Guardrails がフォールバック時に ±1 hop を推定しやすいよう主要ノードを抜粋しています。
 
-| ノード | 主要 Edges | 用途 |
-| --- | --- | --- |
-| `README.md` | `GUARDRAILS.md`, `HUB.codex.md`, `BLUEPRINT.md`, `RUNBOOK.md`, `EVALUATION.md`, `docs/birdseye/index.json` | 初動ガイドと Birdseye 読込順序の提示 |
-| `GUARDRAILS.md` | `README.md`, `HUB.codex.md`, `RUNBOOK.md`, `EVALUATION.md`, `docs/birdseye/index.json`, `docs/BIRDSEYE.md` | 行動指針・鮮度管理・フォールバック手順 |
-| `HUB.codex.md` | `README.md`, `GUARDRAILS.md`, `RUNBOOK.md`, `EVALUATION.md`, `CHECKLISTS.md`, `docs/birdseye/index.json` | 仕様・タスクの依存ハブ |
-| `RUNBOOK.md` | `README.md`, `GUARDRAILS.md`, `EVALUATION.md`, `docs/IN-20250115-001.md` | 運用および Birdseye 再生成 SOP |
-| `EVALUATION.md` | `README.md`, `GUARDRAILS.md`, `RUNBOOK.md`, `CHECKLISTS.md` | 受入基準と品質メトリクス |
-| `docs/birdseye/index.json` | `README.md`, `GUARDRAILS.md`, `HUB.codex.md`, `docs/birdseye/caps/`, `tools/codemap/` | Birdseye hop 計算の基盤 |
-| `tools/codemap/README.md` | `docs/BIRDSEYE.md`, `tools/codemap/update.py`, `docs/birdseye/index.json` | 再生成コマンドと契約 |
+- `README.md`
+  - 主要 Edges: `GUARDRAILS.md`, `HUB.codex.md`, `BLUEPRINT.md`, `RUNBOOK.md`, `EVALUATION.md`, `docs/birdseye/index.json`
+  - 用途: 初動ガイドと Birdseye 読込順序の提示
+- `GUARDRAILS.md`
+  - 主要 Edges: `README.md`, `HUB.codex.md`, `RUNBOOK.md`, `EVALUATION.md`, `docs/birdseye/index.json`, `docs/BIRDSEYE.md`
+  - 用途: 行動指針・鮮度管理・フォールバック手順
+- `HUB.codex.md`
+  - 主要 Edges: `README.md`, `GUARDRAILS.md`, `RUNBOOK.md`, `EVALUATION.md`, `CHECKLISTS.md`, `docs/birdseye/index.json`
+  - 用途: 仕様・タスクの依存ハブ
+- `RUNBOOK.md`
+  - 主要 Edges: `README.md`, `GUARDRAILS.md`, `EVALUATION.md`, `docs/IN-20250115-001.md`
+  - 用途: 運用および Birdseye 再生成 SOP
+- `EVALUATION.md`
+  - 主要 Edges: `README.md`, `GUARDRAILS.md`, `RUNBOOK.md`, `CHECKLISTS.md`
+  - 用途: 受入基準と品質メトリクス
+- `docs/birdseye/index.json`
+  - 主要 Edges: `README.md`, `GUARDRAILS.md`, `HUB.codex.md`, `docs/birdseye/caps/`, `tools/codemap/`
+  - 用途: Birdseye hop 計算の基盤
+- `tools/codemap/README.md`
+  - 主要 Edges: `docs/BIRDSEYE.md`, `tools/codemap/update.py`, `docs/birdseye/index.json`
+  - 用途: 再生成コマンドと契約
 
 > 詳細なエッジリストは `docs/birdseye/index.json` を参照してください。フォールバック中でも JSON を第一読者とし、ここは要約に留めます。
 
@@ -43,19 +56,22 @@ Birdseye は、Workflow Cookbook の知識マップ（`index.json` / `caps/*.jso
 
    ```bash
    python tools/codemap/update.py \
-     --targets README.md GUARDRAILS.md HUB.codex.md \
-     --emit index caps hot
+     --targets docs/birdseye/index.json \
+     --emit index+caps
    ```
 
-3. `docs/birdseye/index.json.generated_at` / `docs/birdseye/hot.json.generated_at` が最新コミットに追随しているか確認します。
+3. `docs/birdseye/index.json.generated_at` と `docs/birdseye/hot.json.generated_at` が最新コミットに追随しているか確認します。
 4. `docs/birdseye/hot.json` の `refresh_command` と `index_snapshot` が現行手順を反映しているか点検します。
+   `hot.json` は `index` の再生成に内包されるため、個別の `hot` オプションは不要です。
 5. JSON の `last_verified_at` を更新し、`git diff` で差分をレビューします。
 6. `GUARDRAILS.md` の [鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling) に従って、必要に応じて人間へ再生成依頼またはインシデント共有を行います。
 
 ## フォールバック運用
 
-- 自動ツールが利用できない場合は、上記 Edges と Hot List を参考に読込対象を最小化しつつ、`README.md` → `docs/birdseye/index.json` → `caps/*.json` の順に確認してください。
-- JSON が取得できない場合でも、`docs/BIRDSEYE.md` に記載された Edges/Hot/更新手順を用いて暫定判断を行い、可能な限り早く `tools/codemap/update.py` を実行できる環境へエスカレーションします。
+- 自動ツールが利用できない場合は、上記 Edges と Hot List を参考に読込対象を最小化しつつ、
+  `README.md` → `docs/birdseye/index.json` → `caps/*.json` の順に確認してください。
+- JSON が取得できない場合でも、`docs/BIRDSEYE.md` に記載された Edges/Hot/更新手順を用いて暫定判断を行い、
+  可能な限り早く `tools/codemap/update.py` を実行できる環境へエスカレーションします。
 - インシデントレベルの齟齬や破損が見つかった場合は `docs/IN-20250115-001.md` の手順で共有し、`RUNBOOK.md` の標準オペレーションに沿って復旧します。
 
 > ここに記載した情報は JSON の要約であり、最新状態は常に `docs/birdseye/index.json`・`docs/birdseye/hot.json`・`docs/birdseye/caps/` を参照してください。

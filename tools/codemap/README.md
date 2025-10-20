@@ -1,6 +1,8 @@
 # codemap ツール
 
-`codemap.update` は Birdseye のインデックスおよびカプセルを再生成するコマンドです。現行の `run_update` は指定ターゲットにかかわらず全カプセルの依存関係を再計算し、更新後は Birdseye のトポロジーが一貫した状態に揃います。以下の手順で最新化します。
+`codemap.update` は Birdseye のインデックスおよびカプセルを再生成するコマンドです。
+現行の `run_update` は指定ターゲットにかかわらず全カプセルの依存関係を再計算し、
+更新後は Birdseye のトポロジーが一貫した状態に揃います。以下の手順で最新化します。
 
 ## 依存
 
@@ -30,7 +32,10 @@
 
 ## Birdseye 再生成スクリプト
 
-`update.py` は Birdseye の再生成処理を司るエントリーポイントです。各ターゲットの解析や JSON 生成ロジックは `run_update` 内で完結し、インデックス・ホットリスト・カプセルの依存情報を同期します。詳細な処理を追加する際は、既存の例外設計・型安全方針に従って実装してください。Birdseye ドキュメント（`docs/BIRDSEYE.md` / `docs/birdseye/README.md`）と整合するよう、手順の更新が必要な場合は併せてメンテナンスしてください。
+`update.py` は Birdseye の再生成処理を司るエントリーポイントです。
+各ターゲットの解析や JSON 生成ロジックは `run_update` 内で完結し、インデックス・ホットリスト・カプセルの依存情報を同期します。
+詳細な処理を追加する際は、既存の例外設計・型安全方針に従って実装してください。
+Birdseye ドキュメント（`docs/BIRDSEYE.md` / `docs/birdseye/README.md`）と整合するよう、手順の更新が必要な場合は併せてメンテナンスしてください。
 
 - CLI エントリ: `python tools/codemap/update.py ...`
 - 追加の機能を導入する場合は、Birdseye ドキュメント（`docs/BIRDSEYE.md` / `docs/birdseye/README.md`）と整合するよう手順を更新してください。
