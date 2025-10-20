@@ -6,14 +6,11 @@
   ],
   "summary": "Birdseye の index.json と caps 群を指定ターゲットに応じて再生成する CLI エントリポイント。",
   "deps_in": [
-    "tools/codemap/",
-    "tools/codemap/README.md",
-    "GUARDRAILS.md",
-    "HUB.codex.md"
+    "tools/codemap/README.md"
   ],
   "deps_out": [
-    "docs/birdseye/index.json",
-    "docs/birdseye/caps/"
+    "docs/birdseye/caps/",
+    "docs/birdseye/index.json"
   ],
   "risks": [
     "誤ったターゲット指定で Birdseye のメタデータを破壊するリスク"

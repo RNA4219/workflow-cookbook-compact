@@ -17,12 +17,12 @@
     "docs/birdseye/index.json",
     "governance/policy.yaml",
     "governance/prioritization.yaml",
-    "tools/codemap/",
-    "tools/codemap/README.md",
-    "tools/codemap/update.py"
+    "tools/codemap/"
   ],
   "deps_in": [
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "GUARDRAILS.md",
+    "governance/prioritization.yaml"
   ],
   "risks": [],
   "tests": []

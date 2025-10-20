@@ -4,14 +4,14 @@
   "public_api": [],
   "summary": "重大度・影響・リソース制約を組み合わせて施策優先度を決定するための評価指標と審査フローを定義したガバナンス基準。",
   "deps_out": [
-    "README.md",
     "EVALUATION.md",
+    "README.md",
     "TASK.codex.md"
   ],
   "deps_in": [
+    "EVALUATION.md",
     "HUB.codex.md",
     "README.md",
-    "EVALUATION.md",
     "TASK.codex.md"
   ],
   "risks": [

@@ -4,6 +4,7 @@
   "public_api": [],
   "summary": "標準化したインシデント報告フォーマットで初動対応を平準化する。",
   "deps_in": [
+    "GUARDRAILS.md",
     "HUB.codex.md"
   ],
   "deps_out": [

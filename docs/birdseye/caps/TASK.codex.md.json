@@ -4,11 +4,16 @@
   "public_api": [],
   "summary": "タスクシードのメタデータ、スコープ、要件、実行コマンド、成果物を統一フォーマットで記述するためのテンプレート。",
   "deps_out": [
-    "EVALUATION.md",
     "CHANGELOG.md",
+    "EVALUATION.md",
     "governance/prioritization.yaml"
   ],
-  "deps_in": ["README.md", "HUB.codex.md", "GUARDRAILS.md"],
+  "deps_in": [
+    "GUARDRAILS.md",
+    "HUB.codex.md",
+    "README.md",
+    "governance/prioritization.yaml"
+  ],
   "risks": [],
   "tests": [
     "手動: Local Commands 節が最新CIゲートと一致するか定期レビュー"

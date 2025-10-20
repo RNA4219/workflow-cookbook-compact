@@ -4,14 +4,14 @@
   "public_api": [],
   "summary": "リリースバージョンごとの追加内容と既知の制約を記録し、テンプレート更新の履歴を追跡する変更ログ。",
   "deps_out": [
-    "README.md",
     "EVALUATION.md",
+    "README.md",
     "governance/policy.yaml"
   ],
   "deps_in": [
-    "README.md",
-    "HUB.codex.md",
     "GUARDRAILS.md",
+    "HUB.codex.md",
+    "README.md",
     "TASK.codex.md",
     "docs/IN-20250115-001.md"
   ],

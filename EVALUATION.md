@@ -17,7 +17,7 @@ next_review_due: 2025-11-14
 
 ## KPIs
 
-- 例）処理時間、成功率、エラー率、再実行回数
+- 例）処理時間、成功率、エラー率、再実行回数（[ADR-021: メトリクスと可観測性の統合](docs/ADR/ADR-021-metrics-observability.md) に準拠）
 
 ## Test Outline
 
