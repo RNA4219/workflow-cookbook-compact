@@ -27,7 +27,8 @@ next_review_due: 2025-11-14
 - QA メトリクス収集と確認
   - `python tools/perf/collect_metrics.py --suite qa --output .ga/qa-metrics.json` を実行し、最新の QA メトリクスを取得する。
   - `.ga/qa-metrics.json` はリポジトリルート配下に生成される。CI で Metrics Harvest が検出できるようファイル名・パスを変更しない。
-  - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8')); print({k: data[k] for k in ('compress_ratio', 'semantic_retention')})` で `compress_ratio` と `semantic_retention` の値を抽出する。
+  - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8')); print({k: data[k] for k in ('compress_ratio', 'semantic_retention')})` で、
+    `compress_ratio` と `semantic_retention` の値を抽出する。
   - 合格レンジ: `compress_ratio` は `0.55` 以上 `0.75` 以下、`semantic_retention` は `0.93` 以上。外れた場合は直近成功値との差分を記録し、再現条件を含めて共有する。
 - 失敗兆候と一次対応
   - `.ga/qa-metrics.json` が生成されない / 壊れている: `python tools/perf/collect_metrics.py --help` でオプションを再確認し、再実行前にキャッシュディレクトリを削除。
