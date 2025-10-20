@@ -1,6 +1,7 @@
 # Birdseye リファレンス
 
-Birdseye は、Workflow Cookbook の知識マップ（`index.json` / `caps/*.json` / `hot.json`）を統合的に参照するための仕組みです。本書は Guardrails からのフォールバック参照起点として、Edges・ホットリスト・更新手順を 1 か所に整理します。
+Birdseye は、Workflow Cookbook の知識マップ（`index.json` / `caps/*.json` / `hot.json`）を統合的に参照するための仕組みです。
+本書は Guardrails からのフォールバック参照起点として、Edges・ホットリスト・更新手順を 1 か所に整理します。
 
 ## Edges（主要ノードの隣接関係）
 
@@ -8,15 +9,20 @@ Birdseye は、Workflow Cookbook の知識マップ（`index.json` / `caps/*.jso
 
 | ノード | 主要 Edges | 用途 |
 | --- | --- | --- |
-| `README.md` | `GUARDRAILS.md`, `HUB.codex.md`, `BLUEPRINT.md`, `RUNBOOK.md`, `EVALUATION.md`, `docs/birdseye/index.json` | 初動ガイドと Birdseye 読込順序の提示 |
-| `GUARDRAILS.md` | `README.md`, `HUB.codex.md`, `RUNBOOK.md`, `EVALUATION.md`, `docs/birdseye/index.json`, `docs/BIRDSEYE.md` | 行動指針・鮮度管理・フォールバック手順 |
-| `HUB.codex.md` | `README.md`, `GUARDRAILS.md`, `RUNBOOK.md`, `EVALUATION.md`, `CHECKLISTS.md`, `docs/birdseye/index.json` | 仕様・タスクの依存ハブ |
+| `README.md` | `GUARDRAILS.md`, `HUB.codex.md`, `BLUEPRINT.md`, `RUNBOOK.md`, | 初動ガイドと Birdseye 読込順序の提示 |
+|             | `EVALUATION.md`, `docs/birdseye/index.json` | |
+| `GUARDRAILS.md` | `README.md`, `HUB.codex.md`, `RUNBOOK.md`, `EVALUATION.md`, | 行動指針・鮮度管理・フォールバック手順 |
+|             | `docs/birdseye/index.json`, `docs/BIRDSEYE.md` | |
+| `HUB.codex.md` | `README.md`, `GUARDRAILS.md`, `RUNBOOK.md`, `EVALUATION.md`, | 仕様・タスクの依存ハブ |
+|             | `CHECKLISTS.md`, `docs/birdseye/index.json` | |
 | `RUNBOOK.md` | `README.md`, `GUARDRAILS.md`, `EVALUATION.md`, `docs/IN-20250115-001.md` | 運用および Birdseye 再生成 SOP |
 | `EVALUATION.md` | `README.md`, `GUARDRAILS.md`, `RUNBOOK.md`, `CHECKLISTS.md` | 受入基準と品質メトリクス |
-| `docs/birdseye/index.json` | `README.md`, `GUARDRAILS.md`, `HUB.codex.md`, `docs/birdseye/caps/`, `tools/codemap/` | Birdseye hop 計算の基盤 |
+| `docs/birdseye/index.json` | `README.md`, `GUARDRAILS.md`, `HUB.codex.md`, | Birdseye hop 計算の基盤 |
+|             | `docs/birdseye/caps/`, `tools/codemap/` | |
 | `tools/codemap/README.md` | `docs/BIRDSEYE.md`, `tools/codemap/update.py`, `docs/birdseye/index.json` | 再生成コマンドと契約 |
 
-> 詳細なエッジリストは `docs/birdseye/index.json` を参照してください。フォールバック中でも JSON を第一読者とし、ここは要約に留めます。
+> 詳細なエッジリストは `docs/birdseye/index.json` を参照してください。
+> フォールバック中でも JSON を第一読者とし、ここは要約に留めます。
 
 ## Hot List（主要ノードの即時参照）
 
@@ -53,8 +59,12 @@ Birdseye は、Workflow Cookbook の知識マップ（`index.json` / `caps/*.jso
 
 ## フォールバック運用
 
-- 自動ツールが利用できない場合は、上記 Edges と Hot List を参考に読込対象を最小化しつつ、`README.md` → `docs/birdseye/index.json` → `caps/*.json` の順に確認してください。
-- JSON が取得できない場合でも、`docs/BIRDSEYE.md` に記載された Edges/Hot/更新手順を用いて暫定判断を行い、可能な限り早く `tools/codemap/update.py` を実行できる環境へエスカレーションします。
-- インシデントレベルの齟齬や破損が見つかった場合は `docs/IN-20250115-001.md` の手順で共有し、`RUNBOOK.md` の標準オペレーションに沿って復旧します。
+- 自動ツールが利用できない場合は、上記 Edges と Hot List を参考に読込対象を最小化しつつ、`README.md` → `docs/birdseye/index.json`
+  → `caps/*.json` の順に確認してください。
+- JSON が取得できない場合でも、`docs/BIRDSEYE.md` に記載された Edges/Hot/更新手順を用いて暫定判断を行い、可能な限り早く
+  `tools/codemap/update.py` を実行できる環境へエスカレーションします。
+- インシデントレベルの齟齬や破損が見つかった場合は `docs/IN-20250115-001.md` の手順で共有し、`RUNBOOK.md` の標準オペレーション
+  に沿って復旧します。
 
-> ここに記載した情報は JSON の要約であり、最新状態は常に `docs/birdseye/index.json`・`docs/birdseye/hot.json`・`docs/birdseye/caps/` を参照してください。
+> ここに記載した情報は JSON の要約であり、最新状態は常に `docs/birdseye/index.json`・`docs/birdseye/hot.json`・`docs/birdseye/
+> caps/` を参照してください。
