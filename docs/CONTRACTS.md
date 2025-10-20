@@ -7,6 +7,7 @@ Cookbook は独立して動作します。外部拡張（例: 子リポジトリ
 - `.ga/qa-metrics.json`: CI メトリクスの任意拡張。存在すれば Metrics Harvest が自動で取り込みます。
 
 ## Config
+
 - `governance/predictor.yaml`: 予測ガバナンス用の重みや閾値。存在しない場合は既定値で実行されます。
 
 ```yaml
