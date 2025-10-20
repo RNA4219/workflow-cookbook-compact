@@ -49,7 +49,7 @@ Birdseye は、Workflow Cookbook の知識マップ（`index.json` / `caps/*.jso
 3. `docs/birdseye/index.json.generated_at` / `docs/birdseye/hot.json.generated_at` が最新コミットに追随しているか確認します。
 4. `docs/birdseye/hot.json` の `refresh_command` と `index_snapshot` が現行手順を反映しているか点検します。
 5. JSON の `last_verified_at` を更新し、`git diff` で差分をレビューします。
-6. `GUARDRAILS.md` の [鮮度管理](GUARDRAILS.md#鮮度管理staleness-handling) に従って、必要に応じて人間へ再生成依頼またはインシデント共有を行います。
+6. `GUARDRAILS.md` の [鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling) に従って、必要に応じて人間へ再生成依頼またはインシデント共有を行います。
 
 ## フォールバック運用
 
