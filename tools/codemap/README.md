@@ -1,8 +1,6 @@
 # codemap ツール
 
-`codemap.update` は Birdseye のインデックスおよびカプセルを再生成するコマンドです。現時点ではローカル実行を前提としており、
-標準では直近変更ファイルから±2 hop のカプセルのみ更新します。今後導入予定の `--full` オプションを指定した場合、全カプセルを再生成します。
-以下の手順で最新化します。
+`codemap.update` は Birdseye のインデックスおよびカプセルを再生成するコマンドです。現行の `run_update` は指定ターゲットに関わらず全カプセルの依存関係を再計算するため、更新後は Birdseye のトポロジーが一貫した状態に揃います。以下の手順で最新化します。
 
 ## 依存
 
@@ -25,23 +23,19 @@
    - `--since` を指定すると `git diff --name-only <参照>...HEAD` を用いて Birdseye 配下の変更ファイルから対象を自動推定します。参照を省略すると `main` が使われます。
    - `--targets` には再生成したい Birdseye リソースをカンマ区切りで指定します。
    - `--emit` には出力したい成果物（`index` / `caps` / `index+caps`）を指定します。
-   - 直近変更箇所から±2 hop のカプセルのみ更新されます。
 3. 実行後、以下の成果物が更新されます。
    - `docs/birdseye/index.json`
+   - `docs/birdseye/hot.json`
    - `docs/birdseye/caps/*.json`
 
 ## Birdseye 再生成スクリプト
 
-`update.py` は Birdseye の再生成処理を司るエントリーポイントです。現状は雛形実装であり、各ターゲットの解析や JSON 生成ロジックを実装する必要があります。詳細な処理を追加する際は、既存の例外設計・型安全方針に従って実装してください。
+`update.py` は Birdseye の再生成処理を司るエントリーポイントです。各ターゲットの解析や JSON 生成ロジックは `run_update` 内で完結し、インデックス・ホットリスト・カプセルの依存情報を同期します。詳細な処理を追加する際は、既存の例外設計・型安全方針に従って実装してください。
 
 - CLI エントリ: `python tools/codemap/update.py ...`
-- 未実装箇所は `TODO` コメントで明示しています。今後の拡張時に置き換えてください。
+- 追加の機能を導入する場合は、Birdseye ドキュメント（`docs/BIRDSEYE.md` / `docs/birdseye/README.md`）と整合するよう手順を更新してください。
 
-### `--full` オプション（導入予定）
+### Birdseye 再生成の観点
 
-`--full` を指定すると Birdseye の全カプセルを再生成します。リポジトリ構造の大幅な変更や、カプセルの鮮度が不明な状態からの復旧時に利用する想定です。
-対象ファイル数に比例して処理時間が大幅に増加するため、通常運用では標準の±2 hop 更新を利用してください。
-
-```bash
-python tools/codemap/update.py --caps docs/birdseye/caps --root . --full
-```
+- `run_update` は常に全カプセルの `deps_in` / `deps_out` を再計算します。部分的な入力であっても依存関係の不整合は残りません。
+- `docs/birdseye/index.json` を更新する際は、同一ルートにある `hot.json` も `generated_at` が揃うよう自動で書き換えられます。
