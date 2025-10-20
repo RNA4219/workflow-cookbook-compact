@@ -52,7 +52,7 @@ Birdseye は、Workflow Cookbook の知識マップを統合的に参照する�
 ## Birdseye 更新手順
 
 1. 変更対象や鮮度が落ちたノードを整理し、`codemap.update` のターゲットに指定します。
-2. 以下を実行し、`index.json`・`caps/`・`hot.json` を同時に再生成します。
+2. 以下を実行し、カンマ区切りで指定した `index.json` と `hot.json` を同時にターゲットへ指定しつつ、`index` と `caps` を出力します。
 
    ```bash
    python tools/codemap/update.py \
