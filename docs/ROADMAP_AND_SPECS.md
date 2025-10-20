@@ -16,7 +16,7 @@
 | タスク統制 | [HUB.codex.md](../HUB.codex.md) | 仕様・運用ドキュメントを束ね、タスク化を自動分配。 | `TASK.*` シード生成時に [入力ファイル分類](../HUB.codex.md#2-入力ファイル分類)を参照。 |
 | リリース判定 | [CHECKLISTS.md](../CHECKLISTS.md) | 日次・リリース・衛生のチェック項目。 | リリース前に `EVALUATION.md` の[Verification Checklist](../EVALUATION.md#verification-checklist)と突き合わせ。 |
 | セキュリティ統制 | [SECURITY.md](../SECURITY.md) / [security/SAC.md](security/SAC.md) | 報告窓口と SAC 原則の適用範囲・是正判断を集約。 | セキュリティレビュー準備で [security/Security_Review_Checklist.md](security/Security_Review_Checklist.md) と `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)を突合し、対応責務を同期。 |
-| 依存グラフ | [docs/birdseye/index.json](birdseye/index.json) / [caps/*](birdseye/caps/) | ノード一覧とカプセルで Birdseye トポロジを提供。 | `codemap.update` で再生成し、`GUARDRAILS.md` の[鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling)に従って鮮度を監視。 |
+| 依存グラフ | [docs/BIRDSEYE.md](BIRDSEYE.md) / [docs/birdseye/index.json](birdseye/index.json) / [caps/*](birdseye/caps/) | ノード一覧とカプセルで Birdseye トポロジを提供し、Guardrails からの参照起点を集約。 | `codemap.update` で再生成し、`GUARDRAILS.md` の[鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling)に従って鮮度を監視。 |
 | ガバナンス | [governance/policy.yaml](../governance/policy.yaml) / [prioritization.yaml](../governance/prioritization.yaml) / [metrics.yaml](../governance/metrics.yaml) | セルフモディフィケーション制御、優先度算出基準、定常メトリクス。 | `HUB.codex.md` の優先度判定および `CHECKLISTS.md` の衛生チェックで参照。 |
 | 設計判断 | [docs/ADR/README.md](ADR/README.md) | ADR 一覧と作成手順、判断変更時のレビュー連携を統括。 | 設計変更 PR で更新・新規 ADR を提出し、レビューテンプレに添付して承認後にマージ。 |
 | 仕様 | [docs/spec.md](spec.md) | レシピ仕様の原則と更新手続きを集約。 | テンプレ更新時に `TASK.codex.md` の[Task Seed Template](../TASK.codex.md#task-seed-template)と整合性を確認。 |
@@ -69,7 +69,7 @@
 ## 参照クイックリンク
 
 - [docs/ci-config.md](ci-config.md)：CI プリセットの分岐条件と再利用手順を集約。**利用シーン**：CI 設定変更前に `CHECKLISTS.md` の[Daily](../CHECKLISTS.md#daily)で運用要件をクロスチェック。
-- [docs/birdseye/index.json](birdseye/index.json) / [birdseye/caps/](birdseye/caps/) / [tools/codemap/README.md#実行手順](../tools/codemap/README.md#実行手順)：Birdseye トポロジーの生成結果と運用手順を一括参照。**利用シーン**：1. `generated_at` を確認し鮮度閾値を超えた場合は同期対象にする。2. README の手順通り `python tools/codemap/update.py` を実行し `caps/*` を再生成。3. `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)と `GUARDRAILS.md` の[鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling)を突き合わせて差分と期限を監視。
+- [docs/BIRDSEYE.md](BIRDSEYE.md) / [docs/birdseye/index.json](birdseye/index.json) / [birdseye/caps/](birdseye/caps/) / [tools/codemap/README.md#実行手順](../tools/codemap/README.md#実行手順)：Birdseye トポロジーの参照起点と生成結果、運用手順を一括で把握。**利用シーン**：1. `BIRDSEYE.md` で確認手順とリンクを把握。2. `generated_at` を確認し鮮度閾値を超えた場合は同期対象にする。3. README の手順通り `python tools/codemap/update.py` を実行し `caps/*` を再生成。4. `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)と `GUARDRAILS.md` の[鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling)を突き合わせて差分と期限を監視。
 - [docs/interfaces.md](interfaces.md)：機能境界と受け渡し契約をテーブル化。**利用シーン**：境界整理や責務調整時に `docs/CONTRACTS.md` と `RUNBOOK.md` の[Execute](../RUNBOOK.md#execute)を並行確認。
 - [docs/INCIDENT_TEMPLATE.md](INCIDENT_TEMPLATE.md)：インシデント報告テンプレートとエスカレーション導線を定義。**利用シーン**：インシデント対応の初動で `RUNBOOK.md` の[Confirm](../RUNBOOK.md#confirm)を基点にメトリクス照合・記録更新・運用チャネル報告を完了し、`CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)で未完了項目を洗い出す。
 - [docs/ADR/README.md](ADR/README.md)：設計判断の記録・改訂フローを統括。**利用シーン**：設計変更 PR に更新・新規 ADR を添付し、レビューテンプレと連携。
