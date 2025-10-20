@@ -28,11 +28,11 @@
 
 ## ADR サマリ
 
-「上位ドキュメント索引」で ADR の位置付けを確認したうえで、本節から `docs/ADR/README.md` のカテゴリ別整理へ遷移できます。判断の更新は下記の分類を起点にし、索引テーブルと相互リンクを点検してください。
+「上位ドキュメント索引」で ADR の位置付けを確認したうえで、本節から `docs/ADR/README.md` のカテゴリ別整理へ遷移できます。判断の更新は下記の代表 ADR を起点にし、索引テーブルと相互リンクを点検してください。
 
-- **基盤方針（代表: [ADR-001](ADR/README.md#adr-core-policy)）**：`docs/ADR/README.md` の基盤方針セクションでテンプレを用い、`BLUEPRINT.md` と差分を突合しながらレビューに設計図面を添付します。判断更新時は `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)で証跡確認を実施。
-- **マイルストーン DoD（代表: [ADR-010](ADR/README.md#adr-milestone-dod)）**：マイルストーンごとの Done 条件を整理し、`docs/ADR/README.md` の記述を更新後に進捗レポートや KPI エビデンスを PR へ添付します。公開前の判断確認は `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)を参照。
-- **運用ガバナンス（代表: [ADR-020](ADR/README.md#adr-operations-governance)）**：セキュリティ・SLO 方針の改訂を記録し、`docs/ADR/README.md` に従って `SECURITY.md` や `RUNBOOK.md` の差分リンクをレビューで共有します。統制判断は `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)でチェック。
+- **ADR-001 基盤方針**（[概要](ADR/README.md#adr-core-policy)）：`BLUEPRINT.md` の[Constraints / Assumptions](../BLUEPRINT.md#3-constraints--assumptions)と同期し、アーキテクチャ前提の差異を把握します。更新時は `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)で証跡を確認し、`docs/ADR/README.md` の[レビューフロー](ADR/README.md#レビューフロー)と [PR テンプレート](../.github/pull_request_template.md)へ ADR 番号と関連資料を記録してからマージします。
+- **ADR-010 マイルストーン DoD**（[概要](ADR/README.md#adr-milestone-dod)）：ロードマップの Done 条件と KPI エビデンスを整理し、進捗レポートと同期します。更新時は `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)で証跡を整え、`docs/ADR/README.md` の[レビューフロー](ADR/README.md#レビューフロー)と [PR テンプレート](../.github/pull_request_template.md)で共有します。
+- **ADR-020 運用ガバナンス**（[概要](ADR/README.md#adr-operations-governance)）：`SECURITY.md` や `RUNBOOK.md` の差分を通じて統制判断を履歴化します。更新時は `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)で統制結果を確認し、`docs/ADR/README.md` の[レビューフロー](ADR/README.md#レビューフロー)と [PR テンプレート](../.github/pull_request_template.md)に差分リンクと影響範囲を添付してください。
 
 ## 実装ディレクトリ↔仕様対応
 
