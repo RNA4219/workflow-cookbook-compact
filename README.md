@@ -45,6 +45,7 @@ canary rules.
 
     - [`GUARDRAILS.md`](GUARDRAILS.md) …… 行動指針と Birdseye の `deps_out`
       と整合する最小読込ガードレールを確認
+    - [`docs/BIRDSEYE.md`](docs/BIRDSEYE.md) …… Birdseye の Edges / Hot / 更新手順をフォールバック用に把握
     - [`tools/codemap/README.md`](tools/codemap/README.md) …… Birdseye カプセル
       再生成前提と `codemap.update` の流れを把握
     - [`tools/codemap/update.py`](tools/codemap/update.py) ……

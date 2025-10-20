@@ -1,69 +1,142 @@
 {
-  "generated_at": "2025-02-18T00:00:00Z",
-  "curation_notes": "Top-level entrypoints and governance documents for Workflow Cookbook agents. Update after reshaping index.json or governance flows.",
+  "generated_at": "2025-02-20T00:00:00Z",
+  "index_snapshot": "docs/birdseye/index.json",
+  "refresh_command": "python tools/codemap/update.py --targets README.md GUARDRAILS.md HUB.codex.md --emit index caps hot",
+  "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。",
   "nodes": [
     {
       "id": "README.md",
-      "role": "overview",
-      "reason": "Bootstrap instructions and repository map for any new agent run.",
+      "role": "bootstrap",
+      "reason": "リポジトリ全体の導入手順と Birdseye の初回読込フローを定義する起点。",
       "caps": "docs/birdseye/caps/README.md.json",
-      "last_verified_at": "2025-02-18T00:00:00Z"
-    },
-    {
-      "id": "HUB.codex.md",
-      "role": "navigation",
-      "reason": "Central hub describing automated task fan-out and coordination model.",
-      "caps": "docs/birdseye/caps/HUB.codex.md.json",
-      "last_verified_at": "2025-02-18T00:00:00Z"
+      "edges": [
+        "GUARDRAILS.md",
+        "HUB.codex.md",
+        "BLUEPRINT.md",
+        "RUNBOOK.md",
+        "EVALUATION.md",
+        "docs/birdseye/index.json"
+      ],
+      "last_verified_at": "2025-02-20T00:00:00Z"
     },
     {
       "id": "GUARDRAILS.md",
       "role": "policy",
-      "reason": "Mandatory behavior guardrails and operational constraints for all automations.",
+      "reason": "自動化が従うべき行動指針と Birdseye 鮮度管理の期待値を定義。",
       "caps": "docs/birdseye/caps/GUARDRAILS.md.json",
-      "last_verified_at": "2025-02-18T00:00:00Z"
+      "edges": [
+        "README.md",
+        "HUB.codex.md",
+        "RUNBOOK.md",
+        "EVALUATION.md",
+        "docs/birdseye/index.json",
+        "docs/BIRDSEYE.md"
+      ],
+      "last_verified_at": "2025-02-20T00:00:00Z"
     },
     {
-      "id": "BLUEPRINT.md",
-      "role": "requirements",
-      "reason": "System-level contracts and IO definitions referenced across specs and tasks.",
-      "caps": "docs/birdseye/caps/BLUEPRINT.md.json",
-      "last_verified_at": "2025-02-18T00:00:00Z"
+      "id": "HUB.codex.md",
+      "role": "navigation",
+      "reason": "仕様とタスクの依存グラフを整理し、Birdseye からの hop を結節させるハブ。",
+      "caps": "docs/birdseye/caps/HUB.codex.md.json",
+      "edges": [
+        "README.md",
+        "GUARDRAILS.md",
+        "RUNBOOK.md",
+        "EVALUATION.md",
+        "CHECKLISTS.md",
+        "docs/birdseye/index.json"
+      ],
+      "last_verified_at": "2025-02-20T00:00:00Z"
     },
     {
       "id": "RUNBOOK.md",
       "role": "operations",
-      "reason": "Standard operating procedures for execution and validation flows.",
+      "reason": "運用手順と Birdseye 再生成を含む標準オペレーションを定義。",
       "caps": "docs/birdseye/caps/RUNBOOK.md.json",
-      "last_verified_at": "2025-02-18T00:00:00Z"
+      "edges": [
+        "README.md",
+        "GUARDRAILS.md",
+        "EVALUATION.md",
+        "docs/IN-20250115-001.md"
+      ],
+      "last_verified_at": "2025-02-20T00:00:00Z"
     },
     {
       "id": "EVALUATION.md",
       "role": "quality",
-      "reason": "Acceptance criteria and QA scope for releases and automation outputs.",
+      "reason": "受入基準と Birdseye カプセルで参照される品質メトリクスを定義。",
       "caps": "docs/birdseye/caps/EVALUATION.md.json",
-      "last_verified_at": "2025-02-18T00:00:00Z"
+      "edges": [
+        "README.md",
+        "GUARDRAILS.md",
+        "RUNBOOK.md",
+        "CHECKLISTS.md"
+      ],
+      "last_verified_at": "2025-02-20T00:00:00Z"
     },
     {
-      "id": "docs/ROADMAP_AND_SPECS.md",
-      "role": "roadmap",
-      "reason": "Forward-looking scope, milestones, and in-flight specifications.",
-      "caps": "docs/birdseye/caps/docs.ROADMAP_AND_SPECS.md.json",
-      "last_verified_at": "2025-02-18T00:00:00Z"
+      "id": "BLUEPRINT.md",
+      "role": "requirements",
+      "reason": "要件定義と機能境界を Birdseye 経由で共有するベースライン。",
+      "caps": "docs/birdseye/caps/BLUEPRINT.md.json",
+      "edges": [
+        "README.md",
+        "HUB.codex.md",
+        "GUARDRAILS.md"
+      ],
+      "last_verified_at": "2025-02-20T00:00:00Z"
+    },
+    {
+      "id": "CHECKLISTS.md",
+      "role": "checklist",
+      "reason": "デリバリー時の確認項目を管理し、Birdseye hop の実運用を支える。",
+      "caps": "docs/birdseye/caps/CHECKLISTS.md.json",
+      "edges": [
+        "README.md",
+        "HUB.codex.md",
+        "EVALUATION.md"
+      ],
+      "last_verified_at": "2025-02-20T00:00:00Z"
     },
     {
       "id": "docs/BIRDSEYE.md",
-      "role": "reference",
-      "reason": "Guardrails-facing entrypoint for Birdseye usage, links, and escalation steps.",
+      "role": "fallback",
+      "reason": "Guardrails が要求する Edges/Hot/更新手順のフォールバック資料。",
       "caps": null,
-      "last_verified_at": "2025-02-18T00:00:00Z"
+      "edges": [
+        "README.md",
+        "GUARDRAILS.md",
+        "docs/birdseye/index.json",
+        "tools/codemap/README.md"
+      ],
+      "last_verified_at": "2025-02-20T00:00:00Z"
     },
     {
       "id": "docs/birdseye/index.json",
       "role": "index",
-      "reason": "Machine-readable adjacency map backing all Birdseye lookups.",
+      "reason": "Birdseye の hop 計算を担う中核インデックス。ホットリストとも鮮度を同期する。",
       "caps": "docs/birdseye/caps/docs.birdseye.index.json.json",
-      "last_verified_at": "2025-02-18T00:00:00Z"
+      "edges": [
+        "README.md",
+        "GUARDRAILS.md",
+        "HUB.codex.md",
+        "docs/birdseye/caps/",
+        "tools/codemap/"
+      ],
+      "last_verified_at": "2025-02-20T00:00:00Z"
+    },
+    {
+      "id": "tools/codemap/README.md",
+      "role": "tooling",
+      "reason": "codemap.update の実行契約と Birdseye 再生成パラメータを明示。",
+      "caps": "docs/birdseye/caps/tools.codemap.README.md.json",
+      "edges": [
+        "docs/BIRDSEYE.md",
+        "tools/codemap/update.py",
+        "docs/birdseye/index.json"
+      ],
+      "last_verified_at": "2025-02-20T00:00:00Z"
     }
   ]
 }
