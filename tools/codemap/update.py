@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from collections import deque
 from dataclasses import dataclass
@@ -26,6 +27,25 @@ class UpdateReport:
     performed_writes: tuple[Path, ...]
 
 
+def _derive_targets_from_since(reference: str) -> tuple[Path, ...]:
+    result = subprocess.run(
+        ["git", "diff", "--name-only", f"{reference}...HEAD"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    targets: list[Path] = []
+    for line in result.stdout.splitlines():
+        candidate = line.strip()
+        if not candidate:
+            continue
+        path = Path(candidate)
+        if path.parts[:2] != ("docs", "birdseye"):
+            continue
+        targets.append(path)
+    return tuple(dict.fromkeys(targets))
+
+
 def parse_args(argv: Iterable[str] | None = None) -> UpdateOptions:
     parser = argparse.ArgumentParser(
         description="Regenerate Birdseye index and capsules.",
@@ -33,8 +53,14 @@ def parse_args(argv: Iterable[str] | None = None) -> UpdateOptions:
     parser.add_argument(
         "--targets",
         type=str,
-        required=True,
         help="Comma-separated list of Birdseye resources to analyse.",
+    )
+    parser.add_argument(
+        "--since",
+        type=str,
+        nargs="?",
+        const="main",
+        help="Derive targets from git diff since the given reference (default: main).",
     )
     parser.add_argument(
         "--emit",
@@ -49,10 +75,21 @@ def parse_args(argv: Iterable[str] | None = None) -> UpdateOptions:
         help="Compute updates without writing to disk.",
     )
     args = parser.parse_args(list(argv) if argv is not None else None)
-    target_paths = tuple(Path(value.strip()) for value in args.targets.split(",") if value.strip())
-    if not target_paths:
-        parser.error("--targets must contain at least one path")
-    return UpdateOptions(targets=target_paths, emit=args.emit, dry_run=args.dry_run)
+    target_paths: list[Path] = []
+    if args.targets:
+        target_paths.extend(
+            Path(value.strip()) for value in args.targets.split(",") if value.strip()
+        )
+    if args.since:
+        try:
+            derived = _derive_targets_from_since(args.since)
+        except subprocess.CalledProcessError as exc:
+            parser.error(f"Failed to resolve git diff for --since: {exc}")
+        target_paths.extend(derived)
+    unique_targets = tuple(dict.fromkeys(target_paths))
+    if not unique_targets:
+        parser.error("Specify --targets, --since, or both")
+    return UpdateOptions(targets=unique_targets, emit=args.emit, dry_run=args.dry_run)
 
 
 def ensure_python_version() -> None:

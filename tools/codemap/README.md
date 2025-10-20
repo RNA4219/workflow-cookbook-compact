@@ -13,9 +13,14 @@
 2. リポジトリルートで次のコマンドを実行します。
 
    ```bash
-   python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/caps --emit index+caps
+   # 例: 直近の main との差分から対象カプセルを推測
+   python tools/codemap/update.py --since --emit index+caps
+
+   # 例: 明示的にターゲットを指定（従来挙動）
+   python tools/codemap/update.py --targets docs/birdseye/index.json --emit index+caps
    ```
 
+   - `--since` を指定すると `git diff --name-only <参照>...HEAD` を用いて Birdseye 配下の変更ファイルから対象を自動推定します。参照を省略すると `main` が使われます。
    - `--targets` には再生成したい Birdseye リソースをカンマ区切りで指定します。
    - `--emit` には出力したい成果物（`index` / `caps` / `index+caps`）を指定します。
 3. 実行後、以下の成果物が更新されます。

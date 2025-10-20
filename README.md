@@ -56,8 +56,11 @@ canary rules.
       参照）。
 
       ```sh
-      # 例: カプセル出力先と解析ルートを指定して再生成
-      python tools/codemap/update.py --caps docs/birdseye/caps --root .
+      # 例: main との差分から対象カプセルを自動抽出
+      python tools/codemap/update.py --since --emit index+caps
+
+      # 例: Birdseye リソースを明示的に指定（従来挙動）
+      python tools/codemap/update.py --targets docs/birdseye/index.json --emit index+caps
       ```
 
     - [`HUB.codex.md`](HUB.codex.md) …… 仕様集約とタスク分割ハブを整備し、Birdseye カプセルの依存関係を維持
@@ -182,7 +185,7 @@ jobs:
 | `tools/` | ドキュメント同期と検証スクリプトを運用する | [docs/design.md](docs/design.md) / [RUNBOOK.md](RUNBOOK.md#execute) | `tools/codemap/update.py` で Birdseye を再生成[^birdseye] |
 | `docs/security/` | セキュリティレビューと SAC 手順を集約する | [docs/security/Security_Review_Checklist.md](docs/security/Security_Review_Checklist.md) / [docs/security/SAC.md](docs/security/SAC.md) | リリース審査の証跡を更新 |
 
-[^birdseye]: `python tools/codemap/update.py --caps docs/birdseye/caps --root .` で Birdseye インデックスとカプセルを更新し、必要に応じて `--full` で全再生成する。詳細は [tools/codemap/README.md](tools/codemap/README.md#実行手順) と [GUARDRAILS.md](GUARDRAILS.md#鮮度管理staleness-handling) を参照。
+[^birdseye]: `python tools/codemap/update.py --since --emit index+caps` で Birdseye インデックスとカプセルを更新し、必要に応じて `--targets` や `--full` を併用する。詳細は [tools/codemap/README.md](tools/codemap/README.md#実行手順) と [GUARDRAILS.md](GUARDRAILS.md#鮮度管理staleness-handling) を参照。
 [^styles]: `styles/qa/QA.yml` の禁止用語・表記揺れルールをレビューで適用し、検知結果を `CHECKLISTS.md` のリリース手順へ反映する。
 
 ![lint](https://github.com/RNA4219/workflow-cookbook/actions/workflows/markdown.yml/badge.svg)
