@@ -15,7 +15,7 @@ Birdseye は、エージェントがリポジトリ全体を最小トークン�
 1. 対象ノードを整理し、`tools/codemap/update.py` で Birdseye を再生成する。例：
 
    ```bash
-   python tools/codemap/update.py --targets README.md GUARDRAILS.md --emit index caps hot
+   python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps
    ```
 
 2. 生成された JSON を確認し、`generated_at` や `last_verified_at` が最新コミットを反映しているかチェックする。
@@ -27,4 +27,4 @@ Birdseye は、エージェントがリポジトリ全体を最小トークン�
 
 - `GUARDRAILS.md` の Birdseye セクションで定義された読込順序（Bootstrap → Index → Caps）を満たすためのデータソースです。
 - `docs/BIRDSEYE.md` は Guardrails からの参照起点であり、本 README はその補助資料として更新手順を提供します。
-- `hot.json` は Guardrails の「頻出入口ホットリスト」要件を満たし、即座に読むべきノードを提示します。
+- `hot.json` は Guardrails の「頻出入口ホットリスト」要件を満たし、即座に読むべきノードを提示します。`index.json` を再生成すると自動的に同期されるため、追加の `hot` 引数は不要です。
