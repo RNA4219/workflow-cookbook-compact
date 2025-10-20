@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -119,8 +120,12 @@ def run_update(options: UpdateOptions) -> UpdateReport:
     performed: set[Path] = set()
     timestamp = _format_timestamp(utc_now())
 
+    grouped: dict[Path, list[Path]] = {}
     for target in options.targets:
         root = _resolve_root(target)
+        grouped.setdefault(root, []).append(target)
+
+    for root, root_targets in grouped.items():
         index_path = root / "index.json"
         caps_dir = root / "caps"
         hot_path = root / "hot.json"
@@ -152,6 +157,21 @@ def run_update(options: UpdateOptions) -> UpdateReport:
         for values in graph_in.values():
             values.sort()
 
+        caps_state: dict[str, tuple[Path, dict[str, Any], str]] = {}
+        cap_path_lookup: dict[Path, str] = {}
+        if emit_caps:
+            for cap_path in sorted(caps_dir.glob("*.json")):
+                if not cap_path.is_file():
+                    continue
+                cap_data, cap_original = _load_json(cap_path)
+                if not isinstance(cap_data, dict):
+                    continue
+                cap_id = cap_data.get("id")
+                if not isinstance(cap_id, str):
+                    continue
+                caps_state[cap_id] = (cap_path, cap_data, cap_original)
+                cap_path_lookup[cap_path.resolve()] = cap_id
+
         if emit_index:
             if index_data.get("generated_at") != timestamp:
                 index_data["generated_at"] = timestamp
@@ -178,16 +198,45 @@ def run_update(options: UpdateOptions) -> UpdateReport:
                         dry_run=options.dry_run,
                     )
 
-        if emit_caps:
-            for cap_path in sorted(caps_dir.glob("*.json")):
-                if not cap_path.is_file():
+        if emit_caps and caps_state:
+            focus_nodes: set[str] = set()
+            root_resolved = root.resolve()
+            index_resolved = (root / "index.json").resolve()
+            caps_dir_resolved = caps_dir.resolve()
+            hot_resolved = (root / "hot.json").resolve()
+            for candidate in root_targets:
+                resolved = candidate.resolve()
+                if resolved in {
+                    root_resolved,
+                    index_resolved,
+                    caps_dir_resolved,
+                    hot_resolved,
+                }:
+                    focus_nodes = set(caps_state)
+                    break
+                cap_id = cap_path_lookup.get(resolved)
+                if cap_id:
+                    focus_nodes.add(cap_id)
+            if not focus_nodes:
+                focus_nodes = set(caps_state)
+            seen: set[str] = set()
+            queue: deque[tuple[str, int]] = deque((node, 0) for node in focus_nodes)
+            while queue:
+                node, distance = queue.popleft()
+                if node in seen or distance > 2:
                     continue
-                cap_data, cap_original = _load_json(cap_path)
-                if not isinstance(cap_data, dict):
+                seen.add(node)
+                if distance == 2:
                     continue
-                cap_id = cap_data.get("id")
-                if not isinstance(cap_id, str):
-                    continue
+                for neighbour in graph_out.get(node, []):
+                    if neighbour not in seen:
+                        queue.append((neighbour, distance + 1))
+                for neighbour in graph_in.get(node, []):
+                    if neighbour not in seen:
+                        queue.append((neighbour, distance + 1))
+            nodes_to_refresh = sorted(node for node in seen if node in caps_state)
+            for cap_id in nodes_to_refresh:
+                cap_path, cap_data, cap_original = caps_state[cap_id]
                 expected_out = _sorted_unique(graph_out.get(cap_id, []))
                 expected_in = _sorted_unique(graph_in.get(cap_id, []))
                 updated = False
