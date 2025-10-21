@@ -65,6 +65,8 @@ _HOT_NODES_FIXTURE: Sequence[dict[str, object]] = (
         "edges": ["GUARDRAILS.md", "docs/birdseye/index.json"],
         "last_verified_at": "2024-01-01T00:00:00Z",
         "refresh_command": _HOT_REFRESH_COMMAND,
+        "index_snapshot": _HOT_INDEX_SNAPSHOT,
+        "curation_notes": _HOT_CURATION_NOTES,
     },
     {
         "id": "GUARDRAILS.md",
@@ -74,6 +76,8 @@ _HOT_NODES_FIXTURE: Sequence[dict[str, object]] = (
         "edges": ["README.md", "docs/birdseye/index.json"],
         "last_verified_at": "2024-01-01T00:00:00Z",
         "refresh_command": _HOT_REFRESH_COMMAND,
+        "index_snapshot": _HOT_INDEX_SNAPSHOT,
+        "curation_notes": _HOT_CURATION_NOTES,
     },
     {
         "id": "docs/birdseye/index.json",
@@ -83,6 +87,8 @@ _HOT_NODES_FIXTURE: Sequence[dict[str, object]] = (
         "edges": ["README.md", "GUARDRAILS.md"],
         "last_verified_at": "2024-01-01T00:00:00Z",
         "refresh_command": _HOT_REFRESH_COMMAND,
+        "index_snapshot": _HOT_INDEX_SNAPSHOT,
+        "curation_notes": _HOT_CURATION_NOTES,
     },
 )
 
@@ -180,6 +186,14 @@ def _prepare_birdseye(
             payload["reason"] = defaults["reason"]
         if "refresh_command" in defaults:
             payload["refresh_command"] = defaults["refresh_command"]
+        if "index_snapshot" in defaults:
+            payload["index_snapshot"] = defaults["index_snapshot"]
+        else:
+            payload["index_snapshot"] = _HOT_INDEX_SNAPSHOT
+        if "curation_notes" in defaults:
+            payload["curation_notes"] = defaults["curation_notes"]
+        else:
+            payload["curation_notes"] = _HOT_CURATION_NOTES
         serialized_nodes.append(payload)
     _write_json(
         hot_path,
@@ -252,6 +266,8 @@ def test_run_update_refreshes_metadata_and_dependencies(tmp_path, monkeypatch, d
     assert refreshed_hot["nodes"] == expected_hot_nodes
     for node in refreshed_hot["nodes"]:
         assert node["refresh_command"] == _HOT_REFRESH_COMMAND
+        assert node["index_snapshot"] == _HOT_INDEX_SNAPSHOT
+        assert node["curation_notes"] == _HOT_CURATION_NOTES
     assert len(refreshed_hot["nodes"]) == len(expected_hot_nodes)
     assert refreshed_hot["nodes"][0]["edges"] == expected_hot_nodes[0]["edges"]
     assert refreshed_hot["nodes"][0]["caps"] == expected_hot_nodes[0]["caps"]
@@ -281,6 +297,8 @@ def test_run_update_preserves_hot_nodes_structure(tmp_path, monkeypatch):
     assert baseline_hot["curation_notes"] == _HOT_CURATION_NOTES
     for node in baseline_hot["nodes"]:
         assert node["refresh_command"] == _HOT_REFRESH_COMMAND
+        assert node["index_snapshot"] == _HOT_INDEX_SNAPSHOT
+        assert node["curation_notes"] == _HOT_CURATION_NOTES
 
     frozen_now = datetime(2025, 1, 1, 12, 0, tzinfo=timezone.utc)
     monkeypatch.setattr(update, "utc_now", lambda: frozen_now)
@@ -300,6 +318,8 @@ def test_run_update_preserves_hot_nodes_structure(tmp_path, monkeypatch):
     assert refreshed_hot["nodes"] == baseline_hot["nodes"]
     for node in refreshed_hot["nodes"]:
         assert node["refresh_command"] == _HOT_REFRESH_COMMAND
+        assert node["index_snapshot"] == _HOT_INDEX_SNAPSHOT
+        assert node["curation_notes"] == _HOT_CURATION_NOTES
     assert len(refreshed_hot["nodes"]) == len(_HOT_NODES_FIXTURE)
     assert all(
         node["last_verified_at"] == "2024-01-01T00:00:00Z"
