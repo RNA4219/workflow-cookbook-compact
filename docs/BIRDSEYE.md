@@ -50,6 +50,8 @@ Birdseye は、Workflow Cookbook の知識マップを統合的に参照する�
 
 ホットリストの `generated_at` は、`index.json` 再生成のたびに同じターゲットで更新し、鮮度を揃えてください。必要に応じてホットリスト項目の `last_verified_at` を更新対象に含めます。
 
+`docs/birdseye/*.json` の `generated_at` は、初回生成が古いものから 5 桁ゼロ埋めの連番（例: `00001`, `00002`）で管理し、再生成時も番号を引き継いでください。
+
 ## Birdseye 更新手順
 
 1. 変更対象や鮮度が落ちたノードを整理し、`codemap.update` のターゲットに指定します。
