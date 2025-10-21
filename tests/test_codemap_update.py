@@ -100,6 +100,26 @@ def test_hot_refresh_command_matches_documentation():
             assert node["refresh_command"] == _HOT_REFRESH_COMMAND
 
 
+def test_hot_nodes_caps_refer_to_existing_capsules():
+    repo_root = Path(__file__).resolve().parents[1]
+    hot_doc = json.loads((repo_root / "docs" / "birdseye" / "hot.json").read_text(encoding="utf-8"))
+
+    for node in hot_doc.get("nodes", []):
+        caps_ref = node.get("caps")
+        if caps_ref is None:
+            continue
+
+        assert isinstance(caps_ref, str), f"caps must be str or null, got {type(caps_ref)!r}"
+
+        caps_path = repo_root / caps_ref
+        assert caps_path.is_file(), f"Capsule missing for node {node['id']}: {caps_ref}"
+
+        capsule_payload = json.loads(caps_path.read_text(encoding="utf-8"))
+        assert (
+            capsule_payload.get("id") == node["id"]
+        ), f"Capsule id mismatch for {node['id']}: {capsule_payload.get('id')}"
+
+
 def _prepare_birdseye(
     tmp_path: Path,
     *,
