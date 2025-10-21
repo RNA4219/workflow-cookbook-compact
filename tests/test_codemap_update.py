@@ -83,7 +83,7 @@ _HOT_NODES_FIXTURE: Sequence[dict[str, object]] = (
         "id": "docs/birdseye/index.json",
         "role": "index",
         "reason": "Birdseye インデックスのホットビュー",
-        "caps": None,
+        "caps": "docs/birdseye/caps/docs.birdseye.index.json.json",
         "edges": ["README.md", "GUARDRAILS.md"],
         "last_verified_at": "2024-01-01T00:00:00Z",
         "refresh_command": _HOT_REFRESH_COMMAND,
@@ -298,7 +298,11 @@ def test_run_update_refreshes_metadata_and_dependencies(tmp_path, monkeypatch, d
         refreshed_hot["nodes"][0]["last_verified_at"]
         == expected_hot_nodes[0]["last_verified_at"]
     )
-    assert any(node["caps"] is None for node in refreshed_hot["nodes"])
+    hot_caps_lookup = {node["id"]: node["caps"] for node in refreshed_hot["nodes"]}
+    assert (
+        hot_caps_lookup["docs/birdseye/index.json"]
+        == "docs/birdseye/caps/docs.birdseye.index.json.json"
+    )
 
 
 def test_run_update_preserves_hot_nodes_structure(tmp_path, monkeypatch):
