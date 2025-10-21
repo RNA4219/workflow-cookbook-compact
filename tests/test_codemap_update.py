@@ -126,6 +126,28 @@ def test_hot_nodes_caps_refer_to_existing_capsules():
         ), f"Capsule id mismatch for {node['id']}: {capsule_payload.get('id')}"
 
 
+def test_index_contains_docs_birdseye_node_with_bidirectional_edges():
+    repo_root = Path(__file__).resolve().parents[1]
+    index_doc = json.loads((repo_root / "docs" / "birdseye" / "index.json").read_text(encoding="utf-8"))
+
+    nodes = index_doc.get("nodes", {})
+    assert "docs/BIRDSEYE.md" in nodes
+
+    capsule_path = nodes["docs/BIRDSEYE.md"].get("caps")
+    assert capsule_path == "docs/birdseye/caps/docs.BIRDSEYE.md.json"
+
+    edges = {
+        tuple(edge)
+        for edge in index_doc.get("edges", [])
+        if isinstance(edge, list) and len(edge) == 2
+    }
+
+    neighbours = ("README.md", "GUARDRAILS.md", "tools/codemap/README.md")
+    for neighbour in neighbours:
+        assert ("docs/BIRDSEYE.md", neighbour) in edges
+        assert (neighbour, "docs/BIRDSEYE.md") in edges
+
+
 def _prepare_birdseye(
     tmp_path: Path,
     *,
