@@ -44,8 +44,7 @@ def _caps_payload(cap_id: str, *, deps_out=None, deps_in=None) -> dict[str, obje
 
 _HOT_INDEX_SNAPSHOT = "docs/birdseye/index.json"
 _HOT_REFRESH_COMMAND = (
-    "python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json"
-    " --emit index+caps"
+    "python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps"
 )
 _HOT_CURATION_NOTES = "Birdseye ホットノードのサンプルノート"
 
@@ -89,6 +88,16 @@ _HOT_NODES_FIXTURE: Sequence[dict[str, object]] = (
 
 
 _HOT_NODE_IDS: tuple[str, ...] = tuple(node["id"] for node in _HOT_NODES_FIXTURE)
+
+
+def test_hot_refresh_command_matches_documentation():
+    repo_root = Path(__file__).resolve().parents[1]
+    hot_doc = json.loads((repo_root / "docs" / "birdseye" / "hot.json").read_text(encoding="utf-8"))
+
+    assert hot_doc["refresh_command"] == _HOT_REFRESH_COMMAND
+    for node in hot_doc.get("nodes", []):
+        if "refresh_command" in node:
+            assert node["refresh_command"] == _HOT_REFRESH_COMMAND
 
 
 def _prepare_birdseye(
