@@ -1,5 +1,5 @@
 {
-  "generated_at": "2025-10-20T17:28:28Z",
+  "generated_at": "2025-10-21T08:51:14Z",
   "index_snapshot": "docs/birdseye/index.json",
   "refresh_command": "python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps",
   "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。",
@@ -17,7 +17,10 @@
         "EVALUATION.md",
         "docs/birdseye/index.json"
       ],
-      "last_verified_at": "2025-02-20T00:00:00Z"
+      "last_verified_at": "2025-02-20T00:00:00Z",
+      "index_snapshot": "docs/birdseye/index.json",
+      "refresh_command": "python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps",
+      "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
     },
     {
       "id": "GUARDRAILS.md",
@@ -32,7 +35,10 @@
         "docs/birdseye/index.json",
         "docs/BIRDSEYE.md"
       ],
-      "last_verified_at": "2025-02-20T00:00:00Z"
+      "last_verified_at": "2025-02-20T00:00:00Z",
+      "index_snapshot": "docs/birdseye/index.json",
+      "refresh_command": "python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps",
+      "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
     },
     {
       "id": "HUB.codex.md",
@@ -47,7 +53,10 @@
         "CHECKLISTS.md",
         "docs/birdseye/index.json"
       ],
-      "last_verified_at": "2025-02-20T00:00:00Z"
+      "last_verified_at": "2025-02-20T00:00:00Z",
+      "index_snapshot": "docs/birdseye/index.json",
+      "refresh_command": "python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps",
+      "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
     },
     {
       "id": "RUNBOOK.md",
@@ -60,7 +69,10 @@
         "EVALUATION.md",
         "docs/IN-20250115-001.md"
       ],
-      "last_verified_at": "2025-02-20T00:00:00Z"
+      "last_verified_at": "2025-02-20T00:00:00Z",
+      "index_snapshot": "docs/birdseye/index.json",
+      "refresh_command": "python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps",
+      "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
     },
     {
       "id": "EVALUATION.md",
@@ -73,7 +85,10 @@
         "RUNBOOK.md",
         "CHECKLISTS.md"
       ],
-      "last_verified_at": "2025-02-20T00:00:00Z"
+      "last_verified_at": "2025-02-20T00:00:00Z",
+      "index_snapshot": "docs/birdseye/index.json",
+      "refresh_command": "python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps",
+      "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
     },
     {
       "id": "BLUEPRINT.md",
@@ -85,7 +100,10 @@
         "HUB.codex.md",
         "GUARDRAILS.md"
       ],
-      "last_verified_at": "2025-02-20T00:00:00Z"
+      "last_verified_at": "2025-02-20T00:00:00Z",
+      "index_snapshot": "docs/birdseye/index.json",
+      "refresh_command": "python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps",
+      "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
     },
     {
       "id": "CHECKLISTS.md",
@@ -97,7 +115,10 @@
         "HUB.codex.md",
         "EVALUATION.md"
       ],
-      "last_verified_at": "2025-02-20T00:00:00Z"
+      "last_verified_at": "2025-02-20T00:00:00Z",
+      "index_snapshot": "docs/birdseye/index.json",
+      "refresh_command": "python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps",
+      "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
     },
     {
       "id": "docs/BIRDSEYE.md",
@@ -110,7 +131,10 @@
         "docs/birdseye/index.json",
         "tools/codemap/README.md"
       ],
-      "last_verified_at": "2025-02-20T00:00:00Z"
+      "last_verified_at": "2025-02-20T00:00:00Z",
+      "index_snapshot": "docs/birdseye/index.json",
+      "refresh_command": "python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps",
+      "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
     },
     {
       "id": "docs/birdseye/index.json",
@@ -124,7 +148,10 @@
         "docs/birdseye/caps/",
         "tools/codemap/"
       ],
-      "last_verified_at": "2025-02-20T00:00:00Z"
+      "last_verified_at": "2025-02-20T00:00:00Z",
+      "index_snapshot": "docs/birdseye/index.json",
+      "refresh_command": "python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps",
+      "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
     },
     {
       "id": "tools/codemap/README.md",
@@ -136,7 +163,10 @@
         "tools/codemap/update.py",
         "docs/birdseye/index.json"
       ],
-      "last_verified_at": "2025-02-20T00:00:00Z"
+      "last_verified_at": "2025-02-20T00:00:00Z",
+      "index_snapshot": "docs/birdseye/index.json",
+      "refresh_command": "python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps",
+      "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
     }
   ]
 }
