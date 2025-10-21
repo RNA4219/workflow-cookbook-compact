@@ -62,12 +62,15 @@ _HOT_NODES_FIXTURE: Sequence[dict[str, object]] = (
 )
 
 
+_HOT_NODE_IDS: tuple[str, ...] = tuple(node["id"] for node in _HOT_NODES_FIXTURE)
+
+
 def _prepare_birdseye(
     tmp_path: Path,
     *,
     edges: Iterable[Iterable[str]],
     caps_payloads: Mapping[str, Mapping[str, object]],
-    hot_nodes: Sequence[Mapping[str, object]] | None,
+    hot_entries: Sequence[str] | None,
     root: Path | None = None,
 ) -> tuple[Path, Path, Path, dict[str, Path]]:
     root = Path(root) if root is not None else tmp_path / "birdseye"
@@ -77,10 +80,11 @@ def _prepare_birdseye(
         cap_id: {"role": payload.get("role", "doc"), "caps": f"docs/birdseye/caps/{cap_id}.json"}
         for cap_id, payload in caps_payloads.items()
     }
+    edge_pairs = [list(pair) for pair in edges]
     index_path = root / "index.json"
     _write_json(
         index_path,
-        {"generated_at": "2024-01-01T00:00:00Z", "nodes": nodes, "edges": edges},
+        {"generated_at": "2024-01-01T00:00:00Z", "nodes": nodes, "edges": edge_pairs},
     )
     cap_paths = {}
     for cap_id, payload in caps_payloads.items():
@@ -88,19 +92,38 @@ def _prepare_birdseye(
         cap_paths[cap_id] = cap_path
         _write_json(cap_path, payload)
     hot_path = root / "hot.json"
-    selected_hot_nodes = hot_nodes if hot_nodes is not None else _HOT_NODES_FIXTURE
+    defaults_lookup = {entry["id"]: entry for entry in _HOT_NODES_FIXTURE}
+    selected_ids = list(hot_entries) if hot_entries is not None else list(_HOT_NODE_IDS)
+    neighbours: dict[str, set[str]] = {}
+    for pair in edge_pairs:
+        if len(pair) != 2:
+            continue
+        source, destination = pair
+        if not isinstance(source, str) or not isinstance(destination, str):
+            continue
+        neighbours.setdefault(source, set()).add(destination)
+        neighbours.setdefault(destination, set()).add(source)
     serialized_nodes = []
-    for node in selected_hot_nodes:
-        base = {
-            "id": node["id"],
-            "role": node.get("role", "doc"),
-            "edges": list(node.get("edges", [])),
-            "caps": node.get("caps"),
-            "last_verified_at": node.get("last_verified_at", "2024-01-01T00:00:00Z"),
+    for entry_id in selected_ids:
+        defaults = defaults_lookup.get(entry_id, {})
+        index_node = nodes.get(entry_id, {})
+        resolved_edges = (
+            list(defaults["edges"]) if "edges" in defaults else sorted(neighbours.get(entry_id, set()))
+        )
+        payload = {
+            "id": entry_id,
+            "role": defaults.get("role", index_node.get("role", "doc")),
+            "edges": resolved_edges,
+            "caps": (
+                defaults.get("caps")
+                or index_node.get("caps")
+                or f"docs/birdseye/caps/{entry_id}.json"
+            ),
+            "last_verified_at": defaults.get("last_verified_at", "2024-01-01T00:00:00Z"),
         }
-        if "reason" in node:
-            base["reason"] = node["reason"]
-        serialized_nodes.append(base)
+        if "reason" in defaults:
+            payload["reason"] = defaults["reason"]
+        serialized_nodes.append(payload)
     _write_json(
         hot_path,
         {
@@ -121,7 +144,7 @@ def test_run_update_refreshes_metadata_and_dependencies(tmp_path, monkeypatch, d
         tmp_path,
         edges=[["alpha.md", "beta.md"], ["beta.md", "alpha.md"]],
         caps_payloads=caps_payloads,
-        hot_nodes=_HOT_NODES_FIXTURE,
+        hot_entries=_HOT_NODE_IDS,
     )
 
     frozen_now = datetime(2025, 1, 1, 9, 30, tzinfo=timezone.utc)
@@ -185,7 +208,7 @@ def test_run_update_preserves_hot_nodes_structure(tmp_path, monkeypatch):
         tmp_path,
         edges=[["alpha.md", "beta.md"], ["beta.md", "alpha.md"]],
         caps_payloads=caps_payloads,
-        hot_nodes=_HOT_NODES_FIXTURE,
+        hot_entries=_HOT_NODE_IDS,
     )
 
     baseline_hot = json.loads(hot_path.read_text(encoding="utf-8"))
@@ -227,8 +250,11 @@ def test_run_update_limits_caps_to_two_hop_scope(tmp_path, monkeypatch):
             ["delta.md", "epsilon.md"],
         ],
         caps_payloads=caps_payloads,
-        hot_nodes=_HOT_NODES_FIXTURE,
+        hot_entries=[],
     )
+
+    baseline_hot = json.loads(hot_path.read_text(encoding="utf-8"))
+    assert baseline_hot["nodes"] == []
 
     frozen_now = datetime(2025, 1, 2, tzinfo=timezone.utc)
     monkeypatch.setattr(update, "utc_now", lambda: frozen_now)
@@ -277,12 +303,14 @@ def test_run_update_refreshes_caps_generated_at(tmp_path, monkeypatch):
         payload["generated_at"] = base_timestamp
         caps_payloads[cap_id] = payload
 
-    root, _, _, cap_paths = _prepare_birdseye(
+    root, _, hot_path, cap_paths = _prepare_birdseye(
         tmp_path,
         edges=edges,
         caps_payloads=caps_payloads,
-        hot_nodes=_HOT_NODES_FIXTURE,
+        hot_entries=[],
     )
+
+    assert json.loads(hot_path.read_text(encoding="utf-8"))["nodes"] == []
 
     frozen_now = datetime(2025, 1, 5, tzinfo=timezone.utc)
     monkeypatch.setattr(update, "utc_now", lambda: frozen_now)
@@ -329,7 +357,7 @@ def test_run_update_accepts_caps_directory_target(tmp_path, monkeypatch):
             ["delta.md", "epsilon.md"],
         ],
         caps_payloads=caps_payloads,
-        hot_nodes=_HOT_NODES_FIXTURE,
+        hot_entries=_HOT_NODE_IDS,
         root=root_base,
     )
 
@@ -361,6 +389,7 @@ def test_run_update_accepts_caps_directory_target(tmp_path, monkeypatch):
 
     refreshed_hot = json.loads(hot_path.read_text(encoding="utf-8"))
     assert refreshed_hot["generated_at"] == expected_timestamp
+    assert len(refreshed_hot["nodes"]) == len(_HOT_NODE_IDS)
 
     expected_deps = {
         "alpha.md": (["beta.md"], []),
@@ -398,7 +427,7 @@ def test_parse_args_supports_since_and_limits_scope(tmp_path, monkeypatch):
             ["epsilon.md", "zeta.md"],
         ],
         caps_payloads=caps_payloads,
-        hot_nodes=_HOT_NODES_FIXTURE,
+        hot_entries=_HOT_NODE_IDS,
         root=root_base,
     )
 
