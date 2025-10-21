@@ -71,6 +71,11 @@
       "caps": "docs/birdseye/caps/docs.birdseye.index.json.json",
       "mtime": "2025-10-14T00:00:00Z"
     },
+    "docs/BIRDSEYE.md": {
+      "role": "fallback",
+      "caps": "docs/birdseye/caps/docs.BIRDSEYE.md.json",
+      "mtime": "2025-10-21T08:51:14Z"
+    },
     "docs/birdseye/caps/": {
       "role": "collection",
       "caps": "docs/birdseye/caps/docs.birdseye.caps.json",
@@ -143,6 +148,10 @@
       "governance/policy.yaml"
     ],
     [
+      "README.md",
+      "docs/BIRDSEYE.md"
+    ],
+    [
       "HUB.codex.md",
       "BLUEPRINT.md"
     ],
@@ -212,6 +221,10 @@
     ],
     [
       "GUARDRAILS.md",
+      "docs/BIRDSEYE.md"
+    ],
+    [
+      "GUARDRAILS.md",
       "HUB.codex.md"
     ],
     [
@@ -227,6 +240,10 @@
       "docs/birdseye/caps/"
     ],
     [
+      "docs/BIRDSEYE.md",
+      "GUARDRAILS.md"
+    ],
+    [
       "HUB.codex.md",
       "docs/birdseye/index.json"
     ],
@@ -241,6 +258,10 @@
     [
       "README.md",
       "docs/birdseye/caps/"
+    ],
+    [
+      "docs/BIRDSEYE.md",
+      "README.md"
     ],
     [
       "docs/birdseye/index.json",
@@ -340,7 +361,15 @@
     ],
     [
       "tools/codemap/README.md",
+      "docs/BIRDSEYE.md"
+    ],
+    [
+      "tools/codemap/README.md",
       "docs/birdseye/caps/"
+    ],
+    [
+      "docs/BIRDSEYE.md",
+      "tools/codemap/README.md"
     ],
     [
       "HUB.codex.md",

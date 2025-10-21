@@ -7,7 +7,7 @@ Birdseye は、Workflow Cookbook の知識マップを統合的に参照する�
 ## Edges（主要ノードの隣接関係）
 
 `docs/birdseye/index.json` の `edges` から、Guardrails がフォールバック時に ±1 hop を推定しやすいよう主要ノードを抜粋しています。
-`docs/BIRDSEYE.md` へのリンクはホットリスト専用のフォールバック導線として `docs/birdseye/hot.json` にのみ保持され、`index.json` のエッジには含まれません。
+`docs/BIRDSEYE.md` へのリンクは `docs/birdseye/index.json` にも `README.md`／`GUARDRAILS.md`／`tools/codemap/README.md` との双方向エッジとして登録され、ホットリスト専用のフォールバック導線に加えて JSON からも辿れるようになりました。
 
 - `README.md`
   - 主要 Edges: `GUARDRAILS.md`, `HUB.codex.md`, `BLUEPRINT.md`, `RUNBOOK.md`, `EVALUATION.md`, `docs/birdseye/index.json`

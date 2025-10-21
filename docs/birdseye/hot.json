@@ -124,7 +124,7 @@
       "id": "docs/BIRDSEYE.md",
       "role": "fallback",
       "reason": "Guardrails が要求する Edges/Hot/更新手順のフォールバック資料。",
-      "caps": null,
+      "caps": "docs/birdseye/caps/docs.BIRDSEYE.md.json",
       "edges": [
         "README.md",
         "GUARDRAILS.md",
