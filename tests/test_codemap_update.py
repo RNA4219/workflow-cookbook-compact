@@ -110,6 +110,15 @@ def test_hot_nodes_caps_refer_to_existing_capsules():
     repo_root = Path(__file__).resolve().parents[1]
     hot_doc = json.loads((repo_root / "docs" / "birdseye" / "hot.json").read_text(encoding="utf-8"))
 
+    birdseye_index_node = next(
+        (node for node in hot_doc.get("nodes", []) if node.get("id") == "docs/birdseye/index.json"),
+        None,
+    )
+    assert birdseye_index_node is not None
+    assert (
+        birdseye_index_node.get("caps") == "docs/birdseye/caps/docs.birdseye.index.json.json"
+    )
+
     for node in hot_doc.get("nodes", []):
         caps_ref = node.get("caps")
         if caps_ref is None:
@@ -321,6 +330,14 @@ def test_run_update_preserves_hot_nodes_structure(tmp_path, monkeypatch):
     assert baseline_hot["index_snapshot"] == _HOT_INDEX_SNAPSHOT
     assert baseline_hot["refresh_command"] == _HOT_REFRESH_COMMAND
     assert baseline_hot["curation_notes"] == _HOT_CURATION_NOTES
+    assert (
+        {
+            node["id"]: node["caps"]
+            for node in baseline_hot["nodes"]
+            if "caps" in node and "id" in node
+        }["docs/birdseye/index.json"]
+        == "docs/birdseye/caps/docs.birdseye.index.json.json"
+    )
     for node in baseline_hot["nodes"]:
         assert node["refresh_command"] == _HOT_REFRESH_COMMAND
         assert node["index_snapshot"] == _HOT_INDEX_SNAPSHOT
@@ -342,6 +359,14 @@ def test_run_update_preserves_hot_nodes_structure(tmp_path, monkeypatch):
     assert refreshed_hot["refresh_command"] == _HOT_REFRESH_COMMAND
     assert refreshed_hot["curation_notes"] == _HOT_CURATION_NOTES
     assert refreshed_hot["nodes"] == baseline_hot["nodes"]
+    assert (
+        {
+            node["id"]: node["caps"]
+            for node in refreshed_hot["nodes"]
+            if "caps" in node and "id" in node
+        }["docs/birdseye/index.json"]
+        == "docs/birdseye/caps/docs.birdseye.index.json.json"
+    )
     for node in refreshed_hot["nodes"]:
         assert node["refresh_command"] == _HOT_REFRESH_COMMAND
         assert node["index_snapshot"] == _HOT_INDEX_SNAPSHOT
