@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 import sys
@@ -155,6 +156,19 @@ def test_index_contains_docs_birdseye_node_with_bidirectional_edges():
     for neighbour in neighbours:
         assert ("docs/BIRDSEYE.md", neighbour) in edges
         assert (neighbour, "docs/BIRDSEYE.md") in edges
+
+
+def test_index_mtime_is_serial_numbered():
+    repo_root = Path(__file__).resolve().parents[1]
+    index_doc = json.loads((repo_root / "docs" / "birdseye" / "index.json").read_text(encoding="utf-8"))
+
+    mtimes = [node.get("mtime") for node in index_doc.get("nodes", {}).values()]
+
+    assert mtimes, "mtime entries should exist"
+    assert all(isinstance(mtime, str) and re.fullmatch(r"\d{5}", mtime) for mtime in mtimes)
+
+    serials = sorted(int(mtime) for mtime in mtimes)
+    assert serials == list(range(1, len(mtimes) + 1))
 
 
 def _prepare_birdseye(

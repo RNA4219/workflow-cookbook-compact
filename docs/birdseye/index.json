@@ -4,102 +4,102 @@
     "README.md": {
       "role": "overview",
       "caps": "docs/birdseye/caps/README.md.json",
-      "mtime": "2025-10-15T20:45:30Z"
+      "mtime": "00007"
     },
     "HUB.codex.md": {
       "role": "navigation",
       "caps": "docs/birdseye/caps/HUB.codex.md.json",
-      "mtime": "2025-10-14T13:23:56Z"
+      "mtime": "00006"
     },
     "GUARDRAILS.md": {
       "role": "policy",
       "caps": "docs/birdseye/caps/GUARDRAILS.md.json",
-      "mtime": "2025-10-14T04:25:52Z"
+      "mtime": "00005"
     },
     "BLUEPRINT.md": {
       "role": "requirements",
       "caps": "docs/birdseye/caps/BLUEPRINT.md.json",
-      "mtime": "2025-10-14T00:00:00Z"
+      "mtime": "00001"
     },
     "RUNBOOK.md": {
       "role": "operations",
       "caps": "docs/birdseye/caps/RUNBOOK.md.json",
-      "mtime": "2025-10-14T00:00:00Z"
+      "mtime": "00008"
     },
     "EVALUATION.md": {
       "role": "quality",
       "caps": "docs/birdseye/caps/EVALUATION.md.json",
-      "mtime": "2025-10-14T00:00:00Z"
+      "mtime": "00004"
     },
     "TASK.codex.md": {
       "role": "template",
       "caps": "docs/birdseye/caps/TASK.codex.md.json",
-      "mtime": "2025-10-14T00:00:00Z"
+      "mtime": "00010"
     },
     "CHECKLISTS.md": {
       "role": "checklist",
       "caps": "docs/birdseye/caps/CHECKLISTS.md.json",
-      "mtime": "2025-10-14T00:00:00Z"
+      "mtime": "00003"
     },
     "CHANGELOG.md": {
       "role": "history",
       "caps": "docs/birdseye/caps/CHANGELOG.md.json",
-      "mtime": "2025-10-14T00:00:00Z"
+      "mtime": "00002"
     },
     "docs/IN-20250115-001.md": {
       "role": "incident",
       "caps": "docs/birdseye/caps/docs.IN-20250115-001.md.json",
-      "mtime": "2025-01-15T04:12:00Z"
+      "mtime": "00012"
     },
     "SECURITY.md": {
       "role": "security",
       "caps": "docs/birdseye/caps/SECURITY.md.json",
-      "mtime": "2025-10-14T00:00:00Z"
+      "mtime": "00009"
     },
     "governance/policy.yaml": {
       "role": "governance",
       "caps": "docs/birdseye/caps/governance.policy.yaml.json",
-      "mtime": "2025-10-14T00:00:00Z"
+      "mtime": "00016"
     },
     "governance/prioritization.yaml": {
       "role": "governance",
       "caps": "docs/birdseye/caps/governance.prioritization.yaml.json",
-      "mtime": "2025-10-16T12:30:00Z"
+      "mtime": "00017"
     },
     "docs/birdseye/index.json": {
       "role": "index",
       "caps": "docs/birdseye/caps/docs.birdseye.index.json.json",
-      "mtime": "2025-10-14T00:00:00Z"
+      "mtime": "00015"
     },
     "docs/BIRDSEYE.md": {
       "role": "fallback",
       "caps": "docs/birdseye/caps/docs.BIRDSEYE.md.json",
-      "mtime": "2025-10-21T08:51:14Z"
+      "mtime": "00011"
     },
     "docs/birdseye/caps/": {
       "role": "collection",
       "caps": "docs/birdseye/caps/docs.birdseye.caps.json",
-      "mtime": "2025-10-16T10:47:48Z"
+      "mtime": "00014"
     },
     "tools/codemap/": {
       "role": "tooling",
       "caps": "docs/birdseye/caps/tools.codemap.json",
-      "mtime": "2025-10-16T10:47:48Z"
+      "mtime": "00018"
     },
     "tools/codemap/README.md": {
       "role": "guide",
       "caps": "docs/birdseye/caps/tools.codemap.README.md.json",
-      "mtime": "2025-10-16T10:47:48Z"
+      "mtime": "00019"
     },
     "tools/codemap/update.py": {
       "role": "script",
       "caps": "docs/birdseye/caps/tools.codemap.update.py.json",
-      "mtime": "2025-10-16T10:47:48Z"
+      "mtime": "00020"
     },
     "docs/INCIDENT_TEMPLATE.md": {
       "role": "template",
       "caps": "docs/birdseye/caps/docs.INCIDENT_TEMPLATE.md.json",
-      "mtime": "2025-10-16T12:00:00Z"
+      "mtime": "00013"
     }
   },
   "edges": [
