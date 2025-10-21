@@ -47,7 +47,7 @@
 | `governance/` | [../EVALUATION.md](../EVALUATION.md#acceptance-criteria) / [../governance/policy.yaml](../governance/policy.yaml) | 受入基準と禁止パス・優先度設定を同期[^governance] |
 | `tests/` | [../EVALUATION.md](../EVALUATION.md#test-outline) / [birdseye/caps/](birdseye/caps/) | テストアウトラインと Birdseye カプセルを連携更新[^tests] |
 
-[^birdseye]: `python tools/codemap/update.py` で `docs/birdseye/index.json` と `caps/*` を再生成し、`GUARDRAILS.md` の鮮度管理基準を維持する。
+[^birdseye]: `python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps` を実行して `docs/birdseye/index.json`・`docs/birdseye/hot.json`・`caps/*` を再生成し、`GUARDRAILS.md` の鮮度管理基準を維持する。
 [^security]: レビュー結果と是正策は `docs/security/SAC.md` に記録し、チェックリストでトレースする。
 [^styles]: `styles/qa/QA.yml` の用語統一・禁止用語ルールをレビュー時に適用する。
 [^codemap]: CLI 実行後は `CHECKLISTS.md` の Hygiene セクションで差分確認を行う。
@@ -69,7 +69,7 @@
 ## 参照クイックリンク
 
 - [docs/ci-config.md](ci-config.md)：CI プリセットの分岐条件と再利用手順を集約。**利用シーン**：CI 設定変更前に `CHECKLISTS.md` の[Daily](../CHECKLISTS.md#daily)で運用要件をクロスチェック。
-- [docs/BIRDSEYE.md](BIRDSEYE.md) / [docs/birdseye/index.json](birdseye/index.json) / [birdseye/caps/](birdseye/caps/) / [tools/codemap/README.md#実行手順](../tools/codemap/README.md#実行手順)：Birdseye トポロジーの参照起点と生成結果、運用手順を一括で把握。**利用シーン**：1. `BIRDSEYE.md` で確認手順とリンクを把握。2. `generated_at`（必要に応じてホットリスト項目の `last_verified_at`）を確認し鮮度閾値を超えた場合は同期対象にする。3. README の手順通り `python tools/codemap/update.py` を実行し `caps/*` を再生成。4. `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)と `GUARDRAILS.md` の[鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling)を突き合わせて差分と期限を監視。
+- [docs/BIRDSEYE.md](BIRDSEYE.md) / [docs/birdseye/index.json](birdseye/index.json) / [docs/birdseye/hot.json](birdseye/hot.json) / [birdseye/caps/](birdseye/caps/) / [tools/codemap/README.md#実行手順](../tools/codemap/README.md#実行手順)：Birdseye トポロジーの参照起点と生成結果、運用手順を一括で把握。**利用シーン**：1. `BIRDSEYE.md` で確認手順とリンクを把握。2. `generated_at`（必要に応じてホットリスト項目の `last_verified_at`）を確認し鮮度閾値を超えた場合は同期対象にする。3. README の手順通り `python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps` を実行し `docs/birdseye/index.json`・`docs/birdseye/hot.json`・`caps/*` を再生成。4. `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)と `GUARDRAILS.md` の[鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling)を突き合わせて差分と期限を監視。
 - [docs/interfaces.md](interfaces.md)：機能境界と受け渡し契約をテーブル化。**利用シーン**：境界整理や責務調整時に `docs/CONTRACTS.md` と `RUNBOOK.md` の[Execute](../RUNBOOK.md#execute)を並行確認。
 - [docs/INCIDENT_TEMPLATE.md](INCIDENT_TEMPLATE.md)：インシデント報告テンプレートとエスカレーション導線を定義。**利用シーン**：インシデント対応の初動で `RUNBOOK.md` の[Confirm](../RUNBOOK.md#confirm)を基点にメトリクス照合・記録更新・運用チャネル報告を完了し、`CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)で未完了項目を洗い出す。
 - [docs/ADR/README.md](ADR/README.md)：設計判断の記録・改訂フローを統括。**利用シーン**：設計変更 PR に更新・新規 ADR を添付し、レビューテンプレと連携。
@@ -89,7 +89,7 @@ Guardrails 連動資料は行動原則と更新判断の基準を担い、本節
    - 改訂後、`EVALUATION.md` の[Acceptance Criteria](../EVALUATION.md#acceptance-criteria)および `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)で相互リンクを確認。
 2. **Birdseye 再生成**
    - `GUARDRAILS.md` の[鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling)に沿って再生成条件を判定。
-   - `tools/codemap/README.md` の[実行手順](../tools/codemap/README.md#実行手順)通り `python tools/codemap/update.py` を実行し、`docs/birdseye/index.json` と `caps/*` を更新。
+   - `tools/codemap/README.md` の[実行手順](../tools/codemap/README.md#実行手順)通り `python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps` を実行し、`docs/birdseye/index.json`・`docs/birdseye/hot.json`・`caps/*` を更新。
    - ツール未整備時は `GUARDRAILS.md` の[codemap 未実装時の暫定手順](../GUARDRAILS.md#codemap-未実装時の暫定手順)に従って手動更新を依頼し、結果を `HUB.codex.md` の[Output Contract](../HUB.codex.md#output-contract)へ反映。
 
 <!-- markdownlint-enable MD013 -->
