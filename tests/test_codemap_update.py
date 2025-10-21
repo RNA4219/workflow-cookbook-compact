@@ -157,6 +157,25 @@ def test_index_contains_docs_birdseye_node_with_bidirectional_edges():
         assert (neighbour, "docs/BIRDSEYE.md") in edges
 
 
+def test_index_contains_docs_birdseye_index_node_with_bidirectional_edges():
+    repo_root = Path(__file__).resolve().parents[1]
+    index_doc = json.loads((repo_root / "docs" / "birdseye" / "index.json").read_text(encoding="utf-8"))
+
+    nodes = index_doc.get("nodes", {})
+    assert "docs/birdseye/index.json" in nodes
+
+    edges = {
+        tuple(edge)
+        for edge in index_doc.get("edges", [])
+        if isinstance(edge, list) and len(edge) == 2
+    }
+
+    neighbours = ("README.md", "GUARDRAILS.md", "HUB.codex.md", "tools/codemap/")
+    for neighbour in neighbours:
+        assert ("docs/birdseye/index.json", neighbour) in edges
+        assert (neighbour, "docs/birdseye/index.json") in edges
+
+
 def _prepare_birdseye(
     tmp_path: Path,
     *,
