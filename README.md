@@ -203,7 +203,8 @@ jobs:
 
 ## License
 
-Apache-2.0. Unless noted otherwise, files copied from this repo into other projects remain Apache-2.0 and require retaining NOTICE text in redistributions.
+Apache-2.0. Unless noted otherwise,
+files copied from this repo into other projects remain Apache-2.0 and require retaining NOTICE text in redistributions.
 
 ### Commit message guide
 
