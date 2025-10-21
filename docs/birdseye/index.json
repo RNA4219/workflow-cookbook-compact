@@ -236,6 +236,10 @@
       "docs/birdseye/index.json"
     ],
     [
+      "docs/birdseye/index.json",
+      "GUARDRAILS.md"
+    ],
+    [
       "GUARDRAILS.md",
       "docs/birdseye/caps/"
     ],
@@ -248,12 +252,20 @@
       "docs/birdseye/index.json"
     ],
     [
+      "docs/birdseye/index.json",
+      "HUB.codex.md"
+    ],
+    [
       "HUB.codex.md",
       "docs/birdseye/caps/"
     ],
     [
       "README.md",
       "docs/birdseye/index.json"
+    ],
+    [
+      "docs/birdseye/index.json",
+      "README.md"
     ],
     [
       "README.md",
@@ -338,6 +350,10 @@
     [
       "tools/codemap/",
       "docs/birdseye/index.json"
+    ],
+    [
+      "docs/birdseye/index.json",
+      "tools/codemap/"
     ],
     [
       "tools/codemap/",
