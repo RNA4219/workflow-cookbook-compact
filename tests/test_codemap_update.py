@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 import sys
@@ -157,23 +158,17 @@ def test_index_contains_docs_birdseye_node_with_bidirectional_edges():
         assert (neighbour, "docs/BIRDSEYE.md") in edges
 
 
-def test_index_contains_docs_birdseye_index_node_with_bidirectional_edges():
+def test_index_mtime_is_serial_numbered():
     repo_root = Path(__file__).resolve().parents[1]
     index_doc = json.loads((repo_root / "docs" / "birdseye" / "index.json").read_text(encoding="utf-8"))
 
-    nodes = index_doc.get("nodes", {})
-    assert "docs/birdseye/index.json" in nodes
+    mtimes = [node.get("mtime") for node in index_doc.get("nodes", {}).values()]
 
-    edges = {
-        tuple(edge)
-        for edge in index_doc.get("edges", [])
-        if isinstance(edge, list) and len(edge) == 2
-    }
+    assert mtimes, "mtime entries should exist"
+    assert all(isinstance(mtime, str) and re.fullmatch(r"\d{5}", mtime) for mtime in mtimes)
 
-    neighbours = ("README.md", "GUARDRAILS.md", "HUB.codex.md", "tools/codemap/")
-    for neighbour in neighbours:
-        assert ("docs/birdseye/index.json", neighbour) in edges
-        assert (neighbour, "docs/birdseye/index.json") in edges
+    serials = sorted(int(mtime) for mtime in mtimes)
+    assert serials == list(range(1, len(mtimes) + 1))
 
 
 def _prepare_birdseye(
