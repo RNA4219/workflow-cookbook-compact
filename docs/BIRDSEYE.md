@@ -7,12 +7,13 @@ Birdseye は、Workflow Cookbook の知識マップを統合的に参照する�
 ## Edges（主要ノードの隣接関係）
 
 `docs/birdseye/index.json` の `edges` から、Guardrails がフォールバック時に ±1 hop を推定しやすいよう主要ノードを抜粋しています。
+`docs/BIRDSEYE.md` へのリンクはホットリスト専用のフォールバック導線として `docs/birdseye/hot.json` にのみ保持され、`index.json` のエッジには含まれません。
 
 - `README.md`
   - 主要 Edges: `GUARDRAILS.md`, `HUB.codex.md`, `BLUEPRINT.md`, `RUNBOOK.md`, `EVALUATION.md`, `docs/birdseye/index.json`
   - 用途: 初動ガイドと Birdseye 読込順序の提示
 - `GUARDRAILS.md`
-  - 主要 Edges: `README.md`, `HUB.codex.md`, `RUNBOOK.md`, `EVALUATION.md`, `docs/birdseye/index.json`, `docs/BIRDSEYE.md`
+  - 主要 Edges: `README.md`, `HUB.codex.md`, `RUNBOOK.md`, `EVALUATION.md`, `docs/birdseye/index.json`
   - 用途: 行動指針・鮮度管理・フォールバック手順
 - `HUB.codex.md`
   - 主要 Edges: `README.md`, `GUARDRAILS.md`, `RUNBOOK.md`, `EVALUATION.md`, `CHECKLISTS.md`, `docs/birdseye/index.json`
@@ -27,7 +28,7 @@ Birdseye は、Workflow Cookbook の知識マップを統合的に参照する�
   - 主要 Edges: `README.md`, `GUARDRAILS.md`, `HUB.codex.md`, `docs/birdseye/caps/`, `tools/codemap/`
   - 用途: Birdseye hop 計算の基盤
 - `tools/codemap/README.md`
-  - 主要 Edges: `docs/BIRDSEYE.md`, `tools/codemap/update.py`, `docs/birdseye/index.json`
+  - 主要 Edges: `tools/codemap/update.py`, `docs/birdseye/index.json`, `docs/birdseye/caps/`
   - 用途: 再生成コマンドと契約
 
 > 詳細なエッジリストは `docs/birdseye/index.json` を参照してください。フォールバック中でも JSON を第一読者とし、ここは要約に留めます。
