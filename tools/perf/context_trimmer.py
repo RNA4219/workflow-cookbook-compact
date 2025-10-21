@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2025 RNA4219
+
 """Context trimming utilities for workflow messages."""
 
 from __future__ import annotations

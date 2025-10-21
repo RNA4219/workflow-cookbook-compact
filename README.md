@@ -8,6 +8,8 @@ next_review_due: 2025-11-14
 
 # Workflow Cookbook / Codex Task Kit
 
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
 This repo defines QA/Governance-first workflows (not application code).
 AI agents implement changes under these policies with acceptance tests and
 canary rules.
@@ -198,6 +200,10 @@ jobs:
 <!-- markdownlint-enable MD013 -->
 
 > バッジ値は `governance/policy.yaml` の `slo` と同期。更新時は同ファイルの値を修正し、上記3つのバッジ表示を揃える。
+
+## License
+
+Apache-2.0. Unless noted otherwise, files copied from this repo into other projects remain Apache-2.0 and require retaining NOTICE text in redistributions.
 
 ### Commit message guide
 
