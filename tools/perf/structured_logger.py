@@ -1,77 +1,114 @@
-"""Structured logging helpers for inference metrics."""
-
 from __future__ import annotations
 
 import json
-import threading
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Mapping
+from typing import IO, Any, Mapping, Sequence
 
-JsonValue = Any
+JsonMapping = Mapping[str, Any]
 
 
-def _normalise_value(value: JsonValue) -> JsonValue:
+def _utc_timestamp(value: datetime | None) -> str:
+    if value is None:
+        value = datetime.now(timezone.utc)
+    elif value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    else:
+        value = value.astimezone(timezone.utc)
+    return value.isoformat()
+
+
+def _to_jsonable(value: Any) -> Any:
     if isinstance(value, Mapping):
-        return {str(key): _normalise_value(item) for key, item in value.items()}
+        return {str(key): _to_jsonable(item) for key, item in value.items()}
     if isinstance(value, (list, tuple)):
-        return [_normalise_value(item) for item in value]
+        return [_to_jsonable(item) for item in value]
     return value
 
 
 @dataclass(slots=True)
 class InferenceLogRecord:
-    """Represents a single Katamari-compatible inference log entry."""
+    logger: str
+    event: str
+    level: str
+    timestamp: str
+    inference_id: str | None = None
+    model: str | None = None
+    prompt: JsonMapping | None = None
+    response: JsonMapping | None = None
+    metrics: JsonMapping | None = None
+    tags: Sequence[str] | None = None
+    extra: JsonMapping | None = None
 
-    session_id: str | None = None
-    project: str | None = None
-    metrics: Mapping[str, JsonValue] | None = None
-    metadata: Mapping[str, JsonValue] | None = None
-    tags: Mapping[str, JsonValue] | None = None
-    extra: Mapping[str, JsonValue] | None = None
-
-    def as_json(self) -> dict[str, JsonValue]:
-        payload: dict[str, JsonValue] = {}
-        if self.session_id is not None:
-            payload["session_id"] = self.session_id
-        if self.project is not None:
-            payload["project"] = self.project
-        if self.metrics:
-            payload["metrics"] = {
-                str(key): _normalise_value(value) for key, value in self.metrics.items()
-            }
-        if self.metadata:
-            payload["metadata"] = {
-                str(key): _normalise_value(value) for key, value in self.metadata.items()
-            }
-        if self.tags:
-            payload["tags"] = {
-                str(key): _normalise_value(value) for key, value in self.tags.items()
-            }
-        if self.extra:
-            payload.update({str(key): _normalise_value(value) for key, value in self.extra.items()})
-        return payload
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "logger": self.logger,
+            "event": self.event,
+            "level": self.level,
+            "timestamp": self.timestamp,
+            "inference_id": self.inference_id,
+            "model": self.model,
+            "prompt": _to_jsonable(self.prompt) if self.prompt is not None else None,
+            "response": _to_jsonable(self.response) if self.response is not None else None,
+            "metrics": _to_jsonable(self.metrics) if self.metrics is not None else {},
+            "tags": list(self.tags) if self.tags is not None else [],
+            "extra": _to_jsonable(self.extra) if self.extra is not None else {},
+        }
 
 
 class StructuredLogger:
-    """Katamari-compatible structured logger that writes JSON Lines."""
+    __slots__ = ("_name", "_path", "_stream")
 
-    def __init__(self, log_path: Path | str) -> None:
-        self._path = Path(log_path)
-        self._lock = threading.Lock()
-        if self._path.parent != self._path:
+    def __init__(self, *, name: str, path: str | Path | None = None, stream: IO[str] | None = None) -> None:
+        if path is None and stream is None:
+            raise ValueError("Either path or stream must be provided")
+        self._name = name
+        self._path = Path(path).expanduser() if path is not None else None
+        self._stream = stream
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    def inference(
+        self,
+        *,
+        inference_id: str | None = None,
+        model: str | None = None,
+        prompt: JsonMapping | None = None,
+        response: JsonMapping | None = None,
+        metrics: JsonMapping | None = None,
+        tags: Sequence[str] | None = None,
+        extra: JsonMapping | None = None,
+        level: str = "INFO",
+        timestamp: datetime | None = None,
+    ) -> None:
+        record = InferenceLogRecord(
+            logger=self._name,
+            event="inference",
+            level=level,
+            timestamp=_utc_timestamp(timestamp),
+            inference_id=inference_id,
+            model=model,
+            prompt=prompt,
+            response=response,
+            metrics=metrics,
+            tags=tuple(tags) if tags is not None else None,
+            extra=extra,
+        )
+        self._write(record)
+
+    def _write(self, record: InferenceLogRecord) -> None:
+        line = json.dumps(record.to_dict(), ensure_ascii=False) + "\n"
+        if self._stream is not None:
+            self._stream.write(line)
+            self._stream.flush()
+        else:
+            assert self._path is not None
             self._path.parent.mkdir(parents=True, exist_ok=True)
-
-    def log_inference(self, record: InferenceLogRecord) -> None:
-        payload = record.as_json()
-        self._write_line(payload)
-
-    def log(self, record: InferenceLogRecord) -> None:
-        self.log_inference(record)
-
-    def _write_line(self, payload: Mapping[str, JsonValue]) -> None:
-        encoded = json.dumps(payload, ensure_ascii=False)
-        with self._lock:
             with self._path.open("a", encoding="utf-8") as handle:
-                handle.write(encoded)
-                handle.write("\n")
+                handle.write(line)
+
+
+__all__ = ["InferenceLogRecord", "StructuredLogger"]

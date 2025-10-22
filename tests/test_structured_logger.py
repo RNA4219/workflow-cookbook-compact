@@ -10,41 +10,49 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools.perf.structured_logger import InferenceLogRecord, StructuredLogger
+from tools.perf.structured_logger import StructuredLogger
 
 
-@pytest.mark.usefixtures("tmp_path")
-def test_structured_logger_writes_json_lines(tmp_path: Path) -> None:
-    log_path = tmp_path / "chainlit.log"
-    logger = StructuredLogger(log_path)
+@pytest.fixture
+def log_path(tmp_path: Path) -> Path:
+    return tmp_path / "chainlit.log"
 
-    logger.log_inference(
-        InferenceLogRecord(
-            session_id="session-1",
-            metrics={
-                "semantic_retention": 0.74,
-                "spec_completeness": {"with_spec": 91, "total": 100},
-            },
-            metadata={"reviewer": "alice"},
-        )
-    )
-    logger.log_inference(
-        InferenceLogRecord(
-            session_id="session-1",
-            metrics={"review_latency": 0.5},
-        )
+
+def test_structured_logger_writes_inference_records(log_path: Path) -> None:
+    logger = StructuredLogger(name="workflow.metrics", path=log_path)
+
+    logger.inference(
+        inference_id="run-42",
+        model="gpt-4.1-mini",
+        prompt={"messages": [{"role": "user", "content": "Ping"}]},
+        response={"content": "Pong", "finish_reason": "stop"},
+        metrics={
+            "semantic_retention": 0.82,
+            "spec_completeness": {"with_spec": 91, "total": 100},
+        },
+        tags=("qa", "integration"),
+        extra={"run": "test"},
     )
 
     contents = log_path.read_text(encoding="utf-8").splitlines()
-    assert len(contents) == 2
+    assert len(contents) == 1
 
-    first = json.loads(contents[0])
-    second = json.loads(contents[1])
+    payload = json.loads(contents[0])
+    assert payload["logger"] == "workflow.metrics"
+    assert payload["event"] == "inference"
+    assert payload["level"] == "INFO"
+    assert payload["metrics"] == {
+        "semantic_retention": 0.82,
+        "spec_completeness": {"with_spec": 91, "total": 100},
+    }
+    assert payload["prompt"] == {"messages": [{"role": "user", "content": "Ping"}]}
+    assert payload["response"] == {"content": "Pong", "finish_reason": "stop"}
+    assert payload["tags"] == ["qa", "integration"]
+    assert payload["extra"] == {"run": "test"}
+    assert payload["inference_id"] == "run-42"
+    assert payload["model"] == "gpt-4.1-mini"
+    assert isinstance(payload["timestamp"], str)
 
-    assert first["session_id"] == "session-1"
-    assert first["metrics"]["semantic_retention"] == pytest.approx(0.74)
-    assert first["metrics"]["spec_completeness"] == {"with_spec": 91, "total": 100}
-    assert first["metadata"] == {"reviewer": "alice"}
-
-    assert second["metrics"]["review_latency"] == pytest.approx(0.5)
-    assert second.get("metadata") is None
+    # Chainlit のログ収集と互換なメトリクス構造を確認
+    assert payload["metrics"]["spec_completeness"]["with_spec"] == 91
+    assert payload["metrics"]["spec_completeness"]["total"] == 100
