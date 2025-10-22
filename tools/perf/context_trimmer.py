@@ -5,10 +5,13 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Sequence
+from math import sqrt
+from typing import Any, Callable, Dict, Iterable, List, Mapping, MutableMapping, Sequence
 
 _Message = Mapping[str, Any]
 _MutableMessage = MutableMapping[str, Any]
+
+_Embedder = Callable[[Sequence[str]], Sequence[Sequence[float]]]
 
 
 class _TokenCounter:
@@ -81,6 +84,82 @@ def _first_system_message(messages: Iterable[_MutableMessage]) -> tuple[_Mutable
     return system_message, remainder
 
 
+def _join_message_contents(messages: Iterable[_Message]) -> str:
+    return " ".join(str(message.get("content", "")) for message in messages).strip()
+
+
+def _cosine_similarity(vector_a: Sequence[float], vector_b: Sequence[float]) -> float | None:
+    if len(vector_a) != len(vector_b) or not vector_a:
+        return None
+    dot = sum(a * b for a, b in zip(vector_a, vector_b))
+    norm_a = sqrt(sum(a * a for a in vector_a))
+    norm_b = sqrt(sum(b * b for b in vector_b))
+    if norm_a == 0 or norm_b == 0:
+        return None
+    return dot / (norm_a * norm_b)
+
+
+def _openai_embedder(options: Mapping[str, Any]) -> _Embedder | None:
+    try:
+        from openai import OpenAI  # type: ignore
+    except Exception:
+        return None
+
+    client_options = dict(options.get("client_options", {}))
+    client = OpenAI(**client_options)
+    model = options.get("model") or "text-embedding-3-small"
+
+    def _embed(texts: Sequence[str]) -> List[List[float]]:
+        response = client.embeddings.create(model=model, input=list(texts))
+        data = getattr(response, "data", [])
+        embeddings: List[List[float]] = []
+        for item in data:
+            embedding = getattr(item, "embedding", None)
+            if embedding is None and isinstance(item, Mapping):
+                embedding = item.get("embedding")
+            if embedding is None:
+                continue
+            embeddings.append([float(value) for value in embedding])
+        return embeddings
+
+    return _embed
+
+
+def _resolve_embedder(options: Mapping[str, Any]) -> _Embedder | None:
+    embedder = options.get("embedder")
+    if callable(embedder):
+        return embedder
+    provider = options.get("provider")
+    if provider == "openai":
+        return _openai_embedder(options)
+    return None
+
+
+def _semantic_retention(
+    original_messages: Sequence[_Message],
+    trimmed_messages: Sequence[_Message],
+    options: Mapping[str, Any],
+) -> float | None:
+    if not options:
+        return None
+    embedder = _resolve_embedder(options)
+    if embedder is None:
+        return None
+    original_text = _join_message_contents(original_messages)
+    trimmed_text = _join_message_contents(trimmed_messages)
+    if not original_text or not trimmed_text:
+        return None
+    try:
+        embeddings_raw = embedder([original_text, trimmed_text])
+    except Exception:
+        return None
+    embeddings = [list(map(float, vector)) for vector in list(embeddings_raw)[:2]]
+    if len(embeddings) < 2:
+        return None
+    similarity = _cosine_similarity(embeddings[0], embeddings[1])
+    return similarity
+
+
 def trim_messages(
     messages: Sequence[_Message],
     *,
@@ -114,13 +193,19 @@ def trim_messages(
     output_tokens = sum(counter.count_message(message) for message in trimmed)
     compression_ratio = 1.0 if total_input_tokens == 0 else output_tokens / total_input_tokens
 
+    statistics: Dict[str, Any] = {
+        "compression_ratio": compression_ratio,
+        "input_tokens": total_input_tokens,
+        "output_tokens": output_tokens,
+    }
+
+    semantic_retention = _semantic_retention(mutable_messages, trimmed, semantic_options or {})
+    if semantic_options is not None:
+        statistics["semantic_retention"] = semantic_retention
+
     return {
         "messages": trimmed,
-        "statistics": {
-            "compression_ratio": compression_ratio,
-            "input_tokens": total_input_tokens,
-            "output_tokens": output_tokens,
-        },
+        "statistics": statistics,
         "token_counter": counter.meta(),
         "semantic_options": dict(semantic_options or {}),
     }
