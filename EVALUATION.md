@@ -17,6 +17,9 @@ next_review_due: 2025-11-14
 
 ## KPIs
 
+- review_latency: 平均レビュー完了時間(h)を監視し、tools/perf/collect_metrics.py のレビューログ解析から週次集計。
+- reopen_rate: 再修正率(%)を追跡し、tools/perf/collect_metrics.py のレビューログ解析からスプリントごとに確認。
+- spec_completeness: 要件/仕様/設計が揃ったPR比率(%)を保持し、tools/perf/collect_metrics.py のレビューログ解析からスプリントごとに確認。
 - compress_ratio: 85%〜115% を許容レンジとし、tools/perf/collect_metrics.py の圧縮統計から週次集計。
 - semantic_retention: 95%以上を維持し、tools/perf/collect_metrics.py のレビューログ解析出力をスプリントごとに確認。
 
