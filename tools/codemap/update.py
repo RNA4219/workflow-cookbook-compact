@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from collections import deque
@@ -132,6 +133,15 @@ def _sorted_unique(items: Sequence[str]) -> list[str]:
     return sorted(dict.fromkeys(items))
 
 
+_SERIAL_PATTERN = re.compile(r"\d{5}")
+
+
+def _next_generated_at(existing: Any, fallback: str) -> str:
+    if isinstance(existing, str) and _SERIAL_PATTERN.fullmatch(existing):
+        return f"{int(existing) + 1:05d}"
+    return fallback
+
+
 def _maybe_write(
     path: Path,
     data: Any,
@@ -161,6 +171,12 @@ def run_update(options: UpdateOptions) -> UpdateReport:
     planned: set[Path] = set()
     performed: set[Path] = set()
     timestamp = _format_timestamp(utc_now())
+    applied_generated_at: str | None = None
+
+    def remember_generated(value: str) -> None:
+        nonlocal applied_generated_at
+        if applied_generated_at is None:
+            applied_generated_at = value
 
     grouped: dict[Path, list[Path]] = {}
     for target in options.targets:
@@ -215,8 +231,10 @@ def run_update(options: UpdateOptions) -> UpdateReport:
                 cap_path_lookup[cap_path.resolve()] = cap_id
 
         if emit_index:
-            if index_data.get("generated_at") != timestamp:
-                index_data["generated_at"] = timestamp
+            new_generated = _next_generated_at(index_data.get("generated_at"), timestamp)
+            if index_data.get("generated_at") != new_generated:
+                index_data["generated_at"] = new_generated
+                remember_generated(new_generated)
             _maybe_write(
                 index_path,
                 index_data,
@@ -229,8 +247,12 @@ def run_update(options: UpdateOptions) -> UpdateReport:
             if hot_path.exists():
                 hot_data, hot_original = _load_json(hot_path)
                 if isinstance(hot_data, dict):
-                    if hot_data.get("generated_at") != timestamp:
-                        hot_data["generated_at"] = timestamp
+                    new_hot_generated = _next_generated_at(
+                        hot_data.get("generated_at"), timestamp
+                    )
+                    if hot_data.get("generated_at") != new_hot_generated:
+                        hot_data["generated_at"] = new_hot_generated
+                        remember_generated(new_hot_generated)
                     _maybe_write(
                         hot_path,
                         hot_data,
@@ -288,9 +310,11 @@ def run_update(options: UpdateOptions) -> UpdateReport:
                 if cap_data.get("deps_in") != expected_in:
                     cap_data["deps_in"] = expected_in
                     updated = True
-                if cap_data.get("generated_at") != timestamp:
-                    cap_data["generated_at"] = timestamp
+                new_generated = _next_generated_at(cap_data.get("generated_at"), timestamp)
+                if cap_data.get("generated_at") != new_generated:
+                    cap_data["generated_at"] = new_generated
                     updated = True
+                    remember_generated(new_generated)
                 if updated:
                     _maybe_write(
                         cap_path,
@@ -302,7 +326,7 @@ def run_update(options: UpdateOptions) -> UpdateReport:
                     )
 
     return UpdateReport(
-        generated_at=timestamp,
+        generated_at=applied_generated_at or timestamp,
         planned_writes=_finalise(planned),
         performed_writes=_finalise(performed),
     )
