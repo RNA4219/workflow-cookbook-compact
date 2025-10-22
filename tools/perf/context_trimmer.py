@@ -106,6 +106,10 @@ def _cosine_similarity(a: Sequence[float], b: Sequence[float]) -> float:
     return similarity
 
 
+def _messages_to_text(messages: Iterable[_Message]) -> str:
+    return "\n".join(str(message.get("content", "")) for message in messages)
+
+
 def _compute_semantic_retention(
     original_text: str,
     trimmed_text: str,
@@ -114,6 +118,30 @@ def _compute_semantic_retention(
     original_vector = _to_vector(embedder(original_text))
     trimmed_vector = _to_vector(embedder(trimmed_text))
     return _cosine_similarity(original_vector, trimmed_vector)
+
+
+def _resolve_semantic_metrics(
+    original_messages: Sequence[_Message],
+    trimmed_messages: Sequence[_Message],
+    semantic_options: Mapping[str, Any] | None,
+) -> tuple[Dict[str, Any], float | None]:
+    if semantic_options is None:
+        return {}, None
+
+    used_options = dict(semantic_options)
+    embedder = used_options.get("embedder")
+    if not callable(embedder):
+        return used_options, None
+
+    try:
+        retention = _compute_semantic_retention(
+            _messages_to_text(original_messages),
+            _messages_to_text(trimmed_messages),
+            embedder,
+        )
+    except Exception:
+        retention = 0.0
+    return used_options, retention
 
 
 def trim_messages(
@@ -155,19 +183,13 @@ def trim_messages(
         "output_tokens": output_tokens,
     }
 
-    semantic_used_options = dict(semantic_options or {})
-    embedder = semantic_used_options.get("embedder")
-    if isinstance(embedder, Callable):
-        try:
-            original_text = "\n".join(str(message.get("content", "")) for message in mutable_messages)
-            trimmed_text = "\n".join(str(message.get("content", "")) for message in trimmed)
-            statistics["semantic_retention"] = _compute_semantic_retention(
-                original_text,
-                trimmed_text,
-                embedder,
-            )
-        except Exception:
-            statistics["semantic_retention"] = 0.0
+    semantic_used_options, semantic_retention = _resolve_semantic_metrics(
+        mutable_messages,
+        trimmed,
+        semantic_options,
+    )
+    if semantic_retention is not None:
+        statistics["semantic_retention"] = semantic_retention
 
     return {
         "messages": trimmed,
