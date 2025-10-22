@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from types import SimpleNamespace
-from typing import Any, Dict, List
 import importlib
 import sys
+from itertools import zip_longest
+from math import sqrt
+from types import SimpleNamespace
+from typing import Any, Dict, Iterable, List
 
 import pytest
 
@@ -28,6 +30,10 @@ def _messages() -> List[Dict[str, str]]:
         {"role": "assistant", "content": "hi there"},
         {"role": "user", "content": "tell me more"},
     ]
+
+
+def _messages_text(messages: Iterable[Dict[str, Any]]) -> str:
+    return "\n".join(str(message.get("content", "")) for message in messages)
 
 
 def test_trim_messages_preserves_first_system(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -89,3 +95,40 @@ def test_trim_messages_records_semantic_retention() -> None:
 
     retention = result["statistics"]["semantic_retention"]
     assert 0.0 <= retention <= 1.0
+
+
+def test_trim_messages_semantic_retention_matches_cosine_similarity() -> None:
+    module = _reload_context_trimmer(fake_tiktoken=None)
+
+    def embedder(text: str) -> List[float]:
+        return [float(len(text)), float(len(text) % 3 + 1)]
+
+    messages = _messages()
+    result = module.trim_messages(
+        messages,
+        max_context_tokens=12,
+        model="test-model",
+        semantic_options={"embedder": embedder},
+    )
+
+    trimmed_messages = result["messages"]
+    retention = result["statistics"]["semantic_retention"]
+    assert isinstance(retention, float)
+    assert 0.0 <= retention <= 1.0
+
+    original_vector = [float(value) for value in embedder(_messages_text(messages))]
+    trimmed_vector = [float(value) for value in embedder(_messages_text(trimmed_messages))]
+
+    dot_product = sum(x * y for x, y in zip_longest(original_vector, trimmed_vector, fillvalue=0.0))
+    norm_original = sqrt(sum(x * x for x in original_vector))
+    norm_trimmed = sqrt(sum(y * y for y in trimmed_vector))
+
+    if norm_original == 0.0 and norm_trimmed == 0.0:
+        expected = 1.0
+    elif norm_original == 0.0 or norm_trimmed == 0.0:
+        expected = 0.0
+    else:
+        expected = dot_product / (norm_original * norm_trimmed)
+
+    expected = max(0.0, min(1.0, expected))
+    assert retention == pytest.approx(expected)
