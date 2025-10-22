@@ -13,7 +13,7 @@
 
 | 機能 | 提供するもの | 受け取るもの | 備考 |
 |------|---------------|---------------|------|
-| collect_metrics_cli（仮称） | CLI経由でエクスポートされる `MetricsSnapshot` JSON + Prometheus PushGateway 互換メトリクス (`--suite qa` で `.ga/qa-metrics.json` を既定出力、`--output` で上書き可) | CI/実行時ログ (`StructuredLog`)、`qa-metrics.json`（任意）、Prometheus PushGateway 接続情報 | 入出力スキーマ: `MetricsSnapshot` JSON; 依存: Prometheus PushGateway、構造化ログ。契約: [docs/CONTRACTS.md](./CONTRACTS.md) の `.ga/qa-metrics.json`。 |
+| collect_metrics_cli（仮称） | CLI経由でエクスポートされる `MetricsSnapshot` JSON + Prometheus PushGateway 互換メトリクス (`--suite qa` で `.ga/qa-metrics.json` を既定出力、`--output` で上書き可、`--pushgateway-url` 指定時に即時送信) | CI/実行時ログ (`StructuredLog`)、`qa-metrics.json`（任意）、Prometheus PushGateway 接続情報 | 入出力スキーマ: `MetricsSnapshot` JSON; 依存: Prometheus PushGateway、構造化ログ。契約: [docs/CONTRACTS.md](./CONTRACTS.md) の `.ga/qa-metrics.json`。 |
 
 追加ルール:
 

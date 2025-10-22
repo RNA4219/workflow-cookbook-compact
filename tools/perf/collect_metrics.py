@@ -200,6 +200,24 @@ def _merge(sources: Iterable[Mapping[str, float]]) -> dict[str, float]:
     return {key: combined[key] for key in METRIC_KEYS}
 
 
+def _format_pushgateway_payload(metrics: Mapping[str, float]) -> bytes:
+    lines = [f"{key} {format(metrics[key], 'g')}" for key in METRIC_KEYS]
+    return ("\n".join(lines) + "\n").encode("utf-8")
+
+
+def _push_to_gateway(pushgateway_url: str, metrics: Mapping[str, float]) -> None:
+    payload = _format_pushgateway_payload(metrics)
+    request = urllib.request.Request(pushgateway_url, data=payload, method="PUT")
+    request.add_header("Content-Type", "text/plain; version=0.0.4")
+    try:
+        with urllib.request.urlopen(request) as response:  # type: ignore[arg-type]
+            response.read()
+    except OSError as exc:
+        raise MetricsCollectionError(
+            f"Failed to push metrics to PushGateway at {pushgateway_url}: {exc}"
+        ) from exc
+
+
 def collect_metrics(metrics_url: str | None, log_path: Path | None) -> dict[str, float]:
     sources: list[Mapping[str, float]] = []
     if metrics_url:
@@ -217,6 +235,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--metrics-url", help="Prometheus metrics endpoint URL")
     parser.add_argument("--log-path", type=Path, help="Path to Chainlit log file")
     parser.add_argument("--output", type=Path, help="File path to write collected metrics JSON")
+    parser.add_argument("--pushgateway-url", help="Prometheus PushGateway endpoint URL")
     args = parser.parse_args(argv)
 
     suite = SUITES.get(args.suite) if args.suite else None
@@ -232,6 +251,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         metrics = collect_metrics(metrics_url, log_path)
+        if args.pushgateway_url:
+            _push_to_gateway(args.pushgateway_url, metrics)
     except MetricsCollectionError as exc:
         print(str(exc), file=sys.stderr)
         return 1

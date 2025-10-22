@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+import http.server
 import json
+import socket
 import subprocess
 import sys
+import threading
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,6 +21,38 @@ def _run_cli(*args: str) -> subprocess.CompletedProcess[str]:
         text=True,
         check=False,
     )
+
+
+@contextmanager
+def _mock_pushgateway(status_code: int = 202) -> Iterator[tuple[str, dict[str, object]]]:
+    captured: dict[str, object] = {}
+
+    class _Handler(http.server.BaseHTTPRequestHandler):
+        def do_PUT(self) -> None:  # noqa: N802 - http.server API
+            length = int(self.headers.get("Content-Length", "0"))
+            captured["body"] = self.rfile.read(length)
+            captured["path"] = self.path
+            captured["method"] = "PUT"
+            captured["headers"] = dict(self.headers)
+            self.send_response(status_code)
+            self.end_headers()
+
+        def log_message(self, format: str, *args: object) -> None:  # noqa: A003 - external API
+            return
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        host, port = sock.getsockname()
+
+    server = http.server.HTTPServer((host, port), _Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield f"http://{host}:{port}/metrics", captured
+    finally:
+        server.shutdown()
+        thread.join()
+        server.server_close()
 
 
 def test_collects_metrics_from_prometheus_and_chainlit(tmp_path: Path) -> None:
@@ -54,6 +91,52 @@ def test_collects_metrics_from_prometheus_and_chainlit(tmp_path: Path) -> None:
         "reopen_rate": 0.05,
         "spec_completeness": 0.91,
     }
+
+
+def test_pushgateway_receives_metrics_payload(tmp_path: Path) -> None:
+    prometheus = tmp_path / "metrics.prom"
+    prometheus.write_text(
+        "compress_ratio 0.82\n"
+        "semantic_retention 0.74\n"
+        "review_latency 0.5\n"
+        "reopen_rate 0.05\n"
+        "spec_completeness 0.91\n",
+        encoding="utf-8",
+    )
+
+    with _mock_pushgateway() as (url, captured):
+        result = _run_cli("--metrics-url", prometheus.as_uri(), "--pushgateway-url", url)
+
+    assert result.returncode == 0, result.stderr
+    body = captured["body"]
+    assert isinstance(body, bytes)
+    assert body.decode("utf-8") == (
+        "compress_ratio 0.82\n"
+        "semantic_retention 0.74\n"
+        "review_latency 0.5\n"
+        "reopen_rate 0.05\n"
+        "spec_completeness 0.91\n"
+    )
+    assert captured["method"] == "PUT"
+    assert captured["path"] == "/metrics"
+
+
+def test_pushgateway_failure_causes_non_zero_exit(tmp_path: Path) -> None:
+    prometheus = tmp_path / "metrics.prom"
+    prometheus.write_text(
+        "compress_ratio 0.82\n"
+        "semantic_retention 0.74\n"
+        "review_latency 0.5\n"
+        "reopen_rate 0.05\n"
+        "spec_completeness 0.91\n",
+        encoding="utf-8",
+    )
+
+    with _mock_pushgateway(status_code=500) as (url, _captured):
+        result = _run_cli("--metrics-url", prometheus.as_uri(), "--pushgateway-url", url)
+
+    assert result.returncode != 0
+    assert "PushGateway" in result.stderr or "push metrics" in result.stderr
 
 
 def test_suite_output_generates_file_and_stdout_matches(tmp_path: Path) -> None:
