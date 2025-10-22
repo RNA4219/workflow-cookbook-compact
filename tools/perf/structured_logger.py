@@ -42,19 +42,24 @@ class InferenceLogRecord:
     extra: JsonMapping | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload: dict[str, Any] = {
             "logger": self.logger,
             "event": self.event,
             "level": self.level,
             "timestamp": self.timestamp,
-            "inference_id": self.inference_id,
-            "model": self.model,
-            "prompt": _to_jsonable(self.prompt) if self.prompt is not None else None,
-            "response": _to_jsonable(self.response) if self.response is not None else None,
             "metrics": _to_jsonable(self.metrics) if self.metrics is not None else {},
             "tags": list(self.tags) if self.tags is not None else [],
             "extra": _to_jsonable(self.extra) if self.extra is not None else {},
         }
+        if self.inference_id is not None:
+            payload["inference_id"] = self.inference_id
+        if self.model is not None:
+            payload["model"] = self.model
+        if self.prompt is not None:
+            payload["prompt"] = _to_jsonable(self.prompt)
+        if self.response is not None:
+            payload["response"] = _to_jsonable(self.response)
+        return payload
 
 
 class StructuredLogger:

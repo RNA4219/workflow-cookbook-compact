@@ -45,6 +45,7 @@ def test_structured_logger_writes_inference_records(log_path: Path) -> None:
         "semantic_retention": 0.82,
         "spec_completeness": {"with_spec": 91, "total": 100},
     }
+    assert payload["metrics"]["semantic_retention"] == 0.82
     assert payload["prompt"] == {"messages": [{"role": "user", "content": "Ping"}]}
     assert payload["response"] == {"content": "Pong", "finish_reason": "stop"}
     assert payload["tags"] == ["qa", "integration"]
@@ -56,3 +57,19 @@ def test_structured_logger_writes_inference_records(log_path: Path) -> None:
     # Chainlit のログ収集と互換なメトリクス構造を確認
     assert payload["metrics"]["spec_completeness"]["with_spec"] == 91
     assert payload["metrics"]["spec_completeness"]["total"] == 100
+
+
+def test_structured_logger_omits_empty_optional_fields(log_path: Path) -> None:
+    logger = StructuredLogger(name="workflow.metrics", path=log_path)
+
+    logger.inference(metrics={"semantic_retention": 0.74})
+
+    contents = log_path.read_text(encoding="utf-8").splitlines()
+    assert len(contents) == 1
+
+    payload = json.loads(contents[0])
+    assert payload["metrics"]["semantic_retention"] == 0.74
+    assert payload["tags"] == []
+    assert payload["extra"] == {}
+    for field in ("inference_id", "model", "prompt", "response"):
+        assert field not in payload

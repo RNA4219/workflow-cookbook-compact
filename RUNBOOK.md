@@ -32,11 +32,10 @@ next_review_due: 2025-11-21
     `semantic_retention` を取得するには `tools/perf/context_trimmer.trim_messages` へ
     `semantic_options`（例: `{"embedder": <callable>}`）を渡せるよう、Chainlit 側で埋め込み関数を設定しておく。
     `--metrics-url` または `--log-path` のどちらか片方しか利用できない場合は、利用可能な入力のみ指定する。
-  - Chainlit（または同等のUI）からメトリクスを出力する場合は `tools.perf.structured_logger.StructuredLogger`
-    を利用する。例: `from tools.perf.structured_logger import StructuredLogger` →
-    `StructuredLogger(name="chainlit", path="~/.chainlit/logs/metrics.log").inference(metrics={"semantic_retention": 0.9})`。
-    こうして生成された JSON ログ行は `collect_metrics --log-path ~/.chainlit/logs/metrics.log` で取り込まれ、
-    `metrics` キー配下の辞書がそのまま Chainlit メトリクスとして集計される。
+  - Chainlit（または同等の UI）では `StructuredLogger(name="chainlit", path="~/.chainlit/logs/metrics.log")`
+    を呼び出し、`inference(metrics={"semantic_retention": 0.9, ...})` で JSON Lines
+    (`metrics.semantic_retention` など) を書き出す。生成ログは
+    `collect_metrics --log-path ~/.chainlit/logs/metrics.log` で取り込める。
   - FastAPI などの Web サービスに組み込む場合は `tools.perf.metrics_registry.MetricsRegistry` を共有シングルトン
     として初期化し、トリミング完了時に `observe_trim(original_tokens=..., trimmed_tokens=..., semantic_retention=...)`
     を記録する。`@app.get("/metrics")` エンドポイントで `return PlainTextResponse(registry.export_prometheus())`
