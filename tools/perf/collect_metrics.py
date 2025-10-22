@@ -19,6 +19,13 @@ METRIC_KEYS: tuple[str, ...] = (
     "spec_completeness",
 )
 
+PERCENTAGE_KEYS: tuple[str, ...] = (
+    "compress_ratio",
+    "semantic_retention",
+    "reopen_rate",
+    "spec_completeness",
+)
+
 
 @dataclass(frozen=True)
 class SuiteConfig:
@@ -197,7 +204,10 @@ def _merge(sources: Iterable[Mapping[str, float]]) -> dict[str, float]:
     missing = [key for key in METRIC_KEYS if key not in combined]
     if missing:
         raise MetricsCollectionError("Missing metrics: " + ", ".join(missing))
-    return {key: combined[key] for key in METRIC_KEYS}
+    result = {key: combined[key] for key in METRIC_KEYS}
+    for key in PERCENTAGE_KEYS:
+        result[key] = result[key] * 100.0
+    return result
 
 
 def _format_pushgateway_payload(metrics: Mapping[str, float]) -> bytes:
