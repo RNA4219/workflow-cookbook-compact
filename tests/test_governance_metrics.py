@@ -33,5 +33,9 @@ def test_governance_metrics_contains_required_keys() -> None:
     metrics_data = yaml.safe_load(metrics_path.read_text(encoding="utf-8"))
 
     assert isinstance(metrics_data, dict)
-    for key in METRIC_KEYS:
-        assert key in metrics_data, f"Missing metric: {key}"
+
+    expected_keys = set(METRIC_KEYS)
+    actual_keys = set(metrics_data)
+
+    missing_keys = expected_keys - actual_keys
+    assert not missing_keys, "Missing metrics: " + ", ".join(sorted(missing_keys))
