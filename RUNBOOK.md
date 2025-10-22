@@ -24,14 +24,15 @@ next_review_due: 2025-11-21
 
 - ログ/メトリクスの確認点、失敗時の兆候（[ADR-021: メトリクスと可観測性の統合](docs/ADR/ADR-021-metrics-observability.md) を参照）
 - インシデント発生時は docs/IN-YYYYMMDD-XXX.md に記録し、最新サンプル（[IN-20250115-001](docs/IN-20250115-001.md)）を参照して検知し、ログ・メトリクスの抜粋を添付
-- QA メトリクス収集と確認
-  - `python tools/perf/collect_metrics.py --suite qa --output .ga/qa-metrics.json` を実行し、最新の QA メトリクスを取得する。
+- QA メトリクス収集と確認（Katamari `tools/perf/` テンプレート準拠）
+  - `python -m tools.perf.collect_metrics --metrics-url <Prometheus URL> --log-path <Chainlit ログパス> > .ga/qa-metrics.json`
+    を実行し、Prometheus（`compress_ratio`/`review_latency`/`reopen_rate`）と Chainlit ログ
+    （`semantic_retention`/`spec_completeness`）から統合メトリクスを取得する。`--metrics-url` または
+    `--log-path` のどちらか片方しか利用できない場合は、利用可能な入力のみ指定する。
   - `.ga/qa-metrics.json` はリポジトリルート配下に生成される。CI で Metrics Harvest が検出できるようファイル名・パスを変更しない。
   - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8'));
-     print({k: data[k] for k in ('compress_ratio', 'semantic_retention')})` で、
-    `compress_ratio` と `semantic_retention` の値を抽出する。
-  - 合格レンジ: `compress_ratio` は `0.55` 以上 `0.75` 以下、`semantic_retention` は `0.93` 以上。
-    外れた場合は直近成功値との差分を記録し、再現条件を含めて共有する。
+     print({k: data[k] for k in ('compress_ratio', 'semantic_retention', 'review_latency', 'reopen_rate', 'spec_completeness')})`
+    で各メトリクスの値を抽出する。閾値は Katamari RUNBOOK の最新サンプルと突き合わせ、外れた場合は直近成功値との差分と再現条件を記録して共有する。
 - 失敗兆候と一次対応
   - `.ga/qa-metrics.json` が生成されない / 壊れている: `python tools/perf/collect_metrics.py --help` で、
     オプションを再確認し、再実行前にキャッシュディレクトリを削除。

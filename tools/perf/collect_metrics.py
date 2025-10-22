@@ -10,7 +10,13 @@ import urllib.request
 from pathlib import Path
 from typing import Iterable, Mapping, MutableMapping, Sequence
 
-METRIC_KEYS: tuple[str, ...] = ("compress_ratio", "semantic_retention")
+METRIC_KEYS: tuple[str, ...] = (
+    "compress_ratio",
+    "semantic_retention",
+    "review_latency",
+    "reopen_rate",
+    "spec_completeness",
+)
 
 
 class MetricsCollectionError(RuntimeError):
