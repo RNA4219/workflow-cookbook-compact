@@ -532,6 +532,10 @@ def test_run_update_accepts_caps_directory_target(tmp_path, monkeypatch):
         root=root_base,
     )
 
+    baseline_index = json.loads(index_path.read_text(encoding="utf-8"))
+    base_serial = baseline_index["generated_at"]
+    expected_serial = _next_serial(base_serial)
+
     monkeypatch.chdir(tmp_path)
 
     frozen_now = datetime(2025, 1, 4, tzinfo=timezone.utc)
@@ -541,9 +545,6 @@ def test_run_update_accepts_caps_directory_target(tmp_path, monkeypatch):
         update.UpdateOptions(targets=(Path("docs/birdseye/caps"),), emit="index+caps", dry_run=False)
     )
 
-    baseline_index = json.loads(index_path.read_text(encoding="utf-8"))
-    base_serial = baseline_index["generated_at"]
-    expected_serial = _next_serial(base_serial)
     expected_caps = {
         Path("docs/birdseye/caps") / f"{cap_id}.json"
         for cap_id in ("alpha.md", "beta.md", "gamma.md", "delta.md", "epsilon.md")
