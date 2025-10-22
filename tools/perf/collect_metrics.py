@@ -7,6 +7,7 @@ import argparse
 import json
 import sys
 import urllib.request
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Mapping, MutableMapping, Sequence
 
@@ -17,6 +18,18 @@ METRIC_KEYS: tuple[str, ...] = (
     "reopen_rate",
     "spec_completeness",
 )
+
+
+@dataclass(frozen=True)
+class SuiteConfig:
+    metrics_url: str | None = None
+    log_path: str | None = None
+    output: str | None = None
+
+
+SUITES: dict[str, SuiteConfig] = {
+    "qa": SuiteConfig(output=".ga/qa-metrics.json"),
+}
 
 
 class MetricsCollectionError(RuntimeError):
@@ -101,19 +114,33 @@ def collect_metrics(metrics_url: str | None, log_path: Path | None) -> dict[str,
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Collect performance metrics for post-processing")
+    parser.add_argument("--suite", choices=sorted(SUITES), help="Preset input/output configuration")
     parser.add_argument("--metrics-url", help="Prometheus metrics endpoint URL")
     parser.add_argument("--log-path", type=Path, help="Path to Chainlit log file")
+    parser.add_argument("--output", type=Path, help="File path to write collected metrics JSON")
     args = parser.parse_args(argv)
 
-    if not args.metrics_url and args.log_path is None:
+    suite = SUITES.get(args.suite) if args.suite else None
+
+    metrics_url = args.metrics_url or (suite.metrics_url if suite else None)
+    log_path = args.log_path if args.log_path is not None else (
+        Path(suite.log_path) if suite and suite.log_path else None
+    )
+    output_path = args.output or (Path(suite.output) if suite and suite.output else None)
+
+    if not metrics_url and log_path is None:
         parser.error("At least one of --metrics-url or --log-path must be provided")
 
     try:
-        metrics = collect_metrics(args.metrics_url, args.log_path)
+        metrics = collect_metrics(metrics_url, log_path)
     except MetricsCollectionError as exc:
         print(str(exc), file=sys.stderr)
         return 1
-    sys.stdout.write(json.dumps(metrics, ensure_ascii=False) + "\n")
+    payload = json.dumps(metrics, ensure_ascii=False)
+    sys.stdout.write(payload + "\n")
+    if output_path:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(payload + "\n", encoding="utf-8")
     return 0
 
 

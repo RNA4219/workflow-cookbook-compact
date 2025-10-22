@@ -48,6 +48,49 @@ def test_collects_metrics_from_prometheus_and_chainlit(tmp_path: Path) -> None:
     }
 
 
+def test_suite_output_generates_file_and_stdout_matches(tmp_path: Path) -> None:
+    prometheus = tmp_path / "metrics.prom"
+    prometheus.write_text(
+        "# HELP compress_ratio Ratio\n"
+        "# TYPE compress_ratio gauge\n"
+        "compress_ratio 0.82\n"
+        "review_latency 18.5\n"
+        "reopen_rate 6.2\n",
+        encoding="utf-8",
+    )
+
+    chainlit = tmp_path / "chainlit.log"
+    chainlit.write_text(
+        """{"metrics": {"semantic_retention": 0.74, "spec_completeness": 0.91}}\n""",
+        encoding="utf-8",
+    )
+
+    output_path = tmp_path / "out.json"
+
+    result = _run_cli(
+        "--suite",
+        "qa",
+        "--metrics-url",
+        prometheus.as_uri(),
+        "--log-path",
+        str(chainlit),
+        "--output",
+        str(output_path),
+    )
+
+    assert result.returncode == 0, result.stderr
+
+    payload = json.loads(result.stdout)
+    assert json.loads(output_path.read_text(encoding="utf-8")) == payload
+    assert payload == {
+        "compress_ratio": 0.82,
+        "semantic_retention": 0.74,
+        "review_latency": 18.5,
+        "reopen_rate": 6.2,
+        "spec_completeness": 0.91,
+    }
+
+
 def test_exits_non_zero_when_metrics_missing(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text("up 1\n", encoding="utf-8")

@@ -4,7 +4,8 @@ Cookbook は独立して動作します。外部拡張（例: 子リポジトリ
 
 ## Artifacts
 
-- `.ga/qa-metrics.json`: CI メトリクスの任意拡張。存在すれば Metrics Harvest が自動で取り込みます。
+- `.ga/qa-metrics.json`: CI メトリクスの任意拡張。`python -m tools.perf.collect_metrics --suite qa`
+  で生成され、存在すれば Metrics Harvest が自動で取り込みます。
 
 ## Config
 
