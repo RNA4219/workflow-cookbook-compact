@@ -23,17 +23,98 @@ class MetricsCollectionError(RuntimeError):
     """Raised when metrics could not be collected."""
 
 
+def _coerce_float(value: object) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    return None
+
+
 def _capture(source: Mapping[str, object], target: MutableMapping[str, float]) -> None:
     for key in METRIC_KEYS:
         if key in target:
             continue
         value = source.get(key)
-        if isinstance(value, (int, float)):
-            target[key] = float(value)
+        coerced = _coerce_float(value)
+        if coerced is not None:
+            target[key] = coerced
+
+
+def _capture_spec_metrics(source: Mapping[str, object], target: MutableMapping[str, float]) -> None:
+    if "spec_completeness" in target:
+        return
+    spec_raw = source.get("spec_completeness")
+    if isinstance(spec_raw, Mapping):
+        numerator = None
+        denominator = None
+        for candidate in ("with_spec", "complete", "numerator", "count", "ready"):
+            numerator = _coerce_float(spec_raw.get(candidate))
+            if numerator is not None:
+                break
+        for candidate in ("total", "denominator", "all", "overall"):
+            denominator = _coerce_float(spec_raw.get(candidate))
+            if denominator is not None and denominator != 0:
+                break
+        if numerator is not None and denominator is not None and denominator != 0:
+            target["spec_completeness"] = numerator / denominator
+            return
+        ratio = _coerce_float(spec_raw.get("ratio"))
+        if ratio is not None:
+            target["spec_completeness"] = ratio
+
+
+def _derive_review_latency(raw: Mapping[str, float]) -> float | None:
+    direct = raw.get("review_latency")
+    if direct is not None:
+        return direct
+    candidates: Sequence[tuple[str, float]] = (
+        ("katamari_review_latency_seconds", 3600.0),
+        ("review_latency_seconds", 3600.0),
+        ("katamari_review_latency_hours", 1.0),
+        ("review_latency_hours", 1.0),
+    )
+    for prefix, scale in candidates:
+        sum_key = f"{prefix}_sum"
+        count_key = f"{prefix}_count"
+        total = raw.get(sum_key)
+        count = raw.get(count_key)
+        if total is None or count in (None, 0.0):
+            continue
+        return (total / count) / scale
+    return None
+
+
+def _derive_reopen_rate(raw: Mapping[str, float]) -> float | None:
+    direct = raw.get("reopen_rate")
+    if direct is not None:
+        return direct
+    suffix_pairs: Sequence[tuple[str, Sequence[str]]] = (
+        ("_reopened_total", ("_total", "_count")),
+        ("_reopened_count", ("_count", "_total")),
+        ("_reopen_total", ("_total", "_count")),
+        ("_reopen_count", ("_count", "_total")),
+    )
+    for numerator_suffix, denominator_suffixes in suffix_pairs:
+        for name, value in raw.items():
+            if not name.endswith(numerator_suffix):
+                continue
+            numerator = value
+            base = name[: -len(numerator_suffix)]
+            for suffix in denominator_suffixes:
+                denominator_key = f"{base}{suffix}"
+                denominator = raw.get(denominator_key)
+                if denominator in (None, 0.0):
+                    continue
+                return numerator / denominator
+    return None
 
 
 def _parse_prometheus(text: str) -> dict[str, float]:
-    metrics: dict[str, float] = {}
+    raw: dict[str, float] = {}
     for line in text.splitlines():
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
@@ -41,12 +122,28 @@ def _parse_prometheus(text: str) -> dict[str, float]:
         parts = stripped.split()
         if len(parts) < 2:
             continue
-        name, raw_value = parts[0], parts[1]
-        if name in METRIC_KEYS:
-            try:
-                metrics[name] = float(raw_value)
-            except ValueError:
-                continue
+        name_token = parts[0]
+        raw_value = parts[-1]
+        metric_name = name_token.split("{", 1)[0]
+        value = _coerce_float(raw_value)
+        if value is None:
+            continue
+        if metric_name in raw:
+            raw[metric_name] += value
+        else:
+            raw[metric_name] = value
+
+    metrics: dict[str, float] = {}
+    _capture(raw, metrics)
+
+    review_latency = _derive_review_latency(raw)
+    if review_latency is not None and "review_latency" not in metrics:
+        metrics["review_latency"] = review_latency
+
+    reopen_rate = _derive_reopen_rate(raw)
+    if reopen_rate is not None and "reopen_rate" not in metrics:
+        metrics["reopen_rate"] = reopen_rate
+
     return metrics
 
 
@@ -72,9 +169,11 @@ def _load_chainlit_log(path: Path) -> Mapping[str, float]:
             continue
         if isinstance(parsed, Mapping):
             _capture(parsed, metrics)
+            _capture_spec_metrics(parsed, metrics)
             nested = parsed.get("metrics")
             if isinstance(nested, Mapping):
                 _capture(nested, metrics)
+                _capture_spec_metrics(nested, metrics)
     return metrics
 
 

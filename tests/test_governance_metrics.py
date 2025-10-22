@@ -26,5 +26,12 @@ def test_governance_metrics_contains_required_keys() -> None:
     metrics_data = yaml.safe_load(metrics_path.read_text(encoding="utf-8"))
 
     assert isinstance(metrics_data, dict)
-    for key in ("compress_ratio", "semantic_retention"):
-        assert key in metrics_data, f"Missing metric: {key}"
+    expected_keys = {
+        "compress_ratio",
+        "semantic_retention",
+        "review_latency",
+        "reopen_rate",
+        "spec_completeness",
+    }
+    missing = sorted(expected_keys.difference(metrics_data))
+    assert not missing, f"Missing metric: {', '.join(missing)}"
