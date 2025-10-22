@@ -30,6 +30,10 @@ next_review_due: 2025-11-21
     （`compress_ratio`/`review_latency`/`reopen_rate`）と Chainlit ログ（`semantic_retention`/`spec_completeness`）
     から統合メトリクスを取得する。出力先を変更したい場合は `--output <JSON パス>` を追加指定する。
     `--metrics-url` または `--log-path` のどちらか片方しか利用できない場合は、利用可能な入力のみ指定する。
+  - Chainlit から Katamari 互換ログを出力する場合は `tools.perf.structured_logger.StructuredLogger`
+    を利用する。例: `logger = StructuredLogger("~/.chainlit/logs/chainlit.jsonl")` として初期化し、
+    `logger.log_inference(InferenceLogRecord(session_id=session.id, metrics=event.metrics))`
+    を各ハンドラで呼び出すと JSON Lines 形式で `metrics.semantic_retention` などが追記される。
   - 実行後に `.ga/qa-metrics.json` がリポジトリルート配下へ生成されていることを確認する。生成されない場合は
     `--output` に明示したパスと標準出力を突き合わせ、異常がないか確認する。
   - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8'));
