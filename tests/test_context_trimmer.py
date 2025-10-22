@@ -72,3 +72,20 @@ def test_trim_messages_counts_tokens_without_tiktoken() -> None:
     expected = sum(max(1, len(m["content"]) // 4 + 1) + 4 for m in _messages())
     assert stats["output_tokens"] == expected
     assert result["token_counter"]["uses_tiktoken"] is False
+
+
+def test_trim_messages_records_semantic_retention() -> None:
+    module = _reload_context_trimmer(fake_tiktoken=None)
+
+    def embedder(text: str) -> List[float]:
+        return [float(len(text)) or 1.0]
+
+    result = module.trim_messages(
+        _messages(),
+        max_context_tokens=12,
+        model="test-model",
+        semantic_options={"embedder": embedder},
+    )
+
+    retention = result["statistics"]["semantic_retention"]
+    assert 0.0 <= retention <= 1.0

@@ -5,6 +5,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from itertools import zip_longest
+from math import sqrt
 from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Sequence
 
 _Message = Mapping[str, Any]
@@ -81,6 +84,38 @@ def _first_system_message(messages: Iterable[_MutableMessage]) -> tuple[_Mutable
     return system_message, remainder
 
 
+def _to_vector(values: Sequence[float]) -> List[float]:
+    return [float(value) for value in values]
+
+
+def _cosine_similarity(a: Sequence[float], b: Sequence[float]) -> float:
+    vec_a = _to_vector(a)
+    vec_b = _to_vector(b)
+    dot_product = sum(x * y for x, y in zip_longest(vec_a, vec_b, fillvalue=0.0))
+    norm_a = sqrt(sum(x * x for x in vec_a))
+    norm_b = sqrt(sum(y * y for y in vec_b))
+    if norm_a == 0.0 and norm_b == 0.0:
+        return 1.0
+    if norm_a == 0.0 or norm_b == 0.0:
+        return 0.0
+    similarity = dot_product / (norm_a * norm_b)
+    if similarity < 0.0:
+        return 0.0
+    if similarity > 1.0:
+        return 1.0
+    return similarity
+
+
+def _compute_semantic_retention(
+    original_text: str,
+    trimmed_text: str,
+    embedder: Callable[[str], Sequence[float]],
+) -> float:
+    original_vector = _to_vector(embedder(original_text))
+    trimmed_vector = _to_vector(embedder(trimmed_text))
+    return _cosine_similarity(original_vector, trimmed_vector)
+
+
 def trim_messages(
     messages: Sequence[_Message],
     *,
@@ -114,13 +149,29 @@ def trim_messages(
     output_tokens = sum(counter.count_message(message) for message in trimmed)
     compression_ratio = 1.0 if total_input_tokens == 0 else output_tokens / total_input_tokens
 
+    statistics: Dict[str, Any] = {
+        "compression_ratio": compression_ratio,
+        "input_tokens": total_input_tokens,
+        "output_tokens": output_tokens,
+    }
+
+    semantic_used_options = dict(semantic_options or {})
+    embedder = semantic_used_options.get("embedder")
+    if isinstance(embedder, Callable):
+        try:
+            original_text = "\n".join(str(message.get("content", "")) for message in mutable_messages)
+            trimmed_text = "\n".join(str(message.get("content", "")) for message in trimmed)
+            statistics["semantic_retention"] = _compute_semantic_retention(
+                original_text,
+                trimmed_text,
+                embedder,
+            )
+        except Exception:
+            statistics["semantic_retention"] = 0.0
+
     return {
         "messages": trimmed,
-        "statistics": {
-            "compression_ratio": compression_ratio,
-            "input_tokens": total_input_tokens,
-            "output_tokens": output_tokens,
-        },
+        "statistics": statistics,
         "token_counter": counter.meta(),
-        "semantic_options": dict(semantic_options or {}),
+        "semantic_options": semantic_used_options,
     }

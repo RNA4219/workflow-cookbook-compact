@@ -29,6 +29,8 @@ next_review_due: 2025-11-21
     を実行する。`--suite qa` は `.ga/qa-metrics.json` への書き出しを既定とし、Prometheus
     （`compress_ratio`/`review_latency`/`reopen_rate`）と Chainlit ログ（`semantic_retention`/`spec_completeness`）
     から統合メトリクスを取得する。出力先を変更したい場合は `--output <JSON パス>` を追加指定する。
+    `semantic_retention` を取得するには `tools/perf/context_trimmer.trim_messages` へ
+    `semantic_options`（例: `{"embedder": <callable>}`）を渡せるよう、Chainlit 側で埋め込み関数を設定しておく。
     `--metrics-url` または `--log-path` のどちらか片方しか利用できない場合は、利用可能な入力のみ指定する。
   - FastAPI などの Web サービスに組み込む場合は `tools.perf.metrics_registry.MetricsRegistry` を共有シングルトン
     として初期化し、トリミング完了時に `observe_trim(original_tokens=..., trimmed_tokens=..., semantic_retention=...)`
@@ -40,6 +42,33 @@ next_review_due: 2025-11-21
   - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8'));
      print({k: data[k] for k in ('compress_ratio', 'semantic_retention', 'review_latency', 'reopen_rate', 'spec_completeness')})`
     で各メトリクスの値を抽出する。閾値は Katamari RUNBOOK の最新サンプルと突き合わせ、外れた場合は直近成功値との差分と再現条件を記録して共有する。
+  - FastAPI 等へ常駐組み込みする際は `tools.perf.metrics_registry.MetricsRegistry` を介し、トリミング結果を逐次記録する:
+
+    ```python
+    from fastapi import FastAPI, Response
+
+    from tools.perf.metrics_registry import MetricsRegistry
+
+    registry = MetricsRegistry(default_labels={"service": "workflow"})
+    app = FastAPI()
+
+    @app.post("/trim")
+    async def record_trim(payload: dict[str, float]) -> dict[str, str]:
+        registry.observe_trim(
+            compress_ratio=payload["compress_ratio"],
+            semantic_retention=payload["semantic_retention"],
+            labels={"model": payload.get("model", "unknown")},
+        )
+        return {"status": "ok"}
+
+    @app.get("/metrics")
+    async def metrics() -> Response:
+        return Response(registry.export_prometheus(), media_type="text/plain")
+    ```
+
+  - 公開メトリクス名: `katamari_trim_compress_ratio` / `katamari_trim_semantic_retention`
+    （各 `_count`、`_sum`、`_avg`、`_min`、`_max` を同時出力）
+
 - 失敗兆候と一次対応
   - `.ga/qa-metrics.json` が生成されない / 壊れている: `python tools/perf/collect_metrics.py --help` で、
     オプションを再確認し、再実行前にキャッシュディレクトリを削除。

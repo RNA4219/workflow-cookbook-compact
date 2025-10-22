@@ -146,7 +146,7 @@ def test_suite_output_generates_file_and_stdout_matches(tmp_path: Path) -> None:
         "# TYPE compress_ratio gauge\n"
         "compress_ratio 0.82\n"
         "review_latency 18.5\n"
-        "reopen_rate 6.2\n",
+        "reopen_rate 0.062\n",
         encoding="utf-8",
     )
 
@@ -177,7 +177,7 @@ def test_suite_output_generates_file_and_stdout_matches(tmp_path: Path) -> None:
         "compress_ratio": 82.0,
         "semantic_retention": 74.0,
         "review_latency": 18.5,
-        "reopen_rate": 620.0,
+        "reopen_rate": 6.2,
         "spec_completeness": 91.0,
     }
 
