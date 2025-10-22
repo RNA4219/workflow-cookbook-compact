@@ -32,6 +32,10 @@ next_review_due: 2025-11-21
     `semantic_retention` を取得するには `tools/perf/context_trimmer.trim_messages` へ
     `semantic_options`（例: `{"embedder": <callable>}`）を渡せるよう、Chainlit 側で埋め込み関数を設定しておく。
     `--metrics-url` または `--log-path` のどちらか片方しか利用できない場合は、利用可能な入力のみ指定する。
+  - Chainlit から Katamari 互換ログを出力する場合は `tools.perf.structured_logger.StructuredLogger`
+    を利用する。例: `logger = StructuredLogger("~/.chainlit/logs/chainlit.jsonl")` として初期化し、
+    `logger.log_inference(InferenceLogRecord(session_id=session.id, metrics=event.metrics))`
+    を各ハンドラで呼び出すと JSON Lines 形式で `metrics.semantic_retention` などが追記される。
   - 実行後に `.ga/qa-metrics.json` がリポジトリルート配下へ生成されていることを確認する。生成されない場合は
     `--output` に明示したパスと標準出力を突き合わせ、異常がないか確認する。
   - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8'));
