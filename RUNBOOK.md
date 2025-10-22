@@ -32,10 +32,11 @@ next_review_due: 2025-11-21
     `semantic_retention` を取得するには `tools/perf/context_trimmer.trim_messages` へ
     `semantic_options`（例: `{"embedder": <callable>}`）を渡せるよう、Chainlit 側で埋め込み関数を設定しておく。
     `--metrics-url` または `--log-path` のどちらか片方しか利用できない場合は、利用可能な入力のみ指定する。
-  - Chainlit から Katamari 互換ログを出力する場合は `tools.perf.structured_logger.StructuredLogger`
-    を利用する。例: `logger = StructuredLogger("~/.chainlit/logs/chainlit.jsonl")` として初期化し、
-    `logger.log_inference(InferenceLogRecord(session_id=session.id, metrics=event.metrics))`
-    を各ハンドラで呼び出すと JSON Lines 形式で `metrics.semantic_retention` などが追記される。
+  - FastAPI などの Web サービスに組み込む場合は `tools.perf.metrics_registry.MetricsRegistry` を共有シングルトン
+    として初期化し、トリミング完了時に `observe_trim(original_tokens=..., trimmed_tokens=..., semantic_retention=...)`
+    を記録する。`@app.get("/metrics")` エンドポイントで `return PlainTextResponse(registry.export_prometheus())`
+    を返すと Prometheus が取得可能となる。収集 CLI は `compress_ratio` と `semantic_retention` を公開 API
+    として参照するため、同名メトリクスを維持する。
   - 実行後に `.ga/qa-metrics.json` がリポジトリルート配下へ生成されていることを確認する。生成されない場合は
     `--output` に明示したパスと標準出力を突き合わせ、異常がないか確認する。
   - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8'));

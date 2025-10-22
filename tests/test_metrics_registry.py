@@ -1,46 +1,31 @@
 from __future__ import annotations
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+ROOT = Path(__file__).resolve().parents[1]
+if (repo_root := str(ROOT)) not in sys.path:
+    sys.path.insert(0, repo_root)
 
-from tools.perf.metrics_registry import MetricsRegistry
+from tools.perf.metrics_registry import MetricsRegistry  # noqa: E402
 
 
-def test_export_prometheus_contains_trim_metrics() -> None:
-    registry = MetricsRegistry(default_labels={"service": "trim"})
+def test_export_prometheus_after_observing_trim() -> None:
+    registry = MetricsRegistry()
 
-    registry.observe_trim(
-        compress_ratio=0.5,
-        semantic_retention=0.8,
-        labels={"model": "gpt-4o"},
-    )
-    registry.observe_trim(compress_ratio=0.25, semantic_retention=0.6)
+    registry.observe_trim(original_tokens=1000, trimmed_tokens=400, semantic_retention=0.92)
+    registry.observe_trim(original_tokens=500, trimmed_tokens=250)
 
     snapshot = registry.snapshot()
+    expected_ratio = (400 + 250) / (1000 + 500)
+    assert snapshot["compress_ratio"] == pytest.approx(expected_ratio)
+    assert snapshot["semantic_retention"] == pytest.approx(0.92)
 
-    compress_entries = snapshot["katamari_trim_compress_ratio"]
-    compress_total = {
-        key: sum(entry["summary"][key] for entry in compress_entries)
-        for key in ("count", "sum")
-    }
-    assert compress_total["count"] == 2
-    assert compress_total["sum"] == pytest.approx(0.75)
+    prometheus = registry.export_prometheus()
+    lines = [line for line in prometheus.splitlines() if line and not line.startswith("#")]
+    metrics = {name: float(value) for name, value in (line.split(None, 1) for line in lines)}
 
-    semantic_entries = snapshot["katamari_trim_semantic_retention"]
-    semantic_total = {
-        key: sum(entry["summary"][key] for entry in semantic_entries)
-        for key in ("count", "sum")
-    }
-    assert semantic_total["count"] == 2
-    assert semantic_total["sum"] == pytest.approx(1.4)
-
-    text = registry.export_prometheus()
-    assert "# TYPE katamari_trim_compress_ratio summary" in text
-    assert "katamari_trim_compress_ratio_count" in text
-    assert "katamari_trim_semantic_retention_sum" in text
-    assert 'model="gpt-4o"' in text
-    assert 'service="trim"' in text
+    assert metrics["compress_ratio"] == pytest.approx(snapshot["compress_ratio"])
+    assert metrics["semantic_retention"] == pytest.approx(snapshot["semantic_retention"])
