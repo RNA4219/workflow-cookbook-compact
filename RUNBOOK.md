@@ -29,17 +29,51 @@ next_review_due: 2025-11-21
     を実行する。`--suite qa` は `.ga/qa-metrics.json` への書き出しを既定とし、Prometheus
     （`compress_ratio`/`review_latency`/`reopen_rate`）と Chainlit ログ（`semantic_retention`/`spec_completeness`）
     から統合メトリクスを取得する。出力先を変更したい場合は `--output <JSON パス>` を追加指定する。
+    `semantic_retention` を取得するには `tools/perf/context_trimmer.trim_messages` へ
+    `semantic_options`（例: `{"embedder": <callable>}`）を渡せるよう、Chainlit 側で埋め込み関数を設定しておく。
     `--metrics-url` または `--log-path` のどちらか片方しか利用できない場合は、利用可能な入力のみ指定する。
   - Chainlit（または同等のUI）からメトリクスを出力する場合は `tools.perf.structured_logger.StructuredLogger`
     を利用する。例: `from tools.perf.structured_logger import StructuredLogger` →
     `StructuredLogger(name="chainlit", path="~/.chainlit/logs/metrics.log").inference(metrics={"semantic_retention": 0.9})`。
     こうして生成された JSON ログ行は `collect_metrics --log-path ~/.chainlit/logs/metrics.log` で取り込まれ、
     `metrics` キー配下の辞書がそのまま Chainlit メトリクスとして集計される。
+  - FastAPI などの Web サービスに組み込む場合は `tools.perf.metrics_registry.MetricsRegistry` を共有シングルトン
+    として初期化し、トリミング完了時に `observe_trim(original_tokens=..., trimmed_tokens=..., semantic_retention=...)`
+    を記録する。`@app.get("/metrics")` エンドポイントで `return PlainTextResponse(registry.export_prometheus())`
+    を返すと Prometheus が取得可能となる。収集 CLI は `compress_ratio` と `semantic_retention` を公開 API
+    として参照するため、同名メトリクスを維持する。
   - 実行後に `.ga/qa-metrics.json` がリポジトリルート配下へ生成されていることを確認する。生成されない場合は
     `--output` に明示したパスと標準出力を突き合わせ、異常がないか確認する。
   - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8'));
      print({k: data[k] for k in ('compress_ratio', 'semantic_retention', 'review_latency', 'reopen_rate', 'spec_completeness')})`
     で各メトリクスの値を抽出する。閾値は Katamari RUNBOOK の最新サンプルと突き合わせ、外れた場合は直近成功値との差分と再現条件を記録して共有する。
+  - FastAPI 等へ常駐組み込みする際は `tools.perf.metrics_registry.MetricsRegistry` を介し、トリミング結果を逐次記録する:
+
+    ```python
+    from fastapi import FastAPI, Response
+
+    from tools.perf.metrics_registry import MetricsRegistry
+
+    registry = MetricsRegistry(default_labels={"service": "workflow"})
+    app = FastAPI()
+
+    @app.post("/trim")
+    async def record_trim(payload: dict[str, float]) -> dict[str, str]:
+        registry.observe_trim(
+            compress_ratio=payload["compress_ratio"],
+            semantic_retention=payload["semantic_retention"],
+            labels={"model": payload.get("model", "unknown")},
+        )
+        return {"status": "ok"}
+
+    @app.get("/metrics")
+    async def metrics() -> Response:
+        return Response(registry.export_prometheus(), media_type="text/plain")
+    ```
+
+  - 公開メトリクス名: `katamari_trim_compress_ratio` / `katamari_trim_semantic_retention`
+    （各 `_count`、`_sum`、`_avg`、`_min`、`_max` を同時出力）
+
 - 失敗兆候と一次対応
   - `.ga/qa-metrics.json` が生成されない / 壊れている: `python tools/perf/collect_metrics.py --help` で、
     オプションを再確認し、再実行前にキャッシュディレクトリを削除。
