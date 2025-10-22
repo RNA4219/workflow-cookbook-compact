@@ -85,11 +85,11 @@ def test_collects_metrics_from_prometheus_and_chainlit(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     assert payload == {
-        "compress_ratio": 0.82,
-        "semantic_retention": 0.74,
+        "compress_ratio": 82.0,
+        "semantic_retention": 74.0,
         "review_latency": 0.5,
-        "reopen_rate": 0.05,
-        "spec_completeness": 0.91,
+        "reopen_rate": 5.0,
+        "spec_completeness": 91.0,
     }
 
 
@@ -111,11 +111,11 @@ def test_pushgateway_receives_metrics_payload(tmp_path: Path) -> None:
     body = captured["body"]
     assert isinstance(body, bytes)
     assert body.decode("utf-8") == (
-        "compress_ratio 0.82\n"
-        "semantic_retention 0.74\n"
+        "compress_ratio 82\n"
+        "semantic_retention 74\n"
         "review_latency 0.5\n"
-        "reopen_rate 0.05\n"
-        "spec_completeness 0.91\n"
+        "reopen_rate 5\n"
+        "spec_completeness 91\n"
     )
     assert captured["method"] == "PUT"
     assert captured["path"] == "/metrics"
@@ -174,11 +174,11 @@ def test_suite_output_generates_file_and_stdout_matches(tmp_path: Path) -> None:
     payload = json.loads(result.stdout)
     assert json.loads(output_path.read_text(encoding="utf-8")) == payload
     assert payload == {
-        "compress_ratio": 0.82,
-        "semantic_retention": 0.74,
+        "compress_ratio": 82.0,
+        "semantic_retention": 74.0,
         "review_latency": 18.5,
-        "reopen_rate": 6.2,
-        "spec_completeness": 0.91,
+        "reopen_rate": 620.0,
+        "spec_completeness": 91.0,
     }
 
 
