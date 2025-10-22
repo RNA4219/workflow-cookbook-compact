@@ -7,6 +7,7 @@ import argparse
 import json
 import sys
 import urllib.request
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Mapping, MutableMapping, Sequence
 
@@ -19,8 +20,31 @@ METRIC_KEYS: tuple[str, ...] = (
 )
 
 
+@dataclass(frozen=True)
+class SuiteConfig:
+    metrics_url: str | None = None
+    log_path: str | None = None
+    output: str | None = None
+
+
+SUITES: dict[str, SuiteConfig] = {
+    "qa": SuiteConfig(output=".ga/qa-metrics.json"),
+}
+
+
 class MetricsCollectionError(RuntimeError):
     """Raised when metrics could not be collected."""
+
+
+def _coerce_float(value: object) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    return None
 
 
 def _capture(source: Mapping[str, object], target: MutableMapping[str, float]) -> None:
@@ -28,12 +52,82 @@ def _capture(source: Mapping[str, object], target: MutableMapping[str, float]) -
         if key in target:
             continue
         value = source.get(key)
-        if isinstance(value, (int, float)):
-            target[key] = float(value)
+        coerced = _coerce_float(value)
+        if coerced is not None:
+            target[key] = coerced
+
+
+def _capture_spec_metrics(source: Mapping[str, object], target: MutableMapping[str, float]) -> None:
+    if "spec_completeness" in target:
+        return
+    spec_raw = source.get("spec_completeness")
+    if isinstance(spec_raw, Mapping):
+        numerator = None
+        denominator = None
+        for candidate in ("with_spec", "complete", "numerator", "count", "ready"):
+            numerator = _coerce_float(spec_raw.get(candidate))
+            if numerator is not None:
+                break
+        for candidate in ("total", "denominator", "all", "overall"):
+            denominator = _coerce_float(spec_raw.get(candidate))
+            if denominator is not None and denominator != 0:
+                break
+        if numerator is not None and denominator is not None and denominator != 0:
+            target["spec_completeness"] = numerator / denominator
+            return
+        ratio = _coerce_float(spec_raw.get("ratio"))
+        if ratio is not None:
+            target["spec_completeness"] = ratio
+
+
+def _derive_review_latency(raw: Mapping[str, float]) -> float | None:
+    direct = raw.get("review_latency")
+    if direct is not None:
+        return direct
+    candidates: Sequence[tuple[str, float]] = (
+        ("katamari_review_latency_seconds", 3600.0),
+        ("review_latency_seconds", 3600.0),
+        ("katamari_review_latency_hours", 1.0),
+        ("review_latency_hours", 1.0),
+    )
+    for prefix, scale in candidates:
+        sum_key = f"{prefix}_sum"
+        count_key = f"{prefix}_count"
+        total = raw.get(sum_key)
+        count = raw.get(count_key)
+        if total is None or count in (None, 0.0):
+            continue
+        return (total / count) / scale
+    return None
+
+
+def _derive_reopen_rate(raw: Mapping[str, float]) -> float | None:
+    direct = raw.get("reopen_rate")
+    if direct is not None:
+        return direct
+    suffix_pairs: Sequence[tuple[str, Sequence[str]]] = (
+        ("_reopened_total", ("_total", "_count")),
+        ("_reopened_count", ("_count", "_total")),
+        ("_reopen_total", ("_total", "_count")),
+        ("_reopen_count", ("_count", "_total")),
+    )
+    for numerator_suffix, denominator_suffixes in suffix_pairs:
+        for name, value in raw.items():
+            if not name.endswith(numerator_suffix):
+                continue
+            numerator = value
+            base = name[: -len(numerator_suffix)]
+            for suffix in denominator_suffixes:
+                denominator_key = f"{base}{suffix}"
+                denominator = raw.get(denominator_key)
+                if denominator in (None, 0.0):
+                    continue
+                return numerator / denominator
+    return None
 
 
 def _parse_prometheus(text: str) -> dict[str, float]:
-    metrics: dict[str, float] = {}
+    raw: dict[str, float] = {}
     for line in text.splitlines():
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
@@ -41,12 +135,28 @@ def _parse_prometheus(text: str) -> dict[str, float]:
         parts = stripped.split()
         if len(parts) < 2:
             continue
-        name, raw_value = parts[0], parts[1]
-        if name in METRIC_KEYS:
-            try:
-                metrics[name] = float(raw_value)
-            except ValueError:
-                continue
+        name_token = parts[0]
+        raw_value = parts[-1]
+        metric_name = name_token.split("{", 1)[0]
+        value = _coerce_float(raw_value)
+        if value is None:
+            continue
+        if metric_name in raw:
+            raw[metric_name] += value
+        else:
+            raw[metric_name] = value
+
+    metrics: dict[str, float] = {}
+    _capture(raw, metrics)
+
+    review_latency = _derive_review_latency(raw)
+    if review_latency is not None and "review_latency" not in metrics:
+        metrics["review_latency"] = review_latency
+
+    reopen_rate = _derive_reopen_rate(raw)
+    if reopen_rate is not None and "reopen_rate" not in metrics:
+        metrics["reopen_rate"] = reopen_rate
+
     return metrics
 
 
@@ -72,9 +182,11 @@ def _load_chainlit_log(path: Path) -> Mapping[str, float]:
             continue
         if isinstance(parsed, Mapping):
             _capture(parsed, metrics)
+            _capture_spec_metrics(parsed, metrics)
             nested = parsed.get("metrics")
             if isinstance(nested, Mapping):
                 _capture(nested, metrics)
+                _capture_spec_metrics(nested, metrics)
     return metrics
 
 
@@ -101,19 +213,33 @@ def collect_metrics(metrics_url: str | None, log_path: Path | None) -> dict[str,
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Collect performance metrics for post-processing")
+    parser.add_argument("--suite", choices=sorted(SUITES), help="Preset input/output configuration")
     parser.add_argument("--metrics-url", help="Prometheus metrics endpoint URL")
     parser.add_argument("--log-path", type=Path, help="Path to Chainlit log file")
+    parser.add_argument("--output", type=Path, help="File path to write collected metrics JSON")
     args = parser.parse_args(argv)
 
-    if not args.metrics_url and args.log_path is None:
+    suite = SUITES.get(args.suite) if args.suite else None
+
+    metrics_url = args.metrics_url or (suite.metrics_url if suite else None)
+    log_path = args.log_path if args.log_path is not None else (
+        Path(suite.log_path) if suite and suite.log_path else None
+    )
+    output_path = args.output or (Path(suite.output) if suite and suite.output else None)
+
+    if not metrics_url and log_path is None:
         parser.error("At least one of --metrics-url or --log-path must be provided")
 
     try:
-        metrics = collect_metrics(args.metrics_url, args.log_path)
+        metrics = collect_metrics(metrics_url, log_path)
     except MetricsCollectionError as exc:
         print(str(exc), file=sys.stderr)
         return 1
-    sys.stdout.write(json.dumps(metrics, ensure_ascii=False) + "\n")
+    payload = json.dumps(metrics, ensure_ascii=False)
+    sys.stdout.write(payload + "\n")
+    if output_path:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(payload + "\n", encoding="utf-8")
     return 0
 
 
