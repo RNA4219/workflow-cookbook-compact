@@ -30,6 +30,11 @@ next_review_due: 2025-11-21
     （`compress_ratio`/`review_latency`/`reopen_rate`）と Chainlit ログ（`semantic_retention`/`spec_completeness`）
     から統合メトリクスを取得する。出力先を変更したい場合は `--output <JSON パス>` を追加指定する。
     `--metrics-url` または `--log-path` のどちらか片方しか利用できない場合は、利用可能な入力のみ指定する。
+  - Chainlit（または同等のUI）からメトリクスを出力する場合は `tools.perf.structured_logger.StructuredLogger`
+    を利用する。例: `from tools.perf.structured_logger import StructuredLogger` →
+    `StructuredLogger(name="chainlit", path="~/.chainlit/logs/metrics.log").inference(metrics={"semantic_retention": 0.9})`。
+    こうして生成された JSON ログ行は `collect_metrics --log-path ~/.chainlit/logs/metrics.log` で取り込まれ、
+    `metrics` キー配下の辞書がそのまま Chainlit メトリクスとして集計される。
   - 実行後に `.ga/qa-metrics.json` がリポジトリルート配下へ生成されていることを確認する。生成されない場合は
     `--output` に明示したパスと標準出力を突き合わせ、異常がないか確認する。
   - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8'));
