@@ -1,7 +1,14 @@
 """governance.metrics.yaml の内容を検証するテスト。"""
 
+import sys
 from pathlib import Path
 from typing import Dict
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if (repo_root := str(REPO_ROOT)) not in sys.path:
+    sys.path.insert(0, repo_root)
+
+from tools.perf.collect_metrics import METRIC_KEYS
 
 try:
     import yaml
@@ -26,12 +33,5 @@ def test_governance_metrics_contains_required_keys() -> None:
     metrics_data = yaml.safe_load(metrics_path.read_text(encoding="utf-8"))
 
     assert isinstance(metrics_data, dict)
-    expected_keys = {
-        "compress_ratio",
-        "semantic_retention",
-        "review_latency",
-        "reopen_rate",
-        "spec_completeness",
-    }
-    missing = sorted(expected_keys.difference(metrics_data))
-    assert not missing, f"Missing metric: {', '.join(missing)}"
+    for key in METRIC_KEYS:
+        assert key in metrics_data, f"Missing metric: {key}"
