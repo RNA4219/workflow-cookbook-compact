@@ -175,10 +175,11 @@ def trim_messages(
     trimmed.extend(kept)
 
     output_tokens = sum(counter.count_message(message) for message in trimmed)
-    compression_ratio = 1.0 if total_input_tokens == 0 else output_tokens / total_input_tokens
+    compress_ratio = 1.0 if total_input_tokens == 0 else output_tokens / total_input_tokens
 
     statistics: Dict[str, Any] = {
-        "compression_ratio": compression_ratio,
+        "compress_ratio": compress_ratio,
+        "compression_ratio": compress_ratio,
         "input_tokens": total_input_tokens,
         "output_tokens": output_tokens,
     }
