@@ -72,28 +72,16 @@ _LEGACY_REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
     ("legacy_review_latency_hours", 1.0),
 )
 
-_RATIO_CAPTURE_CONFIG: Mapping[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
-    "reopen_rate": (("reopened", "reopens", "numerator"), ("total", "resolved", "all", "denominator")),
-    "spec_completeness": (("with_spec", "with_specs", "completed", "numerator"), ("total", "all", "denominator")),
-}
+_RATIO_PROMETHEUS_CONFIG: Mapping[
+    str,
+    tuple[Sequence[str], Sequence[str], Sequence[tuple[str, float]]],
+] = {}
 
-_RATIO_PROMETHEUS_CONFIG: Mapping[str, tuple[tuple[str, ...], tuple[str, ...], tuple[tuple[str, float], ...]]] = {
-    "reopen_rate": (
-        ("_reopened", "_reopen"),
-        ("_total", "_count", "_closed", "_all"),
-        (("workflow_reopen_rate", 1.0), ("docops_reopen_rate", 1.0), ("reopen_rate", 1.0)),
-    ),
-    "spec_completeness": (
-        ("_with_spec", "_with_specs", "_completed"),
-        ("_total", "_count", "_all"),
-        (
-            ("workflow_spec_completeness_ratio", 1.0),
-            ("workflow_spec_completeness", 1.0),
-            ("spec_completeness_ratio", 1.0),
-            ("spec_completeness", 1.0),
-        ),
-    ),
-}
+_REVIEW_LATENCY_AGGREGATE_PREFIXES: tuple[tuple[str, float], ...] = (
+    *REVIEW_LATENCY_PREFIXES,
+    *WORKFLOW_REVIEW_LATENCY_PREFIXES,
+    *_LEGACY_REVIEW_LATENCY_PREFIXES,
+)
 
 
 @dataclass(frozen=True)
@@ -236,14 +224,7 @@ def _derive_review_latency(raw: Mapping[str, float]) -> float | None:
         return direct
     # Prefer the workflow_review_* prefixed aggregates; keep legacy_* as a
     # compatibility fallback so existing exporters continue to work.
-    return _derive_average(
-        raw,
-        (
-            *REVIEW_LATENCY_PREFIXES,
-            *WORKFLOW_REVIEW_LATENCY_PREFIXES,
-            *_LEGACY_REVIEW_LATENCY_PREFIXES,
-        ),
-    )
+    return _derive_average(raw, _REVIEW_LATENCY_AGGREGATE_PREFIXES)
 
 
 def _derive_ratio_by_suffixes(
