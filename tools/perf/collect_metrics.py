@@ -41,9 +41,9 @@ REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
     ("review_latency_hours", 1.0),
 )
 
-LEGACY_REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
-    ("katamari_review_latency_seconds", 3600.0),
-    ("katamari_review_latency_hours", 1.0),
+LEGACY_WORKFLOW_REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
+    ("legacy_review_latency_seconds", 3600.0),
+    ("legacy_review_latency_hours", 1.0),
 )
 
 
@@ -122,11 +122,10 @@ def _capture_compliance(
             target["checklist_compliance_rate"] = ratio
 
 
-def _derive_review_latency(raw: Mapping[str, float]) -> float | None:
-    direct = raw.get("review_latency")
-    if direct is not None:
-        return direct
-    for prefix, scale in (*REVIEW_LATENCY_PREFIXES, *LEGACY_REVIEW_LATENCY_PREFIXES):
+def _derive_average(
+    raw: Mapping[str, float], prefixes: Sequence[tuple[str, float]]
+) -> float | None:
+    for prefix, scale in prefixes:
         sum_key = f"{prefix}_sum"
         count_key = f"{prefix}_count"
         total = raw.get(sum_key)
@@ -135,6 +134,16 @@ def _derive_review_latency(raw: Mapping[str, float]) -> float | None:
             continue
         return (total / count) / scale
     return None
+
+
+def _derive_review_latency(raw: Mapping[str, float]) -> float | None:
+    direct = raw.get("review_latency")
+    if direct is not None:
+        return direct
+    return _derive_average(
+        raw,
+        (*REVIEW_LATENCY_PREFIXES, *LEGACY_WORKFLOW_REVIEW_LATENCY_PREFIXES),
+    )
 
 
 def _derive_checklist_compliance(raw: Mapping[str, float]) -> float | None:

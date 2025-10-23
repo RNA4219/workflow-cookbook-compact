@@ -61,8 +61,12 @@ def test_collects_metrics_from_prometheus_and_logs(tmp_path: Path) -> None:
         "# HELP trim_compress_ratio_avg Ratio\n"
         "# TYPE trim_compress_ratio_avg gauge\n"
         "trim_compress_ratio_avg 0.82\n"
-        "trim_review_latency_seconds_sum 21600\n"
-        "trim_review_latency_seconds_count 12\n"
+        "legacy_review_latency_seconds_sum 21600\n"
+        "legacy_review_latency_seconds_count 12\n"
+        "task_seed_cycle_time_seconds_sum 3600\n"
+        "task_seed_cycle_time_seconds_count 12\n"
+        "birdseye_refresh_delay_minutes_sum 200\n"
+        "birdseye_refresh_delay_minutes_count 5\n"
         "katamari_reviews_reopened_total 3\n"
         "katamari_reviews_total 60\n",
         encoding="utf-8",
