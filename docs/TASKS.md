@@ -54,7 +54,8 @@ next_review_due: YYYY-MM-DD
 ## 4. フォローアップ手順
 
 - **未解決事項**: 実装後も残るリスクや TODO は `Follow-ups` セクションに列挙し、必要なら新規 Task Seed を起票する。
-- **情報同期**: 追記した Task Seed は `HUB.codex.md` の分類に基づき、関連ドキュメント（Blueprint / Guardrails / Incident）とのリンクを整備する。
+- **情報同期**: 追記した Task Seed は `HUB.codex.md` の分類に基づき、関連ドキュメント（Blueprint /
+  Guardrails / Incident）とのリンクを整備する。
 - **レビュー結果の反映**: レビュアーからの追加要求は `Notes` に記録し、着手が別タスクになる場合は Task Seed ID を採番して紐付ける。
 - **完了判定**: `CHECKLISTS.md` と `EVALUATION.md` の条件を満たし、検証ログがすべてグリーンであることを確認して `status: done` へ更新する。
 - **Changelog 通番**: 変更履歴を編集する場合は [README.md の変更履歴の更新ルール](../README.md#changelog-update-rules) に従い、既存の最大通番に 1 を加えて 4 桁ゼロ埋めで記録する。
