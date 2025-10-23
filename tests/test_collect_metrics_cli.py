@@ -174,6 +174,37 @@ def test_collects_review_latency_from_workflow_aggregates(tmp_path: Path) -> Non
     }
 
 
+def test_collects_review_latency_from_minute_aggregates(tmp_path: Path) -> None:
+    prometheus = tmp_path / "metrics.prom"
+    prometheus.write_text(
+        "checklist_compliance_rate 0.96\n"
+        "task_seed_cycle_time_minutes 5.0\n"
+        "birdseye_refresh_delay_minutes 1.0\n"
+        "workflow_review_latency_minutes_sum 360\n"
+        "workflow_review_latency_minutes_count 12\n"
+        "compress_ratio 0.82\n"
+        "semantic_retention 0.91\n"
+        "workflow_reopen_rate 0.2\n"
+        "workflow_spec_completeness_ratio 0.95\n",
+        encoding="utf-8",
+    )
+
+    result = _run_cli("--metrics-url", prometheus.as_uri())
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload == {
+        "checklist_compliance_rate": 96.0,
+        "compress_ratio": pytest.approx(0.82),
+        "semantic_retention": pytest.approx(0.91),
+        "task_seed_cycle_time_minutes": 5.0,
+        "birdseye_refresh_delay_minutes": 1.0,
+        "review_latency": pytest.approx(0.5),
+        "reopen_rate": 20.0,
+        "spec_completeness": 95.0,
+    }
+
+
 def test_pushgateway_receives_metrics_payload(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text(

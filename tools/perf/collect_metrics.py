@@ -67,18 +67,22 @@ _METRIC_SOURCE_PREFERENCES: Mapping[str, tuple[str, ...]] = {
 
 REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
     ("trim_review_latency_seconds", 3600.0),
+    ("trim_review_latency_minutes", 60.0),
     ("review_latency_seconds", 3600.0),
+    ("review_latency_minutes", 60.0),
     ("trim_review_latency_hours", 1.0),
     ("review_latency_hours", 1.0),
 )
 
 WORKFLOW_REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
     ("workflow_review_latency_seconds", 3600.0),
+    ("workflow_review_latency_minutes", 60.0),
     ("workflow_review_latency_hours", 1.0),
 )
 
 _LEGACY_REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
     ("legacy_review_latency_seconds", 3600.0),
+    ("legacy_review_latency_minutes", 60.0),
     ("legacy_review_latency_hours", 1.0),
 )
 
