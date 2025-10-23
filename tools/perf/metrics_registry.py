@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Mapping, MutableMapping
+from typing import Dict, Mapping, MutableMapping, overload
 
 _MetricKey = tuple[str, tuple[tuple[str, str], ...]]
 
@@ -14,6 +14,11 @@ _SERIES_SUFFIXES: tuple[str, ...] = ("count", "sum", "avg", "min", "max")
 _METRIC_HELP: Mapping[str, str] = {
     "katamari_trim_compress_ratio": "Compression ratio observed after trimming.",
     "katamari_trim_semantic_retention": "Semantic retention reported after trimming.",
+}
+
+_COMPAT_FROM_SOURCE: Mapping[str, str] = {
+    "katamari_trim_compress_ratio": "compress_ratio",
+    "katamari_trim_semantic_retention": "semantic_retention",
 }
 
 
@@ -70,6 +75,7 @@ class MetricsRegistry:
         self._default_labels: Mapping[str, str] = dict(default_labels or {})
         self._series: Dict[_MetricKey, _Stats] = {}
 
+    @overload
     def observe_trim(
         self,
         *,
@@ -77,13 +83,48 @@ class MetricsRegistry:
         semantic_retention: float | None = None,
         labels: Mapping[str, str] | None = None,
     ) -> None:
-        if not 0.0 <= compress_ratio <= 1.0:
+        ...
+
+    @overload
+    def observe_trim(
+        self,
+        *,
+        original_tokens: int,
+        trimmed_tokens: int,
+        semantic_retention: float | None = None,
+        labels: Mapping[str, str] | None = None,
+    ) -> None:
+        ...
+
+    def observe_trim(
+        self,
+        *,
+        compress_ratio: float | None = None,
+        original_tokens: int | None = None,
+        trimmed_tokens: int | None = None,
+        semantic_retention: float | None = None,
+        labels: Mapping[str, str] | None = None,
+    ) -> None:
+        if compress_ratio is None:
+            if original_tokens is None or trimmed_tokens is None:
+                raise ValueError(
+                    "Either compress_ratio or both original_tokens and trimmed_tokens must be provided"
+                )
+            if original_tokens <= 0 or trimmed_tokens < 0:
+                raise ValueError("original_tokens must be positive and trimmed_tokens must be non-negative")
+            ratio = trimmed_tokens / original_tokens
+        else:
+            if original_tokens is not None or trimmed_tokens is not None:
+                raise ValueError("Cannot pass both compress_ratio and token counts to observe_trim")
+            ratio = compress_ratio
+
+        if not 0.0 <= ratio <= 1.0:
             raise ValueError("compress_ratio must be between 0.0 and 1.0")
         if semantic_retention is not None and not 0.0 <= semantic_retention <= 1.0:
             raise ValueError("semantic_retention must be between 0.0 and 1.0")
 
         normalized_labels = self._normalize_labels(labels)
-        self._record("katamari_trim_compress_ratio", compress_ratio, normalized_labels)
+        self._record("katamari_trim_compress_ratio", ratio, normalized_labels)
         if semantic_retention is not None:
             self._record(
                 "katamari_trim_semantic_retention",
@@ -127,6 +168,20 @@ class MetricsRegistry:
                         emitted.add(series_name)
                     value = entry[suffix]
                     lines.append(f"{series_name}{label_text} {format(float(value), 'g')}")
+                gauge_name = _COMPAT_FROM_SOURCE.get(metric_name)
+                if gauge_name is not None:
+                    if gauge_name not in emitted:
+                        lines.extend(
+                            [
+                                f"# HELP {gauge_name} {help_text}.",
+                                f"# TYPE {gauge_name} gauge",
+                            ]
+                        )
+                        emitted.add(gauge_name)
+                    average = entry.get("avg")
+                    if not isinstance(average, (int, float)):
+                        raise RuntimeError("Snapshot entry is missing average value")
+                    lines.append(f"{gauge_name}{label_text} {format(float(average), 'g')}")
         return "\n".join(lines) + ("\n" if lines else "")
 
     def _record(

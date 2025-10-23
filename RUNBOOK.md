@@ -40,10 +40,11 @@ next_review_due: 2025-11-21
     こうして生成された JSON ログ行は `collect_metrics --log-path ~/.chainlit/logs/metrics.log` で取り込まれ、
     `metrics` キー配下の辞書がそのまま Chainlit メトリクスとして集計される。
   - FastAPI などの Web サービスに組み込む場合は `tools.perf.metrics_registry.MetricsRegistry` を共有シングルトン
-    として初期化し、トリミング完了時に `observe_trim(original_tokens=..., trimmed_tokens=..., semantic_retention=...)`
-    を記録する。`@app.get("/metrics")` エンドポイントで `return PlainTextResponse(registry.export_prometheus())`
+    として初期化し、トリミング完了時に `observe_trim` を呼び出す。`compress_ratio=` を直接指定する新 API と、
+    既存の `original_tokens=` / `trimmed_tokens=` を渡す後方互換 API のどちらでも動作し、`semantic_retention`
+    の有無も任意。`@app.get("/metrics")` エンドポイントで `return PlainTextResponse(registry.export_prometheus())`
     を返すと Prometheus が取得可能となる。収集 CLI は `compress_ratio` と `semantic_retention` を公開 API
-    として参照するため、同名メトリクスを維持する。
+    として参照するため、同名 Gauge を引き続き公開する。
   - 実行後に `.ga/qa-metrics.json` がリポジトリルート配下へ生成されていることを確認する。生成されない場合は
     `--output` に明示したパスと標準出力を突き合わせ、異常がないか確認する。
   - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8'));
@@ -66,6 +67,13 @@ next_review_due: 2025-11-21
             semantic_retention=payload["semantic_retention"],
             labels={"model": payload.get("model", "unknown")},
         )
+        # 旧 API を利用する場合の例（compress_ratio が未計算なときなど）:
+        # registry.observe_trim(
+        #     original_tokens=payload["original_tokens"],
+        #     trimmed_tokens=payload["trimmed_tokens"],
+        #     semantic_retention=payload.get("semantic_retention"),
+        #     labels={"model": payload.get("model", "unknown")},
+        # )
         return {"status": "ok"}
 
     @app.get("/metrics")
@@ -85,7 +93,8 @@ next_review_due: 2025-11-21
     ```
 
   - 公開メトリクス名: `katamari_trim_compress_ratio` / `katamari_trim_semantic_retention`
-    （各 `_count`、`_sum`、`_avg`、`_min`、`_max` を同時出力）
+    （各 `_count`、`_sum`、`_avg`、`_min`、`_max` を同時出力）に加え、後方互換 Gauge
+    `compress_ratio` / `semantic_retention` も平均値として公開する。
 
 - 失敗兆候と一次対応
   - `.ga/qa-metrics.json` が生成されない / 壊れている: `python tools/perf/collect_metrics.py --help` で、
