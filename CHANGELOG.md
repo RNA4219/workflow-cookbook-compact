@@ -10,17 +10,17 @@ next_review_due: 2025-11-14
 
 ## 0.1.0 - 2025-10-13
 
-- 初版（MD一式 / Codex対応テンプレ含む）
+- 0001: 初版（MD一式 / Codex対応テンプレ含む）
 
 ## 1.0.0 - 2025-10-16
 
 ### Added
 
-- Stable Template API（主要MDの凍結）
-- PR運用の明確化（Intent / EVALUATION リンク / semverラベル）
-- CIワークフロー（links/prose/release）
+- 0002: Stable Template API（主要MDの凍結）
+- 0003: PR運用の明確化（Intent / EVALUATION リンク / semverラベル）
+- 0004: CIワークフロー（links/prose/release）
 
 ### Known limitations
 
-- SLOバッジ自動生成は未実装（README と policy.yaml を手動同期）
-- Canary 連携は任意
+- 0005: SLOバッジ自動生成は未実装（README と policy.yaml を手動同期）
+- 0006: Canary 連携は任意
