@@ -6,10 +6,16 @@ import importlib
 import sys
 from itertools import zip_longest
 from math import sqrt
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Dict, Iterable, List
 
 import pytest
+
+
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
 
 
 def _reload_context_trimmer(fake_tiktoken: Any | None) -> Any:
@@ -83,6 +89,26 @@ def test_trim_messages_counts_tokens_without_tiktoken() -> None:
     assert stats["output_tokens"] == expected
     assert stats["compress_ratio"] == pytest.approx(stats["compression_ratio"])
     assert result["token_counter"]["uses_tiktoken"] is False
+
+
+def test_trim_messages_reports_legacy_compression_ratio_key() -> None:
+    module = _reload_context_trimmer(fake_tiktoken=None)
+    messages = _messages()
+    result = module.trim_messages(messages, max_context_tokens=100, model="test-model")
+    stats = result["statistics"]
+
+    assert list(stats)[:4] == [
+        "compress_ratio",
+        "compression_ratio",
+        "input_tokens",
+        "output_tokens",
+    ]
+
+    expected_tokens = sum(max(1, len(m["content"]) // 4 + 1) + 4 for m in messages)
+    assert stats["input_tokens"] == expected_tokens
+    assert stats["output_tokens"] == expected_tokens
+    assert stats["compress_ratio"] == pytest.approx(1.0)
+    assert stats["compression_ratio"] == pytest.approx(stats["compress_ratio"])
 
 
 def test_trim_messages_records_semantic_retention() -> None:
