@@ -273,14 +273,7 @@ def _derive_review_latency(raw: Mapping[str, float]) -> float | None:
         return direct
     # Prefer the workflow_review_* prefixed aggregates; keep legacy_* as a
     # compatibility fallback so existing exporters continue to work.
-    return _derive_average(
-        raw,
-        (
-            *REVIEW_LATENCY_PREFIXES,
-            *WORKFLOW_REVIEW_LATENCY_PREFIXES,
-            *_LEGACY_REVIEW_LATENCY_PREFIXES,
-        ),
-    )
+    return _derive_average(raw, _REVIEW_LATENCY_AGGREGATE_PREFIXES)
 
 
 def _derive_ratio_by_suffixes(
