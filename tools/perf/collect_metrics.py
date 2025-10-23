@@ -161,6 +161,20 @@ def _derive_checklist_compliance(raw: Mapping[str, float]) -> float | None:
     return None
 
 
+def _derive_average(
+    raw: Mapping[str, float], prefixes: Sequence[tuple[str, float]]
+) -> float | None:
+    for prefix, scale in prefixes:
+        sum_key = f"{prefix}_sum"
+        count_key = f"{prefix}_count"
+        total = raw.get(sum_key)
+        count = raw.get(count_key)
+        if total is None or count in (None, 0.0):
+            continue
+        return (total / count) / scale
+    return None
+
+
 def _derive_task_seed_cycle_time_minutes(raw: Mapping[str, float]) -> float | None:
     direct = raw.get("task_seed_cycle_time_minutes")
     if direct is not None:
