@@ -97,11 +97,10 @@ next_review_due: 2025-11-21
     `compress_ratio` / `semantic_retention` も平均値として公開する。
 
 - 失敗兆候と一次対応
-  - `.ga/qa-metrics.json` が生成されない / 壊れている: `python tools/perf/collect_metrics.py --help` で、
-    オプションを再確認し、再実行前にキャッシュディレクトリを削除。
-  - メトリクス値が合格レンジ外: Chainlit ログ（例: `~/.chainlit/logs/*.log`）で入力プロンプトやレスポンス異常を確認し、
-    必要に応じて再試行ジョブをトリガー。
-  - コマンドエラーやタイムアウト: 依存ライブラリ不足の警告を確認し、仮想環境へ不足モジュールを再インストールしてから再実行。
+  - `.ga/qa-metrics.json` が生成されない / 壊れている: `python -m tools.perf.collect_metrics --help` でオプションを再確認し、一時ファイルやログ出力設定を洗い直してから再実行。
+  - `checklist_compliance_rate` が 95% を下回る: 実行時のチェックリスト完了ログを抽出し、どの項目が未完了かを Birdseye や Git 履歴で確認する。改善作業が必要な場合は Task Seed を追加投入する。
+  - `task_seed_cycle_time_minutes` が 1440 分を超過: 受付から着手までの待機要因（担当者アサイン、依頼内容不備など）を振り返り、対応 SLA を再共有する。
+  - `birdseye_refresh_delay_minutes` が 60 分を超過: Birdseye 更新ジョブの実行ログとスケジューラ状態を確認し、必要に応じて手動更新を実施。
 
 ## Confirm
 

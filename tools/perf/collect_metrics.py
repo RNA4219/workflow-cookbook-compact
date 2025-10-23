@@ -12,18 +12,13 @@ from pathlib import Path
 from typing import Iterable, Mapping, MutableMapping, Sequence
 
 METRIC_KEYS: tuple[str, ...] = (
-    "compress_ratio",
-    "semantic_retention",
-    "review_latency",
-    "reopen_rate",
-    "spec_completeness",
+    "checklist_compliance_rate",
+    "task_seed_cycle_time_minutes",
+    "birdseye_refresh_delay_minutes",
 )
 
 PERCENTAGE_KEYS: tuple[str, ...] = (
-    "compress_ratio",
-    "semantic_retention",
-    "reopen_rate",
-    "spec_completeness",
+    "checklist_compliance_rate",
 )
 
 _METRIC_SOURCE_PREFERENCES: Mapping[str, tuple[str, ...]] = {
@@ -79,9 +74,14 @@ def _coerce_float(value: object) -> float | None:
     return None
 
 
-def _capture(source: Mapping[str, object], target: MutableMapping[str, float]) -> None:
+def _capture(
+    source: Mapping[str, object],
+    target: MutableMapping[str, float],
+    *,
+    overwrite: bool = False,
+) -> None:
     for key in METRIC_KEYS:
-        if key in target:
+        if not overwrite and key in target:
             continue
         preferences = _METRIC_SOURCE_PREFERENCES.get(key, (key,))
         for candidate in preferences:
@@ -94,27 +94,32 @@ def _capture(source: Mapping[str, object], target: MutableMapping[str, float]) -
                 break
 
 
-def _capture_spec_metrics(source: Mapping[str, object], target: MutableMapping[str, float]) -> None:
-    if "spec_completeness" in target:
+def _capture_compliance(
+    source: Mapping[str, object],
+    target: MutableMapping[str, float],
+    *,
+    overwrite: bool = False,
+) -> None:
+    if not overwrite and "checklist_compliance_rate" in target:
         return
-    spec_raw = source.get("spec_completeness")
-    if isinstance(spec_raw, Mapping):
+    compliance_raw = source.get("checklist_compliance_rate")
+    if isinstance(compliance_raw, Mapping):
         numerator = None
         denominator = None
-        for candidate in ("with_spec", "complete", "numerator", "count", "ready"):
-            numerator = _coerce_float(spec_raw.get(candidate))
+        for candidate in ("compliant", "checked", "passing", "numerator"):
+            numerator = _coerce_float(compliance_raw.get(candidate))
             if numerator is not None:
                 break
         for candidate in ("total", "denominator", "all", "overall"):
-            denominator = _coerce_float(spec_raw.get(candidate))
+            denominator = _coerce_float(compliance_raw.get(candidate))
             if denominator is not None and denominator != 0:
                 break
         if numerator is not None and denominator is not None and denominator != 0:
-            target["spec_completeness"] = numerator / denominator
+            target["checklist_compliance_rate"] = numerator / denominator
             return
-        ratio = _coerce_float(spec_raw.get("ratio"))
+        ratio = _coerce_float(compliance_raw.get("ratio"))
         if ratio is not None:
-            target["spec_completeness"] = ratio
+            target["checklist_compliance_rate"] = ratio
 
 
 def _derive_review_latency(raw: Mapping[str, float]) -> float | None:
@@ -132,22 +137,21 @@ def _derive_review_latency(raw: Mapping[str, float]) -> float | None:
     return None
 
 
-def _derive_reopen_rate(raw: Mapping[str, float]) -> float | None:
-    direct = raw.get("reopen_rate")
+def _derive_checklist_compliance(raw: Mapping[str, float]) -> float | None:
+    direct = raw.get("checklist_compliance_rate")
     if direct is not None:
         return direct
     suffix_pairs: Sequence[tuple[str, Sequence[str]]] = (
-        ("_reopened_total", ("_total", "_count")),
-        ("_reopened_count", ("_count", "_total")),
-        ("_reopen_total", ("_total", "_count")),
-        ("_reopen_count", ("_count", "_total")),
+        ("_compliant_total", ("_total", "_count")),
+        ("_compliant_count", ("_count", "_total")),
+        ("_checked_total", ("_total", "_count")),
     )
     for numerator_suffix, denominator_suffixes in suffix_pairs:
         for name, value in raw.items():
             if not name.endswith(numerator_suffix):
                 continue
-            numerator = value
             base = name[: -len(numerator_suffix)]
+            numerator = value
             for suffix in denominator_suffixes:
                 denominator_key = f"{base}{suffix}"
                 denominator = raw.get(denominator_key)
@@ -155,6 +159,30 @@ def _derive_reopen_rate(raw: Mapping[str, float]) -> float | None:
                     continue
                 return numerator / denominator
     return None
+
+
+def _derive_task_seed_cycle_time_minutes(raw: Mapping[str, float]) -> float | None:
+    direct = raw.get("task_seed_cycle_time_minutes")
+    if direct is not None:
+        return direct
+    prefixes: Sequence[tuple[str, float]] = (
+        ("task_seed_cycle_time_seconds", 60.0),
+        ("docops_task_seed_cycle_time_seconds", 60.0),
+        ("task_seed_cycle_time_minutes", 1.0),
+    )
+    return _derive_average(raw, prefixes)
+
+
+def _derive_birdseye_refresh_delay_minutes(raw: Mapping[str, float]) -> float | None:
+    direct = raw.get("birdseye_refresh_delay_minutes")
+    if direct is not None:
+        return direct
+    prefixes: Sequence[tuple[str, float]] = (
+        ("birdseye_refresh_delay_seconds", 60.0),
+        ("docops_birdseye_refresh_delay_seconds", 60.0),
+        ("birdseye_refresh_delay_minutes", 1.0),
+    )
+    return _derive_average(raw, prefixes)
 
 
 def _parse_prometheus(text: str) -> dict[str, float]:
@@ -180,13 +208,23 @@ def _parse_prometheus(text: str) -> dict[str, float]:
     metrics: dict[str, float] = {}
     _capture(raw, metrics)
 
-    review_latency = _derive_review_latency(raw)
-    if review_latency is not None and "review_latency" not in metrics:
-        metrics["review_latency"] = review_latency
+    compliance = _derive_checklist_compliance(raw)
+    if compliance is not None and "checklist_compliance_rate" not in metrics:
+        metrics["checklist_compliance_rate"] = compliance
 
-    reopen_rate = _derive_reopen_rate(raw)
-    if reopen_rate is not None and "reopen_rate" not in metrics:
-        metrics["reopen_rate"] = reopen_rate
+    task_seed_cycle_time = _derive_task_seed_cycle_time_minutes(raw)
+    if (
+        task_seed_cycle_time is not None
+        and "task_seed_cycle_time_minutes" not in metrics
+    ):
+        metrics["task_seed_cycle_time_minutes"] = task_seed_cycle_time
+
+    birdseye_delay = _derive_birdseye_refresh_delay_minutes(raw)
+    if (
+        birdseye_delay is not None
+        and "birdseye_refresh_delay_minutes" not in metrics
+    ):
+        metrics["birdseye_refresh_delay_minutes"] = birdseye_delay
 
     return metrics
 
@@ -200,9 +238,9 @@ def _load_prometheus(metrics_url: str) -> Mapping[str, float]:
     return _parse_prometheus(payload.decode("utf-8"))
 
 
-def _load_chainlit_log(path: Path) -> Mapping[str, float]:
+def _load_structured_log(path: Path) -> Mapping[str, float]:
     if not path.exists():
-        raise MetricsCollectionError(f"Chainlit log not found: {path}")
+        raise MetricsCollectionError(f"Structured log not found: {path}")
     metrics: dict[str, float] = {}
     for line in path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
@@ -213,11 +251,11 @@ def _load_chainlit_log(path: Path) -> Mapping[str, float]:
             continue
         if isinstance(parsed, Mapping):
             _capture(parsed, metrics)
-            _capture_spec_metrics(parsed, metrics)
+            _capture_compliance(parsed, metrics, overwrite=True)
             nested = parsed.get("metrics")
             if isinstance(nested, Mapping):
                 _capture(nested, metrics)
-                _capture_spec_metrics(nested, metrics)
+                _capture_compliance(nested, metrics, overwrite=True)
     return metrics
 
 
@@ -225,6 +263,8 @@ def _merge(sources: Iterable[Mapping[str, float]]) -> dict[str, float]:
     combined: dict[str, float] = {}
     for mapping in sources:
         _capture(mapping, combined)
+        if "checklist_compliance_rate" in mapping:
+            combined["checklist_compliance_rate"] = mapping["checklist_compliance_rate"]
     missing = [key for key in METRIC_KEYS if key not in combined]
     if missing:
         raise MetricsCollectionError("Missing metrics: " + ", ".join(missing))
@@ -257,7 +297,7 @@ def collect_metrics(metrics_url: str | None, log_path: Path | None) -> dict[str,
     if metrics_url:
         sources.append(_load_prometheus(metrics_url))
     if log_path:
-        sources.append(_load_chainlit_log(log_path))
+        sources.append(_load_structured_log(log_path))
     if not sources:
         raise MetricsCollectionError("At least one of --metrics-url or --log-path is required")
     return _merge(sources)
@@ -267,7 +307,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Collect performance metrics for post-processing")
     parser.add_argument("--suite", choices=sorted(SUITES), help="Preset input/output configuration")
     parser.add_argument("--metrics-url", help="Prometheus metrics endpoint URL")
-    parser.add_argument("--log-path", type=Path, help="Path to Chainlit log file")
+    parser.add_argument(
+        "--log-path",
+        type=Path,
+        help="Path to structured operations log",
+    )
     parser.add_argument("--output", type=Path, help="File path to write collected metrics JSON")
     parser.add_argument("--pushgateway-url", help="Prometheus PushGateway endpoint URL")
     args = parser.parse_args(argv)
