@@ -19,8 +19,8 @@ Workflow Cookbook の標準手順を土台に、リポジトリ固有の要件�
 ## 3. 依存ドキュメントの同期
 
 - `CHECKLISTS.md#release` の要件と整合するように `RUNBOOK.md`・`BLUEPRINT.md` など関連ドキュメントの参照先が最新バージョンへ更新されているかを確認する。
-- [docs/UPSTREAM.md](docs/UPSTREAM.md) を派生元の最新版と突合し、差分評価と反映状況が更新済みであることを保証する。
-- [docs/UPSTREAM_WEEKLY_LOG.md](docs/UPSTREAM_WEEKLY_LOG.md) を最新のフォローアップログと照合し、未反映の検証結果が残っていないかを確認する。
+- [docs/UPSTREAM.md](UPSTREAM.md) を派生元の最新版と突合し、差分評価と反映状況が更新済みであることを保証する。
+- [docs/UPSTREAM_WEEKLY_LOG.md](UPSTREAM_WEEKLY_LOG.md) を最新のフォローアップログと照合し、未反映の検証結果が残っていないかを確認する。
 - サンプルコマンドや設定ファイルがバージョン更新に追随しているかを確認し、差異がある場合は同一リリース内で修正する。
 
 ## 4. 配布物の整合性
