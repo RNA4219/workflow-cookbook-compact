@@ -9,7 +9,7 @@
 - 決定:
   RUNBOOK / EVALUATION / governance/metrics.yaml を統一メトリクスセットで結び、
   `CHECKLISTS.md` の Release 手順でメトリクス最新化と証跡共有を必須化する。
-  また、Birdseye マップと Katamari 由来の監視テンプレを同期して、
+  また、Birdseye マップと Workflow Cookbook 標準の監視テンプレを同期して、
   可観測性の指標と操作フローを一元管理する運用に移行する。
 
 - 影響範囲:

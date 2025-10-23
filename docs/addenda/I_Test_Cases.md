@@ -6,7 +6,7 @@
 | I-02 | Birdseye 再生成確認 | ドキュメント差分に応じた Birdseye インデックス/カプセルの再生成を検証する。 | [`tools/codemap/README.md`](../../tools/codemap/README.md#実行手順), [`docs/BIRDSEYE.md`](../BIRDSEYE.md) |
 | I-03 | Task Seed TDD 例 | Task Seed で設計したテスト計画と実行ログが一貫しているか確認する。 | [`docs/TASKS.md`](../TASKS.md#3-検証ログtdd-前提), [`TASK.codex.md`](../../TASK.codex.md) |
 
-> **利用方法**: Katamari 付録I形式に倣い、代表シナリオをケースID・目的・参照資料で管理する。追加が必要な場合は既存IDの連番で追記し、
+> **利用方法**: Workflow Cookbook 付録Iテンプレートに倣い、代表シナリオをケースID・目的・参照資料で管理する。追加が必要な場合は既存IDの連番で追記し、
 > 実施ログや検証結果から逆引きできるようにする。
 
 ## I-01 チェックリスト突合
