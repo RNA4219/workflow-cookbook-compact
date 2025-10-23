@@ -38,7 +38,8 @@ next_review_due: 2025-11-21
     `--metrics-url` または `--log-path` のどちらか片方しか利用できない場合は、利用可能な入力のみ指定する。
   - Chainlit（または同等のUI）からメトリクスを出力する場合は `tools.perf.structured_logger.StructuredLogger`
     を利用する。例: `from tools.perf.structured_logger import StructuredLogger` →
-    `StructuredLogger(name="chainlit", path="~/.chainlit/logs/metrics.log").inference(metrics={"semantic_retention": 0.9})`。
+    `StructuredLogger(name="chainlit", path="~/.chainlit/logs/metrics.log")`
+    `.inference(metrics={"semantic_retention": 0.9})`。
     こうして生成された JSON ログ行は `collect_metrics --log-path ~/.chainlit/logs/metrics.log` で取り込まれ、
     `metrics` キー配下の辞書がそのまま Chainlit メトリクスとして集計される。
   - FastAPI などの Web サービスに組み込む場合は `tools.perf.metrics_registry.MetricsRegistry` を共有シングルトン
@@ -51,9 +52,28 @@ next_review_due: 2025-11-21
     `workflow_spec_completeness_*` → `spec_completeness_*` → `spec_completeness` をフォールバックとして参照する。
   - 実行後に `.ga/qa-metrics.json` がリポジトリルート配下へ生成されていることを確認する。生成されない場合は
     `--output` に明示したパスと標準出力を突き合わせ、異常がないか確認する。
-  - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8'));
-     print({k: data[k] for k in ('checklist_compliance_rate', 'compress_ratio', 'semantic_retention', 'task_seed_cycle_time_minutes', 'birdseye_refresh_delay_minutes', 'review_latency', 'reopen_rate', 'spec_completeness')})`
-    で各メトリクスの値を抽出する。閾値は最新サンプルと突き合わせ、外れた場合は直近成功値との差分と再現条件を記録して共有する。
+  - `python - <<'PY'` を実行し、以下を評価して各メトリクスの値を抽出する:
+
+    ```python
+    import json
+
+    with open('.ga/qa-metrics.json', encoding='utf-8') as fh:
+        data = json.load(fh)
+
+    keys = (
+        'checklist_compliance_rate',
+        'compress_ratio',
+        'semantic_retention',
+        'task_seed_cycle_time_minutes',
+        'birdseye_refresh_delay_minutes',
+        'review_latency',
+        'reopen_rate',
+        'spec_completeness',
+    )
+    print({k: data[k] for k in keys})
+    ```
+
+    閾値は最新サンプルと突き合わせ、外れた場合は直近成功値との差分と再現条件を記録して共有する。
   - FastAPI 等へ常駐組み込みする際は `tools.perf.metrics_registry.MetricsRegistry` を介し、トリミング結果を逐次記録する:
 
       ```python
