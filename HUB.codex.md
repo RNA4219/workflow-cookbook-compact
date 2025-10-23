@@ -75,6 +75,7 @@ next_review_due: 2025-11-14
 補完資料一覧:
 
 - `README.md`: リポジトリ概要と参照リンク
+- `CONTRIBUTING.md`: ブランチ運用・TDD・チェックリスト連携のガイドライン
 - `CHANGELOG.md`: 完了タスクと履歴の記録
 - `.github/PULL_REQUEST_TEMPLATE.md`: PR 作成時のチェック項目（Intent/リスク/Canary連携）
 - `.github/ISSUE_TEMPLATE/bug.yml`: Intent ID と自動ゲート確認を必須化した不具合報告フォーム

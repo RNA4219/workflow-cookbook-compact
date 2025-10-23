@@ -34,6 +34,7 @@ canary rules.
 
 ## 使い方（最短）
 
+0. 作業開始前に [CONTRIBUTING.md](CONTRIBUTING.md) を読み、ブランチ運用とテスト手順を確認
 1. これらのMDをリポジトリ直下に配置
    - この5ファイルを別リポにコピー
      - `BLUEPRINT.md`
