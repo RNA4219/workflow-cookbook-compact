@@ -28,9 +28,11 @@ next_review_due: 2025-11-14
 
 ## Test Outline
 
-- 単体: 入力→出力の例テーブル
-- 結合: 代表シナリオ
-- 回帰: 重要パス再確認
+- 単体: 入力→出力の例テーブル（[ケース I-03](docs/addenda/I_Test_Cases.md#i-03-task-seed-tdd-例)）
+- 結合: 代表シナリオ（[ケース I-02](docs/addenda/I_Test_Cases.md#i-02-birdseye-再生成確認)）
+- 回帰: 重要パス再確認（[ケース I-01](docs/addenda/I_Test_Cases.md#i-01-チェックリスト突合)）
+
+> 検証手順の詳細は [`docs/addenda/I_Test_Cases.md`](docs/addenda/I_Test_Cases.md) を参照する。
 
 ## Verification Checklist
 

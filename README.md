@@ -98,7 +98,7 @@ canary rules.
 
 - [`BLUEPRINT.md`](BLUEPRINT.md) …… Intent と仕様全体の骨子を提示
 - [`RUNBOOK.md`](RUNBOOK.md) …… 実装および運用手順を逐次記載
-- [`EVALUATION.md`](EVALUATION.md) …… 受入基準と検証観点を定義
+- [`EVALUATION.md`](EVALUATION.md) …… 受入基準と検証観点を定義（代表シナリオは [付録I](docs/addenda/I_Test_Cases.md) を参照）
 - [`GUARDRAILS.md`](GUARDRAILS.md) …… 行動指針と Birdseye 連携の制約を明示
 - [`HUB.codex.md`](HUB.codex.md) …… タスク分割と依存グラフの中核ハブを維持
 - [`CHECKLISTS.md`](CHECKLISTS.md) …… リリースとレビューフローのチェックリストを提供
