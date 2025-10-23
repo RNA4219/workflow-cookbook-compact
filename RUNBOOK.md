@@ -51,7 +51,7 @@ next_review_due: 2025-11-21
      print({k: data[k] for k in ('compress_ratio', 'semantic_retention', 'review_latency', 'reopen_rate', 'spec_completeness')})`
     で各メトリクスの値を抽出する。閾値は Katamari RUNBOOK の最新サンプルと突き合わせ、外れた場合は直近成功値との差分と再現条件を記録して共有する。
   - FastAPI 等へ常駐組み込みする際は `tools.perf.metrics_registry.MetricsRegistry` を介し、トリミング結果を逐次記録する:
-
+  
     ```python
     from fastapi import FastAPI, Response
 
@@ -79,19 +79,20 @@ next_review_due: 2025-11-21
     @app.get("/metrics")
     async def metrics() -> Response:
         return Response(registry.export_prometheus(), media_type="text/plain")
-    ```
-
-  - `snapshot()` で `{"katamari_trim_compress_ratio": [{"labels": {...}, "count": 2, ...}]}` 形式の統計を確認できる。
+  
+    ```text
+  
+    `snapshot()` で `{"katamari_trim_compress_ratio": [{"labels": {...}, "count": 2, ...}]}` 形式の統計を確認できる。
     Prometheus エクスポートでは `katamari_trim_compress_ratio_{count,sum,avg,min,max}` および
     `katamari_trim_semantic_retention_{count,sum,avg,min,max}` を同一ラベル集合ごとに出力する。
     例:
 
-    ```
+    ```text
     # HELP katamari_trim_compress_ratio_count Compression ratio observed after trimming. (count).
     katamari_trim_compress_ratio_count{model="gpt-5",service="workflow"} 2
     katamari_trim_compress_ratio_avg{model="gpt-5",service="workflow"} 0.45
     ```
-
+  
   - 公開メトリクス名: `katamari_trim_compress_ratio` / `katamari_trim_semantic_retention`
     （各 `_count`、`_sum`、`_avg`、`_min`、`_max` を同時出力）に加え、後方互換 Gauge
     `compress_ratio` / `semantic_retention` も平均値として公開する。
