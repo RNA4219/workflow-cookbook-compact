@@ -52,6 +52,17 @@ _LEGACY_REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
     ("legacy_review_latency_hours", 1.0),
 )
 
+_RATIO_PROMETHEUS_CONFIG: Mapping[
+    str,
+    tuple[Sequence[str], Sequence[str], Sequence[tuple[str, float]]],
+] = {}
+
+_REVIEW_LATENCY_AGGREGATE_PREFIXES: tuple[tuple[str, float], ...] = (
+    *REVIEW_LATENCY_PREFIXES,
+    *WORKFLOW_REVIEW_LATENCY_PREFIXES,
+    *_LEGACY_REVIEW_LATENCY_PREFIXES,
+)
+
 
 @dataclass(frozen=True)
 class SuiteConfig:
@@ -161,14 +172,7 @@ def _derive_review_latency(raw: Mapping[str, float]) -> float | None:
         return direct
     # Prefer the workflow_review_* prefixed aggregates; keep legacy_* as a
     # compatibility fallback so existing exporters continue to work.
-    return _derive_average(
-        raw,
-        (
-            *REVIEW_LATENCY_PREFIXES,
-            *WORKFLOW_REVIEW_LATENCY_PREFIXES,
-            *_LEGACY_REVIEW_LATENCY_PREFIXES,
-        ),
-    )
+    return _derive_average(raw, _REVIEW_LATENCY_AGGREGATE_PREFIXES)
 
 
 def _derive_checklist_compliance(raw: Mapping[str, float]) -> float | None:
