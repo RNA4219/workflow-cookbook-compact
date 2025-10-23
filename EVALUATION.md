@@ -17,14 +17,13 @@ next_review_due: 2025-11-14
 
 ## KPIs
 
-- review_latency: 平均レビュー完了時間(h)。Prometheus（`katamari_review_latency_seconds` または `review_latency`）を tools/perf/
-  collect_metrics.py で週次集計し、Katamari RUNBOOK の許容レンジと突き合わせる。
-- reopen_rate: 再修正率(%)。Prometheus（`reopen_rate` などの派生指標）を tools/perf/collect_metrics.py でスプリントごとに集計し、
-  Katamari RUNBOOK の許容レンジと照合する。
-- spec_completeness: 要件/仕様/設計が揃ったPR比率(%)。Chainlit ログを tools/perf/collect_metrics.py でスプリントごとに解析し、
-  Katamari RUNBOOK の許容レンジと照合する。
-- compress_ratio: 85%〜115% を許容レンジとし、tools/perf/collect_metrics.py の圧縮統計から週次集計。
-- semantic_retention: 95%以上を維持し、tools/perf/collect_metrics.py のレビューログ解析出力をスプリントごとに確認。
+- checklist_compliance_rate: ドキュメント出荷時に必須チェックリストへ準拠できた割合(%)。`tools/perf/collect_metrics.py` の出力
+  （`checklist_compliance_rate`）を週次で確認し、95%以上を維持する。構成管理ログ（`docs/logs/docops.log` など）から checklist
+  完了数/対象総数を抽出して集計する。
+- task_seed_cycle_time_minutes: Task Seed の受付から初回処理完了までの平均所要時間(分)。構造化ログ内の `task_seed_cycle_time`
+  系イベントを `tools/perf/collect_metrics.py` で集計し、24時間以内（1440分以下）を目標値とする。
+- birdseye_refresh_delay_minutes: Birdseye ダッシュボードの更新遅延(分)。Prometheus やジョブ監視ログから更新完了時刻を収集し、
+  `tools/perf/collect_metrics.py` で平均遅延を 60 分以内に抑える。
 
 ## Test Outline
 

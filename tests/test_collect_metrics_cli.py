@@ -55,52 +55,49 @@ def _mock_pushgateway(status_code: int = 202) -> Iterator[tuple[str, dict[str, o
         server.server_close()
 
 
-def test_collects_metrics_from_prometheus_and_chainlit(tmp_path: Path) -> None:
+def test_collects_metrics_from_prometheus_and_logs(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text(
-        "# HELP compress_ratio Ratio\n"
-        "# TYPE compress_ratio gauge\n"
-        "compress_ratio 0.82\n"
-        "katamari_review_latency_seconds_sum 21600\n"
-        "katamari_review_latency_seconds_count 12\n"
-        "katamari_reviews_reopened_total 3\n"
-        "katamari_reviews_total 60\n",
+        "# HELP checklist_compliance_rate Ratio\n"
+        "# TYPE checklist_compliance_rate gauge\n"
+        "checklist_compliance_rate 0.9\n"
+        "task_seed_cycle_time_seconds_sum 7200\n"
+        "task_seed_cycle_time_seconds_count 24\n"
+        "birdseye_refresh_delay_seconds_sum 14400\n"
+        "birdseye_refresh_delay_seconds_count 6\n",
         encoding="utf-8",
     )
 
-    chainlit = tmp_path / "chainlit.log"
-    chainlit.write_text(
+    structured = tmp_path / "docops.log"
+    structured.write_text(
         "\n".join(
             (
-                '{"metrics": {"semantic_retention": 0.74}}',
-                '{"metrics": {"spec_completeness": {"with_spec": 91, "total": 100}}}',
+                '{"metrics": {"checklist_compliance_rate": {"compliant": 48, "total": 50}}}',
+                '{"metrics": {"task_seed_cycle_time_minutes": 25.0}}',
+                '{"metrics": {"birdseye_refresh_delay_minutes": 150.0}}',
             )
         )
         + "\n",
         encoding="utf-8",
     )
 
-    result = _run_cli("--metrics-url", prometheus.as_uri(), "--log-path", str(chainlit))
+    result = _run_cli("--metrics-url", prometheus.as_uri(), "--log-path", str(structured))
 
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     assert payload == {
-        "compress_ratio": 82.0,
-        "semantic_retention": 74.0,
-        "review_latency": 0.5,
-        "reopen_rate": 5.0,
-        "spec_completeness": 91.0,
+        "checklist_compliance_rate": 96.0,
+        "task_seed_cycle_time_minutes": 5.0,
+        "birdseye_refresh_delay_minutes": 40.0,
     }
 
 
 def test_pushgateway_receives_metrics_payload(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text(
-        "compress_ratio 0.82\n"
-        "semantic_retention 0.74\n"
-        "review_latency 0.5\n"
-        "reopen_rate 0.05\n"
-        "spec_completeness 0.91\n",
+        "checklist_compliance_rate 0.96\n"
+        "task_seed_cycle_time_minutes 12.0\n"
+        "birdseye_refresh_delay_minutes 18.0\n",
         encoding="utf-8",
     )
 
@@ -111,11 +108,9 @@ def test_pushgateway_receives_metrics_payload(tmp_path: Path) -> None:
     body = captured["body"]
     assert isinstance(body, bytes)
     assert body.decode("utf-8") == (
-        "compress_ratio 82\n"
-        "semantic_retention 74\n"
-        "review_latency 0.5\n"
-        "reopen_rate 5\n"
-        "spec_completeness 91\n"
+        "checklist_compliance_rate 96\n"
+        "task_seed_cycle_time_minutes 12\n"
+        "birdseye_refresh_delay_minutes 18\n"
     )
     assert captured["method"] == "PUT"
     assert captured["path"] == "/metrics"
@@ -124,11 +119,9 @@ def test_pushgateway_receives_metrics_payload(tmp_path: Path) -> None:
 def test_pushgateway_failure_causes_non_zero_exit(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text(
-        "compress_ratio 0.82\n"
-        "semantic_retention 0.74\n"
-        "review_latency 0.5\n"
-        "reopen_rate 0.05\n"
-        "spec_completeness 0.91\n",
+        "checklist_compliance_rate 0.96\n"
+        "task_seed_cycle_time_minutes 12.0\n"
+        "birdseye_refresh_delay_minutes 18.0\n",
         encoding="utf-8",
     )
 
@@ -142,17 +135,17 @@ def test_pushgateway_failure_causes_non_zero_exit(tmp_path: Path) -> None:
 def test_suite_output_generates_file_and_stdout_matches(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text(
-        "# HELP compress_ratio Ratio\n"
-        "# TYPE compress_ratio gauge\n"
-        "compress_ratio 0.82\n"
-        "review_latency 18.5\n"
-        "reopen_rate 0.062\n",
+        "# HELP checklist_compliance_rate Ratio\n"
+        "# TYPE checklist_compliance_rate gauge\n"
+        "checklist_compliance_rate 0.92\n"
+        "task_seed_cycle_time_minutes 5.5\n"
+        "birdseye_refresh_delay_minutes 16.0\n",
         encoding="utf-8",
     )
 
-    chainlit = tmp_path / "chainlit.log"
-    chainlit.write_text(
-        """{"metrics": {"semantic_retention": 0.74, "spec_completeness": 0.91}}\n""",
+    structured = tmp_path / "docops.log"
+    structured.write_text(
+        """{"metrics": {"checklist_compliance_rate": {"compliant": 23, "total": 24}}}\n""",
         encoding="utf-8",
     )
 
@@ -164,7 +157,7 @@ def test_suite_output_generates_file_and_stdout_matches(tmp_path: Path) -> None:
         "--metrics-url",
         prometheus.as_uri(),
         "--log-path",
-        str(chainlit),
+        str(structured),
         "--output",
         str(output_path),
     )
@@ -174,11 +167,9 @@ def test_suite_output_generates_file_and_stdout_matches(tmp_path: Path) -> None:
     payload = json.loads(result.stdout)
     assert json.loads(output_path.read_text(encoding="utf-8")) == payload
     assert payload == {
-        "compress_ratio": 82.0,
-        "semantic_retention": 74.0,
-        "review_latency": 18.5,
-        "reopen_rate": 6.2,
-        "spec_completeness": 91.0,
+        "checklist_compliance_rate": 95.83333333333334,
+        "task_seed_cycle_time_minutes": 5.5,
+        "birdseye_refresh_delay_minutes": 16.0,
     }
 
 
@@ -186,32 +177,14 @@ def test_exits_non_zero_when_metrics_missing(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text("up 1\n", encoding="utf-8")
 
-    chainlit = tmp_path / "chainlit.log"
-    chainlit.write_text("{}\n", encoding="utf-8")
+    structured = tmp_path / "docops.log"
+    structured.write_text("{}\n", encoding="utf-8")
 
-    result = _run_cli("--metrics-url", prometheus.as_uri(), "--log-path", str(chainlit))
-
-    assert result.returncode != 0
-    assert "compress_ratio" in result.stderr
-    assert "semantic_retention" in result.stderr
-    assert "review_latency" in result.stderr
-    assert "reopen_rate" in result.stderr
-    assert "spec_completeness" in result.stderr
-
-
-def test_exits_non_zero_when_additional_metrics_missing(tmp_path: Path) -> None:
-    prometheus = tmp_path / "metrics.prom"
-    prometheus.write_text(
-        "compress_ratio 0.8\nsemantic_retention 0.9\n",
-        encoding="utf-8",
-    )
-
-    chainlit = tmp_path / "chainlit.log"
-    chainlit.write_text("{}\n", encoding="utf-8")
-
-    result = _run_cli("--metrics-url", prometheus.as_uri(), "--log-path", str(chainlit))
+    result = _run_cli("--metrics-url", prometheus.as_uri(), "--log-path", str(structured))
 
     assert result.returncode != 0
-    assert "review_latency" in result.stderr
-    assert "reopen_rate" in result.stderr
-    assert "spec_completeness" in result.stderr
+    assert "checklist_compliance_rate" in result.stderr
+    assert "task_seed_cycle_time_minutes" in result.stderr
+    assert "birdseye_refresh_delay_minutes" in result.stderr
+
+
