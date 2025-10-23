@@ -17,6 +17,7 @@ next_review_due: 2025-11-14
 - 0009: `<旧ブランド名>` 参照を中立表現へ整理
 - 0010: ブランド非依存の表現へ整理し、`CHANGELOG.md` と `CHECKLISTS.md` の記述を同期
 - 0011: `docs/Release_Checklist.md` に上流同期確認のチェック項目を追加し、`docs/UPSTREAM*.md` とのリンクを明示
+- 0012: `EVALUATION.md` の KPI 定義を `governance/metrics.yaml` と同期し、`RUNBOOK.md#Observability` と相互参照するリンクを追加
 
 ## 0.1.0 - 2025-10-13
 

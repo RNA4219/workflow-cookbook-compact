@@ -23,6 +23,7 @@ next_review_due: 2025-11-21
 ## Observability
 
 - ログ/メトリクスの確認点、失敗時の兆候（[ADR-021: メトリクスと可観測性の統合](docs/ADR/ADR-021-metrics-observability.md) を参照）
+- KPI の目的・閾値は [EVALUATION.md#KPIs](EVALUATION.md#kpis) を参照し、収集手順と解釈を同期する。
 - インシデント発生時は docs/IN-YYYYMMDD-XXX.md に記録し、最新サンプル（[IN-20250115-001](docs/IN-20250115-001.md)）を参照して検知し、ログ・メトリクスの抜粋を添付
 - QA メトリクス収集と確認（`tools/perf/` 共通テンプレート準拠）
   - `python -m tools.perf.collect_metrics --suite qa --metrics-url <Prometheus URL> --log-path <Chainlit ログパス>`
