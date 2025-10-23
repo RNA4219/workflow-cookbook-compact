@@ -74,7 +74,7 @@ canary rules.
    - 雛形との差分を確認したい場合は `examples/TASK.sample.md` を参照し、実在の値が埋め込まれたダミーサンプルと比較する
 5. リリースは `CHECKLISTS.md` をなぞり、差分は `CHANGELOG.md` に追記
 
-## 変更履歴の更新ルール
+## 変更履歴の更新ルール {#changelog-update-rules}
 
 - **更新タイミング**:
   リリース判定が `CHECKLISTS.md` の [Release](CHECKLISTS.md#release) を通過し、レビュー承認で確定した直後に [`CHANGELOG.md`](CHANGELOG.md)
@@ -82,6 +82,7 @@ canary rules.
 - **記載形式**:
   [`CHANGELOG.md`](CHANGELOG.md) ではセマンティックバージョニングに従い、`## x.y.z - YYYY-MM-DD` の見出し配下へ `### Added`・
   `### Changed` などのカテゴリ小見出しを用いて差分を整理する。最新リリースを先頭に追記し、既存節の体裁を崩さない。
+  各箇条書きの先頭へ 4 桁ゼロ埋めの通番（例: `0001`）を付与し、既存項目の最大値に 1 を加えて採番する。
 - **突合手順**:
   1. `CHECKLISTS.md` の [Release](CHECKLISTS.md#release) を順に確認し、完了済みチェック項目と未了項目を照合する。
   2. チェックリストに記録した内容を [`CHANGELOG.md`](CHANGELOG.md) の該当リリース節へ反映し、必要に応じて `RUNBOOK.md` や関連資料の更新有無をメモする。
