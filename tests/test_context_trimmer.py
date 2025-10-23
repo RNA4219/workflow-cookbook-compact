@@ -67,6 +67,7 @@ def test_trim_messages_counts_tokens_with_tiktoken() -> None:
     assert stats["input_tokens"] == stats["output_tokens"] == 4 * len(_messages()) + sum(
         len(message["content"].split()) for message in _messages()
     )
+    assert stats["compress_ratio"] == pytest.approx(stats["compression_ratio"])
     assert result["token_counter"]["uses_tiktoken"] is True
     assert result["token_counter"]["encoding"] == "fake-encoding"
 
@@ -78,6 +79,7 @@ def test_trim_messages_counts_tokens_without_tiktoken() -> None:
     assert stats["input_tokens"] == stats["output_tokens"]
     expected = sum(max(1, len(m["content"]) // 4 + 1) + 4 for m in _messages())
     assert stats["output_tokens"] == expected
+    assert stats["compress_ratio"] == pytest.approx(stats["compression_ratio"])
     assert result["token_counter"]["uses_tiktoken"] is False
 
 

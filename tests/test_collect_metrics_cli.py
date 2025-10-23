@@ -80,14 +80,13 @@ def test_collects_metrics_from_prometheus_and_logs(tmp_path: Path) -> None:
     structured = tmp_path / "docops.log"
     structured.write_text(
         "\n".join(
-            json.dumps(entry)
-            for entry in (
-                {"metrics": {"compress_ratio": 0.85, "semantic_retention": 0.92}},
-                {"metrics": {"checklist_compliance_rate": {"compliant": 48, "total": 50}}},
-                {"metrics": {"task_seed_cycle_time_minutes": 25.0}},
-                {"metrics": {"birdseye_refresh_delay_minutes": 150.0}},
-                {"metrics": {"reopen_rate": {"reopened": 3, "total": 12}}},
-                {"metrics": {"spec_completeness": {"with_spec": 91, "total": 100}}},
+            (
+                '{"statistics": {"compress_ratio": 0.85, "compression_ratio": 0.85}, "metrics": {"semantic_retention": 0.92}}',
+                '{"metrics": {"checklist_compliance_rate": {"compliant": 48, "total": 50}}}',
+                '{"metrics": {"task_seed_cycle_time_minutes": 25.0}}',
+                '{"metrics": {"birdseye_refresh_delay_minutes": 150.0}}',
+                '{"metrics": {"reopen_rate": {"reopened": 3, "total": 12}}}',
+                '{"metrics": {"spec_completeness": {"with_spec": 91, "total": 100}}}',
             )
         )
         + "\n",

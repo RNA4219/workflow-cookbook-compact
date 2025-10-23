@@ -481,6 +481,15 @@ def _load_structured_log(path: Path) -> Mapping[str, float]:
             _capture_trim_metrics(parsed, metrics)
             _capture_review_latency(parsed, metrics, overwrite=True)
             _capture_compliance(parsed, metrics, overwrite=True)
+            statistics = parsed.get("statistics")
+            if isinstance(statistics, Mapping):
+                _capture(statistics, metrics)
+                if "compress_ratio" not in metrics:
+                    legacy_ratio = _coerce_float(statistics.get("compression_ratio"))
+                    if legacy_ratio is not None:
+                        metrics["compress_ratio"] = legacy_ratio
+                _capture_trim_metrics(statistics, metrics, overwrite=True)
+                _capture_review_latency(statistics, metrics, overwrite=True)
             for metric_key, numerator_keys, denominator_keys in _RATIO_CAPTURE_ENTRIES:
                 _capture_ratio_metric(
                     parsed,
@@ -496,6 +505,15 @@ def _load_structured_log(path: Path) -> Mapping[str, float]:
                 _capture_trim_metrics(nested, metrics, overwrite=True)
                 _capture_review_latency(nested, metrics, overwrite=True)
                 _capture_compliance(nested, metrics, overwrite=True)
+                statistics = nested.get("statistics")
+                if isinstance(statistics, Mapping):
+                    _capture(statistics, metrics)
+                    if "compress_ratio" not in metrics:
+                        legacy_ratio = _coerce_float(statistics.get("compression_ratio"))
+                        if legacy_ratio is not None:
+                            metrics["compress_ratio"] = legacy_ratio
+                    _capture_trim_metrics(statistics, metrics, overwrite=True)
+                    _capture_review_latency(statistics, metrics, overwrite=True)
                 for metric_key, numerator_keys, denominator_keys in _RATIO_CAPTURE_ENTRIES:
                     _capture_ratio_metric(
                         nested,
