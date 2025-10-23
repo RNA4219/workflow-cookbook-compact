@@ -91,6 +91,7 @@ def test_collects_metrics_from_prometheus_and_logs(tmp_path: Path) -> None:
         "checklist_compliance_rate": 96.0,
         "task_seed_cycle_time_minutes": 5.0,
         "birdseye_refresh_delay_minutes": 40.0,
+        "review_latency": 0.5,
     }
 
 
@@ -98,6 +99,7 @@ def test_collects_average_metrics_from_prometheus(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text(
         "checklist_compliance_rate 0.96\n"
+        "review_latency 0.5\n"
         "task_seed_cycle_time_seconds_sum 3600\n"
         "task_seed_cycle_time_seconds_count 12\n"
         "birdseye_refresh_delay_seconds_sum 7200\n"
@@ -113,6 +115,7 @@ def test_collects_average_metrics_from_prometheus(tmp_path: Path) -> None:
         "checklist_compliance_rate": 96.0,
         "task_seed_cycle_time_minutes": 5.0,
         "birdseye_refresh_delay_minutes": 1.0,
+        "review_latency": 0.5,
     }
 
 
@@ -121,7 +124,8 @@ def test_pushgateway_receives_metrics_payload(tmp_path: Path) -> None:
     prometheus.write_text(
         "checklist_compliance_rate 0.96\n"
         "task_seed_cycle_time_minutes 12.0\n"
-        "birdseye_refresh_delay_minutes 18.0\n",
+        "birdseye_refresh_delay_minutes 18.0\n"
+        "review_latency 2.5\n",
         encoding="utf-8",
     )
 
@@ -135,6 +139,7 @@ def test_pushgateway_receives_metrics_payload(tmp_path: Path) -> None:
         "checklist_compliance_rate 96\n"
         "task_seed_cycle_time_minutes 12\n"
         "birdseye_refresh_delay_minutes 18\n"
+        "review_latency 2.5\n"
     )
     assert captured["method"] == "PUT"
     assert captured["path"] == "/metrics"
@@ -145,7 +150,8 @@ def test_pushgateway_failure_causes_non_zero_exit(tmp_path: Path) -> None:
     prometheus.write_text(
         "checklist_compliance_rate 0.96\n"
         "task_seed_cycle_time_minutes 12.0\n"
-        "birdseye_refresh_delay_minutes 18.0\n",
+        "birdseye_refresh_delay_minutes 18.0\n"
+        "review_latency 2.5\n",
         encoding="utf-8",
     )
 
@@ -163,7 +169,8 @@ def test_suite_output_generates_file_and_stdout_matches(tmp_path: Path) -> None:
         "# TYPE checklist_compliance_rate gauge\n"
         "checklist_compliance_rate 0.92\n"
         "task_seed_cycle_time_minutes 5.5\n"
-        "birdseye_refresh_delay_minutes 16.0\n",
+        "birdseye_refresh_delay_minutes 16.0\n"
+        "review_latency 1.25\n",
         encoding="utf-8",
     )
 
@@ -194,6 +201,7 @@ def test_suite_output_generates_file_and_stdout_matches(tmp_path: Path) -> None:
         "checklist_compliance_rate": 95.83333333333334,
         "task_seed_cycle_time_minutes": 5.5,
         "birdseye_refresh_delay_minutes": 16.0,
+        "review_latency": 1.25,
     }
 
 

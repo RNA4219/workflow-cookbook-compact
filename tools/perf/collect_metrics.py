@@ -15,6 +15,7 @@ METRIC_KEYS: tuple[str, ...] = (
     "checklist_compliance_rate",
     "task_seed_cycle_time_minutes",
     "birdseye_refresh_delay_minutes",
+    "review_latency",
 )
 
 PERCENTAGE_KEYS: tuple[str, ...] = (
@@ -97,6 +98,33 @@ def _capture(
             if coerced is not None:
                 target[key] = coerced
                 break
+
+
+def _coerce_numeric_mapping(source: Mapping[str, object]) -> dict[str, float]:
+    numeric: dict[str, float] = {}
+    for key, value in source.items():
+        if isinstance(value, Mapping):
+            continue
+        coerced = _coerce_float(value)
+        if coerced is not None:
+            numeric[key] = coerced
+    return numeric
+
+
+def _capture_review_latency(
+    source: Mapping[str, object],
+    target: MutableMapping[str, float],
+    *,
+    overwrite: bool = False,
+) -> None:
+    if not overwrite and "review_latency" in target:
+        return
+    numeric = _coerce_numeric_mapping(source)
+    if not numeric:
+        return
+    derived = _derive_review_latency(numeric)
+    if derived is not None:
+        target["review_latency"] = derived
 
 
 def _capture_compliance(
@@ -228,6 +256,8 @@ def _parse_prometheus(text: str) -> dict[str, float]:
     metrics: dict[str, float] = {}
     _capture(raw, metrics)
 
+    _capture_review_latency(raw, metrics)
+
     compliance = _derive_checklist_compliance(raw)
     if compliance is not None and "checklist_compliance_rate" not in metrics:
         metrics["checklist_compliance_rate"] = compliance
@@ -271,10 +301,12 @@ def _load_structured_log(path: Path) -> Mapping[str, float]:
             continue
         if isinstance(parsed, Mapping):
             _capture(parsed, metrics)
+            _capture_review_latency(parsed, metrics, overwrite=True)
             _capture_compliance(parsed, metrics, overwrite=True)
             nested = parsed.get("metrics")
             if isinstance(nested, Mapping):
                 _capture(nested, metrics)
+                _capture_review_latency(nested, metrics, overwrite=True)
                 _capture_compliance(nested, metrics, overwrite=True)
     return metrics
 
@@ -285,6 +317,8 @@ def _merge(sources: Iterable[Mapping[str, float]]) -> dict[str, float]:
         _capture(mapping, combined)
         if "checklist_compliance_rate" in mapping:
             combined["checklist_compliance_rate"] = mapping["checklist_compliance_rate"]
+        if "review_latency" in mapping:
+            combined["review_latency"] = mapping["review_latency"]
     missing = [key for key in METRIC_KEYS if key not in combined]
     if missing:
         raise MetricsCollectionError("Missing metrics: " + ", ".join(missing))

@@ -27,9 +27,10 @@ next_review_due: 2025-11-21
 - QA メトリクス収集と確認（`tools/perf/` 共通テンプレート準拠）
   - `python -m tools.perf.collect_metrics --suite qa --metrics-url <Prometheus URL> --log-path <Chainlit ログパス>`
     を実行する。`--suite qa` は `.ga/qa-metrics.json` への書き出しを既定とし、Prometheus
-    （`trim_compress_ratio_*`/`workflow_review_latency_*`/`reopen_rate`。旧 `legacy_review_latency_*`
-    も互換処理で継続利用可能）と Chainlit ログ（`trim_semantic_retention_*`/`spec_completeness`）
-    から統合メトリクスを取得する。出力先を変更したい場合は `--output <JSON パス>` を追加指定する。
+    （`workflow_review_latency_*` は `review_latency` に正規化され、旧 `legacy_review_latency_*`
+    も互換処理で継続利用可能。`task_seed_cycle_time_*`／`birdseye_refresh_delay_*` も同様に平均化）と
+    Chainlit ログ（`checklist_compliance_rate` の比率計算も含む）から統合メトリクスを取得する。
+    出力先を変更したい場合は `--output <JSON パス>` を追加指定する。
     `semantic_retention` を取得するには `tools/perf/context_trimmer.trim_messages` へ
     `semantic_options`（例: `{"embedder": <callable>}`）を渡せるよう、Chainlit 側で埋め込み関数を設定しておく。
     埋め込み関数はテキストを `Sequence[float]` へ変換できる必要があり、トリミング後の意味保持率は
@@ -49,7 +50,7 @@ next_review_due: 2025-11-21
   - 実行後に `.ga/qa-metrics.json` がリポジトリルート配下へ生成されていることを確認する。生成されない場合は
     `--output` に明示したパスと標準出力を突き合わせ、異常がないか確認する。
   - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8'));
-     print({k: data[k] for k in ('compress_ratio', 'semantic_retention', 'review_latency', 'reopen_rate', 'spec_completeness')})`
+     print({k: data[k] for k in ('checklist_compliance_rate', 'task_seed_cycle_time_minutes', 'birdseye_refresh_delay_minutes', 'review_latency')})`
     で各メトリクスの値を抽出する。閾値は最新サンプルと突き合わせ、外れた場合は直近成功値との差分と再現条件を記録して共有する。
   - FastAPI 等へ常駐組み込みする際は `tools.perf.metrics_registry.MetricsRegistry` を介し、トリミング結果を逐次記録する:
 
