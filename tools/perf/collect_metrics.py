@@ -28,6 +28,16 @@ PERCENTAGE_KEYS: tuple[str, ...] = (
     "spec_completeness",
 )
 
+_TRIM_COMPRESS_PREFIXES: Sequence[tuple[str, float]] = (
+    ("trim_compress_ratio", 1.0),
+    ("context_compression_ratio", 1.0),
+)
+
+_TRIM_SEMANTIC_PREFIXES: Sequence[tuple[str, float]] = (
+    ("trim_semantic_retention", 1.0),
+    ("context_semantic_retention", 1.0),
+)
+
 _METRIC_SOURCE_PREFERENCES: Mapping[str, tuple[str, ...]] = {
     "compress_ratio": (
         "trim_compress_ratio_avg",
@@ -141,6 +151,25 @@ def _capture(
             if coerced is not None:
                 target[key] = coerced
                 break
+
+
+def _capture_trim_metrics(
+    source: Mapping[str, object],
+    target: MutableMapping[str, float],
+    *,
+    overwrite: bool = False,
+) -> None:
+    numeric = _coerce_numeric_mapping(source)
+    if not numeric:
+        return
+    if overwrite or "compress_ratio" not in target:
+        derived_compress = _derive_average(numeric, _TRIM_COMPRESS_PREFIXES)
+        if derived_compress is not None:
+            target["compress_ratio"] = derived_compress
+    if overwrite or "semantic_retention" not in target:
+        derived_semantic = _derive_average(numeric, _TRIM_SEMANTIC_PREFIXES)
+        if derived_semantic is not None:
+            target["semantic_retention"] = derived_semantic
 
 
 def _coerce_numeric_mapping(source: Mapping[str, object]) -> dict[str, float]:
@@ -376,6 +405,7 @@ def _parse_prometheus(text: str) -> dict[str, float]:
 
     metrics: dict[str, float] = {}
     _capture(raw, metrics)
+    _capture_trim_metrics(raw, metrics)
 
     _capture_review_latency(raw, metrics)
 
@@ -435,6 +465,7 @@ def _load_structured_log(path: Path) -> Mapping[str, float]:
             continue
         if isinstance(parsed, Mapping):
             _capture(parsed, metrics)
+            _capture_trim_metrics(parsed, metrics)
             _capture_review_latency(parsed, metrics, overwrite=True)
             _capture_compliance(parsed, metrics, overwrite=True)
             for metric_key, (numerator_keys, denominator_keys) in _RATIO_CAPTURE_CONFIG.items():
@@ -442,6 +473,7 @@ def _load_structured_log(path: Path) -> Mapping[str, float]:
             nested = parsed.get("metrics")
             if isinstance(nested, Mapping):
                 _capture(nested, metrics)
+                _capture_trim_metrics(nested, metrics, overwrite=True)
                 _capture_review_latency(nested, metrics, overwrite=True)
                 _capture_compliance(nested, metrics, overwrite=True)
                 for metric_key, (numerator_keys, denominator_keys) in _RATIO_CAPTURE_CONFIG.items():

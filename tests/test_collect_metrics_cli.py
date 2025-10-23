@@ -10,6 +10,8 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -58,10 +60,12 @@ def _mock_pushgateway(status_code: int = 202) -> Iterator[tuple[str, dict[str, o
 def test_collects_metrics_from_prometheus_and_logs(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text(
-        "# HELP trim_compress_ratio_avg Ratio\n"
-        "# TYPE trim_compress_ratio_avg gauge\n"
-        "trim_compress_ratio_avg 0.82\n"
-        "trim_semantic_retention_avg 0.91\n"
+        "# HELP trim_compress_ratio_sum Ratio\n"
+        "# TYPE trim_compress_ratio_sum gauge\n"
+        "trim_compress_ratio_sum 8.2\n"
+        "trim_compress_ratio_count 10\n"
+        "trim_semantic_retention_sum 9.1\n"
+        "trim_semantic_retention_count 10\n"
         "workflow_review_latency_seconds_sum 21600\n"
         "workflow_review_latency_seconds_count 12\n"
         "task_seed_cycle_time_seconds_sum 3600\n"
@@ -94,8 +98,8 @@ def test_collects_metrics_from_prometheus_and_logs(tmp_path: Path) -> None:
     payload = json.loads(result.stdout)
     assert payload == {
         "checklist_compliance_rate": 96.0,
-        "compress_ratio": 0.82,
-        "semantic_retention": 0.91,
+        "compress_ratio": pytest.approx(0.82),
+        "semantic_retention": pytest.approx(0.91),
         "task_seed_cycle_time_minutes": 5.0,
         "birdseye_refresh_delay_minutes": 40.0,
         "review_latency": 0.5,
@@ -108,8 +112,10 @@ def test_collects_average_metrics_from_prometheus(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text(
         "checklist_compliance_rate 0.96\n"
-        "trim_compress_ratio_avg 0.82\n"
-        "trim_semantic_retention_avg 0.91\n"
+        "trim_compress_ratio_sum 8.2\n"
+        "trim_compress_ratio_count 10\n"
+        "trim_semantic_retention_sum 9.1\n"
+        "trim_semantic_retention_count 10\n"
         "review_latency 0.5\n"
         "task_seed_cycle_time_seconds_sum 3600\n"
         "task_seed_cycle_time_seconds_count 12\n"
@@ -126,8 +132,8 @@ def test_collects_average_metrics_from_prometheus(tmp_path: Path) -> None:
     payload = json.loads(result.stdout)
     assert payload == {
         "checklist_compliance_rate": 96.0,
-        "compress_ratio": 0.82,
-        "semantic_retention": 0.91,
+        "compress_ratio": pytest.approx(0.82),
+        "semantic_retention": pytest.approx(0.91),
         "task_seed_cycle_time_minutes": 5.0,
         "birdseye_refresh_delay_minutes": 1.0,
         "review_latency": 0.5,
