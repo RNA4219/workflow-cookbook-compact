@@ -177,13 +177,13 @@ def trim_messages(
     output_tokens = sum(counter.count_message(message) for message in trimmed)
     compress_ratio = 1.0 if total_input_tokens == 0 else output_tokens / total_input_tokens
 
+    # Preserve the legacy key for consumers still expecting "compression_ratio".
     statistics: Dict[str, Any] = {
         "compress_ratio": compress_ratio,
+        "compression_ratio": compress_ratio,
         "input_tokens": total_input_tokens,
         "output_tokens": output_tokens,
     }
-    # Preserve the legacy key for consumers still expecting "compression_ratio".
-    statistics["compression_ratio"] = compress_ratio
 
     semantic_used_options, semantic_retention = _resolve_semantic_metrics(
         mutable_messages,
