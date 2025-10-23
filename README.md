@@ -78,6 +78,8 @@ canary rules.
    - 完了した `TASK.*` の成果は `[Unreleased](CHANGELOG.md#unreleased)` へ通番付きで転記し、該当 Task Seed から成果差分へのリンクを貼る
 5. リリースは `CHECKLISTS.md` をなぞり、差分は `CHANGELOG.md` に追記しつつ、`[Unreleased](CHANGELOG.md#unreleased)` に集約した Task Seed 成果をリリースノートへ昇格させる
 
+利用時は [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) を確認し、行動規範の遵守を徹底してください。
+
 ## 変更履歴の更新ルール {#changelog-update-rules}
 
 - **更新タイミング**:
