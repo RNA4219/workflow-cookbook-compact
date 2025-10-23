@@ -20,8 +20,10 @@ next_review_due: 2025-11-14
 
 - 失敗させたテストが緑化する最小コミット単位を維持し、差分を可視化
 - `CHANGELOG.md` の `[Unreleased](CHANGELOG.md#unreleased)` に Task Seed 番号付きで成果を追記
-- PR 説明欄から [docs/TASKS.md](docs/TASKS.md)・[docs/ROADMAP_AND_SPECS.md](docs/ROADMAP_AND_SPECS.md)・[`RUNBOOK.md`](RUNBOOK.md) 等の参照先へ遷移できるようリンクを付す
-- レビュー観点は [docs/security/Security_Review_Checklist.md](docs/security/Security_Review_Checklist.md) の「レビュー」節と [`GUARDRAILS.md`](GUARDRAILS.md) を再確認
+- PR 説明欄から [docs/TASKS.md](docs/TASKS.md)・[docs/ROADMAP_AND_SPECS.md](docs/ROADMAP_AND_SPECS.md)
+  ・[`RUNBOOK.md`](RUNBOOK.md) 等の参照先へ遷移できるようリンクを付す
+- レビュー観点は [docs/security/Security_Review_Checklist.md](docs/security/Security_Review_Checklist.md) の「レビュー」節と
+  [`GUARDRAILS.md`](GUARDRAILS.md) を再確認
 - ラベル運用・テンプレ遵守は `HUB.codex.md` と `TASK.codex.md` のタスク分割フローに合わせる
 
 ## Ops / Incident
@@ -45,9 +47,9 @@ next_review_due: 2025-11-14
 - リリースノート（`CHANGELOG.md` など）へ必要最小の項目を追記
 - 未反映の `TASK.*` が残っていないか確認し、成果を `[Unreleased](CHANGELOG.md#unreleased)` へ通番付きで転記済みかチェック
 - [docs/UPSTREAM.md](docs/UPSTREAM.md) を参照し、対象派生リポの取り込み評価が最新であるか
-  確認
+  確認する
 - [docs/UPSTREAM_WEEKLY_LOG.md](docs/UPSTREAM_WEEKLY_LOG.md) に未反映の検証ログ・
-  フォローアップが残っていないかチェック
+  フォローアップが残っていないか確認する
 - 受け入れ基準に対するエビデンス
 - 影響範囲の再確認
 - PR に `type:*` および `semver:*` ラベルを付与済み

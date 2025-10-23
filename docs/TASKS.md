@@ -42,7 +42,8 @@ next_review_due: YYYY-MM-DD
 - PR 要約・Intent 明記・必要なドキュメント差分を記載。
 ```
 
-> **用語補足**: `Objective`・`Scope`・`Requirements` の定義は [`docs/addenda/A_Glossary.md`](addenda/A_Glossary.md) を参照し、`TASK.codex.md` の章立てと整合させる。
+> **用語補足**: `Objective`・`Scope`・`Requirements` の定義は [`docs/addenda/A_Glossary.md`](addenda/A_Glossary.md) を参照し、
+> `TASK.codex.md` の章立てと整合させる。
 
 ## 3. 検証ログ（TDD 前提）
 
@@ -58,8 +59,10 @@ next_review_due: YYYY-MM-DD
   Guardrails / Incident）とのリンクを整備する。
 - **レビュー結果の反映**: レビュアーからの追加要求は `Notes` に記録し、着手が別タスクになる場合は Task Seed ID を採番して紐付ける。
 - **完了判定**: `CHECKLISTS.md` と `EVALUATION.md` の条件を満たし、検証ログがすべてグリーンであることを確認して `status: done` へ更新する。
-- **Changelog 通番**: 変更履歴を編集する場合は [README.md の変更履歴の更新ルール](../README.md#changelog-update-rules) に従い、既存の最大通番に 1 を加えて 4 桁ゼロ埋めで記録する。
-- **成果の転記**: 完了した Task Seed の成果差分は `[Unreleased](../CHANGELOG.md#unreleased)` に通番付きで記録し、当該 Task Seed からリンクを張って追跡できるようにする。
+- **Changelog 通番**: 変更履歴を編集する場合は [README.md の変更履歴の更新ルール](../README.md#changelog-update-rules) に従い、
+  既存の最大通番に 1 を加えて 4 桁ゼロ埋めで記録する。
+- **成果の転記**: 完了した Task Seed の成果差分は `[Unreleased](../CHANGELOG.md#unreleased)` に通番付きで記録し、
+  当該 Task Seed からリンクを張って追跡できるようにする。
 
 ---
 
