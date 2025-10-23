@@ -61,12 +61,15 @@ def test_collects_metrics_from_prometheus_and_logs(tmp_path: Path) -> None:
         "# HELP trim_compress_ratio_avg Ratio\n"
         "# TYPE trim_compress_ratio_avg gauge\n"
         "trim_compress_ratio_avg 0.82\n"
+        "trim_semantic_retention_avg 0.91\n"
         "workflow_review_latency_seconds_sum 21600\n"
         "workflow_review_latency_seconds_count 12\n"
         "task_seed_cycle_time_seconds_sum 3600\n"
         "task_seed_cycle_time_seconds_count 12\n"
         "birdseye_refresh_delay_minutes_sum 200\n"
-        "birdseye_refresh_delay_minutes_count 5\n",
+        "birdseye_refresh_delay_minutes_count 5\n"
+        "workflow_reopen_rate 0.12\n"
+        "workflow_spec_completeness_ratio 0.88\n",
         encoding="utf-8",
     )
 
@@ -77,6 +80,8 @@ def test_collects_metrics_from_prometheus_and_logs(tmp_path: Path) -> None:
                 '{"metrics": {"checklist_compliance_rate": {"compliant": 48, "total": 50}}}',
                 '{"metrics": {"task_seed_cycle_time_minutes": 25.0}}',
                 '{"metrics": {"birdseye_refresh_delay_minutes": 150.0}}',
+                '{"metrics": {"reopen_rate": {"reopened": 3, "total": 12}}}',
+                '{"metrics": {"spec_completeness": {"with_spec": 91, "total": 100}}}',
             )
         )
         + "\n",
@@ -89,9 +94,13 @@ def test_collects_metrics_from_prometheus_and_logs(tmp_path: Path) -> None:
     payload = json.loads(result.stdout)
     assert payload == {
         "checklist_compliance_rate": 96.0,
+        "compress_ratio": 0.82,
+        "semantic_retention": 0.91,
         "task_seed_cycle_time_minutes": 5.0,
         "birdseye_refresh_delay_minutes": 40.0,
         "review_latency": 0.5,
+        "reopen_rate": 25.0,
+        "spec_completeness": 91.0,
     }
 
 
@@ -99,11 +108,15 @@ def test_collects_average_metrics_from_prometheus(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text(
         "checklist_compliance_rate 0.96\n"
+        "trim_compress_ratio_avg 0.82\n"
+        "trim_semantic_retention_avg 0.91\n"
         "review_latency 0.5\n"
         "task_seed_cycle_time_seconds_sum 3600\n"
         "task_seed_cycle_time_seconds_count 12\n"
         "birdseye_refresh_delay_seconds_sum 7200\n"
-        "birdseye_refresh_delay_seconds_count 120\n",
+        "birdseye_refresh_delay_seconds_count 120\n"
+        "workflow_reopen_rate 0.2\n"
+        "workflow_spec_completeness_ratio 0.95\n",
         encoding="utf-8",
     )
 
@@ -113,9 +126,13 @@ def test_collects_average_metrics_from_prometheus(tmp_path: Path) -> None:
     payload = json.loads(result.stdout)
     assert payload == {
         "checklist_compliance_rate": 96.0,
+        "compress_ratio": 0.82,
+        "semantic_retention": 0.91,
         "task_seed_cycle_time_minutes": 5.0,
         "birdseye_refresh_delay_minutes": 1.0,
         "review_latency": 0.5,
+        "reopen_rate": 20.0,
+        "spec_completeness": 95.0,
     }
 
 
@@ -123,9 +140,13 @@ def test_pushgateway_receives_metrics_payload(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text(
         "checklist_compliance_rate 0.96\n"
+        "trim_compress_ratio_avg 0.82\n"
+        "trim_semantic_retention_avg 0.91\n"
         "task_seed_cycle_time_minutes 12.0\n"
         "birdseye_refresh_delay_minutes 18.0\n"
-        "review_latency 2.5\n",
+        "review_latency 2.5\n"
+        "workflow_reopen_rate 0.1\n"
+        "workflow_spec_completeness_ratio 0.87\n",
         encoding="utf-8",
     )
 
@@ -140,6 +161,10 @@ def test_pushgateway_receives_metrics_payload(tmp_path: Path) -> None:
         "task_seed_cycle_time_minutes 12\n"
         "birdseye_refresh_delay_minutes 18\n"
         "review_latency 2.5\n"
+        "compress_ratio 0.82\n"
+        "semantic_retention 0.91\n"
+        "reopen_rate 10\n"
+        "spec_completeness 87\n"
     )
     assert captured["method"] == "PUT"
     assert captured["path"] == "/metrics"
@@ -149,9 +174,13 @@ def test_pushgateway_failure_causes_non_zero_exit(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text(
         "checklist_compliance_rate 0.96\n"
+        "trim_compress_ratio_avg 0.82\n"
+        "trim_semantic_retention_avg 0.91\n"
         "task_seed_cycle_time_minutes 12.0\n"
         "birdseye_refresh_delay_minutes 18.0\n"
-        "review_latency 2.5\n",
+        "review_latency 2.5\n"
+        "workflow_reopen_rate 0.1\n"
+        "workflow_spec_completeness_ratio 0.87\n",
         encoding="utf-8",
     )
 
@@ -168,9 +197,13 @@ def test_suite_output_generates_file_and_stdout_matches(tmp_path: Path) -> None:
         "# HELP checklist_compliance_rate Ratio\n"
         "# TYPE checklist_compliance_rate gauge\n"
         "checklist_compliance_rate 0.92\n"
+        "trim_compress_ratio_avg 0.78\n"
+        "trim_semantic_retention_avg 0.89\n"
         "task_seed_cycle_time_minutes 5.5\n"
         "birdseye_refresh_delay_minutes 16.0\n"
-        "review_latency 1.25\n",
+        "review_latency 1.25\n"
+        "workflow_reopen_rate 0.08\n"
+        "workflow_spec_completeness_ratio 0.83\n",
         encoding="utf-8",
     )
 
@@ -199,9 +232,13 @@ def test_suite_output_generates_file_and_stdout_matches(tmp_path: Path) -> None:
     assert json.loads(output_path.read_text(encoding="utf-8")) == payload
     assert payload == {
         "checklist_compliance_rate": 95.83333333333334,
+        "compress_ratio": 0.78,
+        "semantic_retention": 0.89,
         "task_seed_cycle_time_minutes": 5.5,
         "birdseye_refresh_delay_minutes": 16.0,
         "review_latency": 1.25,
+        "reopen_rate": 8.0,
+        "spec_completeness": 83.0,
     }
 
 
@@ -216,7 +253,12 @@ def test_exits_non_zero_when_metrics_missing(tmp_path: Path) -> None:
 
     assert result.returncode != 0
     assert "checklist_compliance_rate" in result.stderr
+    assert "compress_ratio" in result.stderr
+    assert "semantic_retention" in result.stderr
     assert "task_seed_cycle_time_minutes" in result.stderr
     assert "birdseye_refresh_delay_minutes" in result.stderr
+    assert "review_latency" in result.stderr
+    assert "reopen_rate" in result.stderr
+    assert "spec_completeness" in result.stderr
 
 
