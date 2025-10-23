@@ -77,7 +77,7 @@
 - [docs/security/Security_Review_Checklist.md](security/Security_Review_Checklist.md)：セキュリティ審査項目と証跡収集ポイントを整理。**利用シーン**：リリース前審査で `SECURITY.md`・`docs/security/SAC.md`・`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)を同期。
 - [SECURITY.md](../SECURITY.md) / [docs/security/SAC.md](security/SAC.md)：報告窓口の連絡経路と SAC 拘束事項を統合し、対応判断の前提条件を提示。**利用シーン**：セキュリティ審査で通知窓口と拘束条件を共有し、インシデント初動前の前提確認で運用責務の充足を判定。
 - [CHANGELOG.md](../CHANGELOG.md)：リリース差分と意思決定の履歴を集約し、更新ルールを一元管理。**利用シーン**：`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)完了後に `README.md` の[使い方（最短）](../README.md#使い方最短)手順と照合してガバナンス記録を反映。
-- [LICENSE](../LICENSE) / [CHECKLISTS.md#release](../CHECKLISTS.md#release) / [CHANGELOG.md](../CHANGELOG.md)：Katamari 版と同様に配布物へ必須ライセンス・変更履歴・監査観点を束ねる。**利用シーン**：リリース成果物へ `LICENSE` を同梱し、`CHECKLISTS.md#release` の配布物チェックを踏まえて `CHANGELOG.md` の公開内容と突合する。
+- [LICENSE](../LICENSE) / [CHECKLISTS.md#release](../CHECKLISTS.md#release) / [CHANGELOG.md](../CHANGELOG.md)：外部派生リポジトリ版と同様に配布物へ必須ライセンス・変更履歴・監査観点を束ねる。**利用シーン**：リリース成果物へ `LICENSE` を同梱し、`CHECKLISTS.md#release` の配布物チェックを踏まえて `CHANGELOG.md` の公開内容と突合する。
 - [README.md](../README.md#変更履歴の更新ルール)：`CHANGELOG.md` の更新トリガー・書式・`CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)を用いた突合フローを整理。**利用シーン**：リリース確定後にチェックリスト→変更履歴→再確認の流れを短時間でなぞり、記録漏れを防ぐ。
 - [EVALUATION.md#Test Outline](../EVALUATION.md#test-outline) / [tests/](../tests/)：評価指標とテストケース集を束ねた TDD 前提の検証ハブ。**利用シーン**：テスト追加前のチェックで指標・ケース網羅を見直し、Birdseye カプセル同期の要否を判断して TDD フローを開始。
 

@@ -2,7 +2,7 @@
 
 詳細なバージョニングとリリース手順は [`docs/addenda/M_Versioning_Release.md`](addenda/M_Versioning_Release.md) を参照する。
 
-Katamari 版の手順を踏襲しつつ、Chainlit 固有の SSE / OAuth 要件は対象外として整理したチェックリストです。リリースの都度、以下を確認してください。
+外部派生リポジトリ版の手順を参考にしつつ、Chainlit 固有の SSE / OAuth 要件は対象外として整理したチェックリストです。リリースの都度、以下を確認してください。
 
 ## 1. バージョンとタグ
 

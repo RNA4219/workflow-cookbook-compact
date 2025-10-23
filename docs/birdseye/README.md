@@ -47,7 +47,7 @@ python tools/codemap/update.py \
 - `docs/birdseye/hot.json` は `index.json` の再生成時に自動同期され、`refresh_command` と `index_snapshot`
   で更新履歴を追跡します。必要に応じて各ホットリスト項目に記録された `last_verified_at` を確認し、
   対象ノードの確認日が反映されているかを点検します。
-- ホットリストの構成は `README.md`・`GUARDRAILS.md`・`HUB.codex.md` など主要導線を中心に選定し、Katamari リポジトリのホットリスト形式を参考に `edges` を明示しています。
+- ホットリストの構成は `README.md`・`GUARDRAILS.md`・`HUB.codex.md` など主要導線を中心に選定し、外部派生リポジトリのホットリスト形式を参考に `edges` を明示しています。
 - `docs/BIRDSEYE.md` ではホットリストの概要と Edges を人間が参照できるよう再掲しているため、変更時は両ドキュメントの整合性を確認します。
 
 ## Guardrails との整合

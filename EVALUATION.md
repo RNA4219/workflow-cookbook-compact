@@ -17,14 +17,20 @@ next_review_due: 2025-11-14
 
 ## KPIs
 
-- review_latency: 平均レビュー完了時間(h)。Prometheus（`katamari_review_latency_seconds` または `review_latency`）を tools/perf/
-  collect_metrics.py で週次集計し、Katamari RUNBOOK の許容レンジと突き合わせる。
-- reopen_rate: 再修正率(%)。Prometheus（`reopen_rate` などの派生指標）を tools/perf/collect_metrics.py でスプリントごとに集計し、
-  Katamari RUNBOOK の許容レンジと照合する。
-- spec_completeness: 要件/仕様/設計が揃ったPR比率(%)。Chainlit ログを tools/perf/collect_metrics.py でスプリントごとに解析し、
-  Katamari RUNBOOK の許容レンジと照合する。
-- compress_ratio: 85%〜115% を許容レンジとし、tools/perf/collect_metrics.py の圧縮統計から週次集計。
-- semantic_retention: 95%以上を維持し、tools/perf/collect_metrics.py のレビューログ解析出力をスプリントごとに確認。
+`governance/metrics.yaml` に定義された可観測性メトリクスを、リリース運用基準
+（[`docs/addenda/M_Versioning_Release.md`](docs/addenda/M_Versioning_Release.md)）
+と整合させて管理する。許容レンジと集計頻度は以下を標準とする。
+
+| key | 指標の意味 | 許容レンジ | 集計頻度 | 取得手段 |
+| :-- | :-- | :-- | :-- | :-- |
+| review_latency | 平均レビュー完了時間(h) | 24h 未満 | 週次 | `python -m tools.perf.collect_metrics --suite qa --metrics-url <Prometheus URL>` |
+| reopen_rate | 再修正率(%) | 15% 以下 | スプリント単位 | 上記コマンド + `.ga/qa-metrics.json` 確認 |
+| spec_completeness | 要件/仕様/設計が揃った PR 比率(%) | 90% 以上 | スプリント単位 | Chainlit ログを `--log-path` で渡す |
+| compress_ratio | 圧縮後サイズ/元サイズの比率(%) | 85%〜115% | 週次 | `collect_metrics` の圧縮統計出力 |
+| semantic_retention | 圧縮後レビューコメントの意味保持率(%) | 95% 以上 | スプリント単位 | `collect_metrics` のレビューログ解析出力 |
+
+集計結果は `.ga/qa-metrics.json` に保存し、リリース判定前に
+[`docs/Release_Checklist.md`](docs/Release_Checklist.md) と突き合わせて許容レンジ内であることを確認する。
 
 ## Test Outline
 

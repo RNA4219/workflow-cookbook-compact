@@ -89,7 +89,7 @@ next_review_due: 2025-11-14
 - `LICENSE`: OSS としての配布条件（Apache-2.0）
 - `.github/release-drafter.yml`: リリースノート自動整形のテンプレート
 - `.github/workflows/release-drafter.yml`: Release Drafter の CI 設定
-- `docs/UPSTREAM.md`: Katamari 派生リポからの知見取り込み手順と評価基準
+- `docs/UPSTREAM.md`: 外部派生リポジトリからの知見取り込み手順と評価基準
 - `docs/UPSTREAM_WEEKLY_LOG.md`: Upstream 差分確認の週次ログテンプレート
 
 更新日: 2025-10-13
