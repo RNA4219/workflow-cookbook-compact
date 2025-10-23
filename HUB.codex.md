@@ -72,7 +72,7 @@ next_review_due: 2025-11-14
 - **Task Seeds** (`TASK.*-MM-DD-YYYY`): 既存タスクドラフト。優先順: 高。
   備考: 未着手タスクの候補。
 
-補完資料:
+補完資料一覧:
 
 - `README.md`: リポジトリ概要と参照リンク
 - `CHANGELOG.md`: 完了タスクと履歴の記録
@@ -88,6 +88,8 @@ next_review_due: 2025-11-14
 - `LICENSE`: OSS としての配布条件（Apache-2.0）
 - `.github/release-drafter.yml`: リリースノート自動整形のテンプレート
 - `.github/workflows/release-drafter.yml`: Release Drafter の CI 設定
+- `docs/UPSTREAM.md`: Katamari 派生リポからの知見取り込み手順と評価基準
+- `docs/UPSTREAM_WEEKLY_LOG.md`: Upstream 差分確認の週次ログテンプレート
 
 更新日: 2025-10-13
 

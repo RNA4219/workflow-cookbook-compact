@@ -20,6 +20,8 @@ next_review_due: 2025-11-14
 - 変更点の要約
 - リリースノート（`CHANGELOG.md` など）へ必要最小の項目を追記
 - 未反映の `TASK.*` が残っていないか確認し、成果を `[Unreleased](CHANGELOG.md#unreleased)` へ通番付きで転記済みかチェック
+- [docs/UPSTREAM.md](docs/UPSTREAM.md) を参照し、対象派生リポの取り込み評価が最新であるか確認
+- [docs/UPSTREAM_WEEKLY_LOG.md](docs/UPSTREAM_WEEKLY_LOG.md) に未反映の検証ログ・フォローアップが残っていないかチェック
 - 受け入れ基準に対するエビデンス
 - 影響範囲の再確認
 - PR に `type:*` および `semver:*` ラベルを付与済み
