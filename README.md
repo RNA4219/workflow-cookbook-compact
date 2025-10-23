@@ -34,6 +34,8 @@ canary rules.
 
 ## 使い方（最短）
 
+参加前に [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) を読み、連絡窓口と遵守事項を確認してください。
+
 1. これらのMDをリポジトリ直下に配置
    - この5ファイルを別リポにコピー
      - `BLUEPRINT.md`

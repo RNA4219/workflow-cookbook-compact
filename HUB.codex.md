@@ -84,7 +84,7 @@ next_review_due: 2025-11-14
 - `docs/INCIDENT_TEMPLATE.md`: 検知/影響/5Whys/再発防止/タイムラインのインシデント雛形
 - `docs/TASKS.md`: Task Seed 運用ガイドとテンプレートの要点
 - `docs/ADR/README.md`: 最新 ADR 索引と更新手順
-- `CODE_OF_CONDUCT.md`: コントリビューター行動規範と連絡窓口
+- `CODE_OF_CONDUCT.md`: コントリビューター行動規範と `maintainers@workflow-cookbook.example` / `security@workflow-cookbook.example` の連絡窓口
 - `SECURITY.md`: 脆弱性報告窓口と連絡手順
 - `CODEOWNERS`: `/governance/**` とインシデント雛形を QA 管轄とする宣言
 - `LICENSE`: OSS としての配布条件（Apache-2.0）
