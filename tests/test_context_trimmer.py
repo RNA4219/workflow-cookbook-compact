@@ -63,6 +63,7 @@ def test_trim_messages_counts_tokens_with_tiktoken() -> None:
     module = _reload_context_trimmer(fake_tiktoken=fake_tiktoken)
     result = module.trim_messages(_messages(), max_context_tokens=100, model="test-model")
     stats = result["statistics"]
+    assert stats["compress_ratio"] == pytest.approx(stats["compression_ratio"])
     assert stats["input_tokens"] == stats["output_tokens"] == 4 * len(_messages()) + sum(
         len(message["content"].split()) for message in _messages()
     )
