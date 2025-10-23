@@ -1,3 +1,11 @@
+---
+intent_id: GOV-CODE-OF-CONDUCT
+owner: workflow-cookbook-maintainers
+status: active   # draft|active|deprecated
+last_reviewed_at: 2025-10-14
+next_review_due: 2026-04-14
+---
+
 # コントリビューター行動規範
 
 ## 私たちの約束
