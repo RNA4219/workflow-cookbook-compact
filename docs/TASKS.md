@@ -52,6 +52,8 @@ next_review_due: YYYY-MM-DD
 3. **インシデントとの連携**: 再発防止策が `docs/IN-*.md` に存在する場合、該当節を参照し、テストケースや検証ログにリンクを残す。
 4. **チェックリスト照合**: ゲート通過後は `CHECKLISTS.md` の該当項目を確認し、未完了項目があれば Follow-up へ移す。
 
+> 代表的な検証手順は [`docs/addenda/I_Test_Cases.md`](addenda/I_Test_Cases.md) を参照する。
+
 ## 4. フォローアップ手順
 
 - **未解決事項**: 実装後も残るリスクや TODO は `Follow-ups` セクションに列挙し、必要なら新規 Task Seed を起票する。
