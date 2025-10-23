@@ -82,6 +82,7 @@ next_review_due: 2025-11-14
 - `governance/prioritization.yaml`: 設計更新の優先度スコア計算ルール
 - `docs/IN-*.md`: インシデントログ本体。Blueprint/Evaluation との相互リンクを維持し、再発防止策の同期を確認
 - `docs/INCIDENT_TEMPLATE.md`: 検知/影響/5Whys/再発防止/タイムラインのインシデント雛形
+- `docs/TASKS.md`: Task Seed 運用ガイドとテンプレートの要点
 - `SECURITY.md`: 脆弱性報告窓口と連絡手順
 - `CODEOWNERS`: `/governance/**` とインシデント雛形を QA 管轄とする宣言
 - `LICENSE`: OSS としての配布条件（Apache-2.0）
