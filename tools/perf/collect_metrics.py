@@ -82,6 +82,12 @@ _LEGACY_REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
     ("legacy_review_latency_hours", 1.0),
 )
 
+_REVIEW_LATENCY_AGGREGATE_PREFIXES: Sequence[tuple[str, float]] = (
+    *WORKFLOW_REVIEW_LATENCY_PREFIXES,
+    *REVIEW_LATENCY_PREFIXES,
+    *_LEGACY_REVIEW_LATENCY_PREFIXES,
+)
+
 _RATIO_CAPTURE_ENTRIES: tuple[tuple[str, tuple[str, ...], tuple[str, ...]], ...] = (
     (
         "reopen_rate",
@@ -504,6 +510,10 @@ def _merge(sources: Iterable[Mapping[str, float]]) -> dict[str, float]:
             combined["checklist_compliance_rate"] = mapping["checklist_compliance_rate"]
         if "review_latency" in mapping:
             combined["review_latency"] = mapping["review_latency"]
+        if "compress_ratio" in mapping:
+            combined["compress_ratio"] = mapping["compress_ratio"]
+        if "semantic_retention" in mapping:
+            combined["semantic_retention"] = mapping["semantic_retention"]
         if "reopen_rate" in mapping:
             combined["reopen_rate"] = mapping["reopen_rate"]
         if "spec_completeness" in mapping:
