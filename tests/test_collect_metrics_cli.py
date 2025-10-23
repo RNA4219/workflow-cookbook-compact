@@ -67,8 +67,8 @@ def test_collects_metrics_from_prometheus_and_logs(tmp_path: Path) -> None:
         "task_seed_cycle_time_seconds_count 12\n"
         "birdseye_refresh_delay_minutes_sum 200\n"
         "birdseye_refresh_delay_minutes_count 5\n"
-        "katamari_reviews_reopened_total 3\n"
-        "katamari_reviews_total 60\n",
+        "workflow_review_latency_reopened_total 3\n"
+        "workflow_review_latency_total 60\n",
         encoding="utf-8",
     )
 
