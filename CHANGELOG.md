@@ -13,7 +13,8 @@ next_review_due: 2025-11-14
 ### Changed
 
 - 0007: `CHECKLISTS.md` に Development / Pull Request / Ops チェックリストを追加し、Release セクションが新設項目と重複しないよう参照構造へ更新
-- 0008: 旧 Katamari 参照を Workflow Cookbook 向けの名称・リンクへ更新し、関連チェックリストとメトリクス定義の整合性を再確認
+- 0008: 旧ブランド参照を Workflow Cookbook 向けの名称・リンクへ更新し、関連チェックリストとメトリクス定義の整合性を再確認
+- 0009: `<旧ブランド名>` 参照を中立表現へ整理
 
 ## 0.1.0 - 2025-10-13
 
