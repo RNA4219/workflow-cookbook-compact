@@ -24,12 +24,78 @@ next_review_due: 2025-11-21
 
 - ログ/メトリクスの確認点、失敗時の兆候（[ADR-021: メトリクスと可観測性の統合](docs/ADR/ADR-021-metrics-observability.md) を参照）
 - インシデント発生時は docs/IN-YYYYMMDD-XXX.md に記録し、最新サンプル（[IN-20250115-001](docs/IN-20250115-001.md)）を参照して検知し、ログ・メトリクスの抜粋を添付
-- ドキュメント運用メトリクスの収集と確認
-  - `python -m tools.perf.collect_metrics --suite qa --metrics-url <Prometheus URL> --log-path <構造化ログパス>` を実行する。`--suite qa` は `.ga/qa-metrics.json` への書き出しを既定とし、Prometheus（`checklist_compliance_rate` などの Gauge）と構造化ログ（例: `docs/logs/docops.log`）から `checklist_compliance_rate` / `task_seed_cycle_time_minutes` / `birdseye_refresh_delay_minutes` を統合する。出力先を変更したい場合は `--output <JSON パス>` を追加指定する。
-  - 構造化ログは `tools.perf.structured_logger.StructuredLogger` で生成する。例: `StructuredLogger(name="docops", path="~/logs/docops.log").record(metrics={"task_seed_cycle_time_minutes": 45.0})`。`collect_metrics --log-path` へ同パスを渡すと `metrics` キー配下の辞書がそのまま集計される。
-  - 常駐プロセスから Prometheus へ公開する場合は `tools.perf.metrics_registry.MetricsRegistry` を初期化し、`observe("checklist_compliance_rate", ratio)` や `observe("task_seed_cycle_time_minutes", minutes)` を必要時に呼び出す。`PlainTextResponse(registry.export_prometheus())` を `/metrics` エンドポイントで返すと収集 CLI が利用可能。
-  - 実行後に `.ga/qa-metrics.json` が生成されていることを確認する。生成されない場合は `--output` に明示したパスと標準出力を突き合わせて異常を特定。
-  - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8')); print({k: data[k] for k in ('checklist_compliance_rate', 'task_seed_cycle_time_minutes', 'birdseye_refresh_delay_minutes')})` で各メトリクスの値を抽出する。閾値逸脱時は直近正常値と実行条件を比較し、フォローアップチケットを起票する。
+- QA メトリクス収集と確認（`tools/perf/` 共通テンプレート準拠）
+  - `python -m tools.perf.collect_metrics --suite qa --metrics-url <Prometheus URL> --log-path <Chainlit ログパス>`
+    を実行する。`--suite qa` は `.ga/qa-metrics.json` への書き出しを既定とし、Prometheus
+    （`trim_compress_ratio_*`/`review_latency`/`reopen_rate`）と Chainlit ログ（`trim_semantic_retention_*`/`spec_completeness`）
+    から統合メトリクスを取得する。出力先を変更したい場合は `--output <JSON パス>` を追加指定する。
+    `semantic_retention` を取得するには `tools/perf/context_trimmer.trim_messages` へ
+    `semantic_options`（例: `{"embedder": <callable>}`）を渡せるよう、Chainlit 側で埋め込み関数を設定しておく。
+    埋め込み関数はテキストを `Sequence[float]` へ変換できる必要があり、トリミング後の意味保持率は
+    このベクトル間のコサイン類似度として集計される。
+    `--metrics-url` または `--log-path` のどちらか片方しか利用できない場合は、利用可能な入力のみ指定する。
+  - Chainlit（または同等のUI）からメトリクスを出力する場合は `tools.perf.structured_logger.StructuredLogger`
+    を利用する。例: `from tools.perf.structured_logger import StructuredLogger` →
+    `StructuredLogger(name="chainlit", path="~/.chainlit/logs/metrics.log").inference(metrics={"semantic_retention": 0.9})`。
+    こうして生成された JSON ログ行は `collect_metrics --log-path ~/.chainlit/logs/metrics.log` で取り込まれ、
+    `metrics` キー配下の辞書がそのまま Chainlit メトリクスとして集計される。
+  - FastAPI などの Web サービスに組み込む場合は `tools.perf.metrics_registry.MetricsRegistry` を共有シングルトン
+    として初期化し、トリミング完了時に `observe_trim` を呼び出す。`compress_ratio=` を直接指定する新 API と、
+    既存の `original_tokens=` / `trimmed_tokens=` を渡す後方互換 API のどちらでも動作し、`semantic_retention`
+    の有無も任意。`@app.get("/metrics")` エンドポイントで `return PlainTextResponse(registry.export_prometheus())`
+    を返すと Prometheus が取得可能となる。収集 CLI は公開 API として `compress_ratio` / `semantic_retention`
+    を参照しつつ、Prometheus 上では `trim_compress_ratio_*` / `trim_semantic_retention_*` を優先的に解釈する。
+  - 実行後に `.ga/qa-metrics.json` がリポジトリルート配下へ生成されていることを確認する。生成されない場合は
+    `--output` に明示したパスと標準出力を突き合わせ、異常がないか確認する。
+  - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8'));
+     print({k: data[k] for k in ('compress_ratio', 'semantic_retention', 'review_latency', 'reopen_rate', 'spec_completeness')})`
+    で各メトリクスの値を抽出する。閾値は最新サンプルと突き合わせ、外れた場合は直近成功値との差分と再現条件を記録して共有する。
+  - FastAPI 等へ常駐組み込みする際は `tools.perf.metrics_registry.MetricsRegistry` を介し、トリミング結果を逐次記録する:
+
+      ```python
+    from fastapi import FastAPI, Response
+
+    from tools.perf.metrics_registry import MetricsRegistry
+
+    registry = MetricsRegistry(default_labels={"service": "workflow"})
+    app = FastAPI()
+
+    @app.post("/trim")
+    async def record_trim(payload: dict[str, float]) -> dict[str, str]:
+        registry.observe_trim(
+            compress_ratio=payload["compress_ratio"],
+            semantic_retention=payload["semantic_retention"],
+            labels={"model": payload.get("model", "unknown")},
+        )
+        # 旧 API を利用する場合の例（compress_ratio が未計算なときなど）:
+        # registry.observe_trim(
+        #     original_tokens=payload["original_tokens"],
+        #     trimmed_tokens=payload["trimmed_tokens"],
+        #     semantic_retention=payload.get("semantic_retention"),
+        #     labels={"model": payload.get("model", "unknown")},
+        # )
+        return {"status": "ok"}
+
+    @app.get("/metrics")
+    async def metrics() -> Response:
+        return Response(registry.export_prometheus(), media_type="text/plain")
+      ```
+
+  - `snapshot()` で `{"trim_compress_ratio": [{"labels": {...}, "count": 2, ...}]}` 形式の統計を確認できる。
+    Prometheus エクスポートでは `trim_compress_ratio_{count,sum,avg,min,max}` および
+    `trim_semantic_retention_{count,sum,avg,min,max}` を同一ラベル集合ごとに出力する。
+    例:
+
+    ```text
+    # HELP trim_compress_ratio_count Compression ratio observed after trimming. (count).
+    trim_compress_ratio_count{model="gpt-5",service="workflow"} 2
+    trim_compress_ratio_avg{model="gpt-5",service="workflow"} 0.45
+    ```
+
+  - 公開メトリクス名: `trim_compress_ratio` / `trim_semantic_retention`
+    （各 `_count`、`_sum`、`_avg`、`_min`、`_max` を同時出力）に加え、後方互換 Gauge
+    `compress_ratio` / `semantic_retention` も平均値として公開する。
+
 - 失敗兆候と一次対応
   - `.ga/qa-metrics.json` が生成されない / 壊れている: `python -m tools.perf.collect_metrics --help` でオプションを再確認し、一時ファイルやログ出力設定を洗い直してから再実行。
   - `checklist_compliance_rate` が 95% を下回る: 実行時のチェックリスト完了ログを抽出し、どの項目が未完了かを Birdseye や Git 履歴で確認する。改善作業が必要な場合は Task Seed を追加投入する。

@@ -58,13 +58,13 @@ def _mock_pushgateway(status_code: int = 202) -> Iterator[tuple[str, dict[str, o
 def test_collects_metrics_from_prometheus_and_logs(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text(
-        "# HELP checklist_compliance_rate Ratio\n"
-        "# TYPE checklist_compliance_rate gauge\n"
-        "checklist_compliance_rate 0.9\n"
-        "task_seed_cycle_time_seconds_sum 7200\n"
-        "task_seed_cycle_time_seconds_count 24\n"
-        "birdseye_refresh_delay_seconds_sum 14400\n"
-        "birdseye_refresh_delay_seconds_count 6\n",
+        "# HELP trim_compress_ratio_avg Ratio\n"
+        "# TYPE trim_compress_ratio_avg gauge\n"
+        "trim_compress_ratio_avg 0.82\n"
+        "trim_review_latency_seconds_sum 21600\n"
+        "trim_review_latency_seconds_count 12\n"
+        "katamari_reviews_reopened_total 3\n"
+        "katamari_reviews_total 60\n",
         encoding="utf-8",
     )
 

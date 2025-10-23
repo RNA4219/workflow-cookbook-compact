@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-"""Katamari-style registry for trimming metrics."""
+"""Brand-agnostic registry for trimming metrics."""
 
 from __future__ import annotations
 
@@ -12,13 +12,13 @@ _MetricKey = tuple[str, tuple[tuple[str, str], ...]]
 _SERIES_SUFFIXES: tuple[str, ...] = ("count", "sum", "avg", "min", "max")
 
 _METRIC_HELP: Mapping[str, str] = {
-    "katamari_trim_compress_ratio": "Compression ratio observed after trimming.",
-    "katamari_trim_semantic_retention": "Semantic retention reported after trimming.",
+    "trim_compress_ratio": "Compression ratio observed after trimming.",
+    "trim_semantic_retention": "Semantic retention reported after trimming.",
 }
 
 _COMPAT_FROM_SOURCE: Mapping[str, str] = {
-    "katamari_trim_compress_ratio": "compress_ratio",
-    "katamari_trim_semantic_retention": "semantic_retention",
+    "trim_compress_ratio": "compress_ratio",
+    "trim_semantic_retention": "semantic_retention",
 }
 
 
@@ -124,10 +124,10 @@ class MetricsRegistry:
             raise ValueError("semantic_retention must be between 0.0 and 1.0")
 
         normalized_labels = self._normalize_labels(labels)
-        self._record("katamari_trim_compress_ratio", ratio, normalized_labels)
+        self._record("trim_compress_ratio", ratio, normalized_labels)
         if semantic_retention is not None:
             self._record(
-                "katamari_trim_semantic_retention",
+                "trim_semantic_retention",
                 semantic_retention,
                 normalized_labels,
             )
