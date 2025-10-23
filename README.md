@@ -72,7 +72,8 @@ canary rules.
       Birdseye カプセル要約で指示される `deps_out` を照合
 4. タスクごとに `TASK.codex.md` を複製して内容を埋め、エージェントに渡す
    - 雛形との差分を確認したい場合は `examples/TASK.sample.md` を参照し、実在の値が埋め込まれたダミーサンプルと比較する
-5. リリースは `CHECKLISTS.md` をなぞり、差分は `CHANGELOG.md` に追記
+   - 完了した `TASK.*` の成果は `[Unreleased](CHANGELOG.md#unreleased)` へ通番付きで転記し、該当 Task Seed から成果差分へのリンクを貼る
+5. リリースは `CHECKLISTS.md` をなぞり、差分は `CHANGELOG.md` に追記しつつ、`[Unreleased](CHANGELOG.md#unreleased)` に集約した Task Seed 成果をリリースノートへ昇格させる
 
 ## 変更履歴の更新ルール {#changelog-update-rules}
 
