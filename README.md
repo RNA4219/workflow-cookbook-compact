@@ -92,6 +92,8 @@ canary rules.
   2. チェックリストに記録した内容を [`CHANGELOG.md`](CHANGELOG.md) の該当リリース節へ反映し、必要に応じて `RUNBOOK.md` や関連資料の更新有無をメモする。
   3. 反映後に再度チェックリストへ戻り、記録済みであることをコメントまたは添付リンクで明示してリリース完了とする。
 
+詳細な手順は [`docs/addenda/M_Versioning_Release.md`](docs/addenda/M_Versioning_Release.md) を参照する。
+
 ### 最小導入セット
 
 - [`BLUEPRINT.md`](BLUEPRINT.md) …… Intent と仕様全体の骨子を提示
