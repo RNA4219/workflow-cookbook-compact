@@ -41,7 +41,12 @@ REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
     ("review_latency_hours", 1.0),
 )
 
-LEGACY_WORKFLOW_REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
+WORKFLOW_REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
+    ("workflow_review_latency_seconds", 3600.0),
+    ("workflow_review_latency_hours", 1.0),
+)
+
+_LEGACY_REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
     ("legacy_review_latency_seconds", 3600.0),
     ("legacy_review_latency_hours", 1.0),
 )
@@ -140,9 +145,15 @@ def _derive_review_latency(raw: Mapping[str, float]) -> float | None:
     direct = raw.get("review_latency")
     if direct is not None:
         return direct
+    # Prefer the workflow_review_* prefixed aggregates; keep legacy_* as a
+    # compatibility fallback so existing exporters continue to work.
     return _derive_average(
         raw,
-        (*REVIEW_LATENCY_PREFIXES, *LEGACY_WORKFLOW_REVIEW_LATENCY_PREFIXES),
+        (
+            *REVIEW_LATENCY_PREFIXES,
+            *WORKFLOW_REVIEW_LATENCY_PREFIXES,
+            *_LEGACY_REVIEW_LATENCY_PREFIXES,
+        ),
     )
 
 

@@ -27,7 +27,8 @@ next_review_due: 2025-11-21
 - QA メトリクス収集と確認（`tools/perf/` 共通テンプレート準拠）
   - `python -m tools.perf.collect_metrics --suite qa --metrics-url <Prometheus URL> --log-path <Chainlit ログパス>`
     を実行する。`--suite qa` は `.ga/qa-metrics.json` への書き出しを既定とし、Prometheus
-    （`trim_compress_ratio_*`/`review_latency`/`reopen_rate`）と Chainlit ログ（`trim_semantic_retention_*`/`spec_completeness`）
+    （`trim_compress_ratio_*`/`workflow_review_latency_*`/`reopen_rate`。旧 `legacy_review_latency_*`
+    も互換処理で継続利用可能）と Chainlit ログ（`trim_semantic_retention_*`/`spec_completeness`）
     から統合メトリクスを取得する。出力先を変更したい場合は `--output <JSON パス>` を追加指定する。
     `semantic_retention` を取得するには `tools/perf/context_trimmer.trim_messages` へ
     `semantic_options`（例: `{"embedder": <callable>}`）を渡せるよう、Chainlit 側で埋め込み関数を設定しておく。
