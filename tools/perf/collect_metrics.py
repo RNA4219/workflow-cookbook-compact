@@ -82,10 +82,18 @@ _LEGACY_REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
     ("legacy_review_latency_hours", 1.0),
 )
 
-_RATIO_CAPTURE_CONFIG: Mapping[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
-    "reopen_rate": (("reopened", "reopens", "numerator"), ("total", "resolved", "all", "denominator")),
-    "spec_completeness": (("with_spec", "with_specs", "completed", "numerator"), ("total", "all", "denominator")),
-}
+_RATIO_CAPTURE_ENTRIES: tuple[tuple[str, tuple[str, ...], tuple[str, ...]], ...] = (
+    (
+        "reopen_rate",
+        ("reopened", "reopens", "numerator"),
+        ("total", "resolved", "all", "denominator"),
+    ),
+    (
+        "spec_completeness",
+        ("with_spec", "with_specs", "completed", "numerator"),
+        ("total", "all", "denominator"),
+    ),
+)
 
 _RATIO_PROMETHEUS_CONFIG: Mapping[str, tuple[tuple[str, ...], tuple[str, ...], tuple[tuple[str, float], ...]]] = {
     "reopen_rate": (
@@ -468,16 +476,30 @@ def _load_structured_log(path: Path) -> Mapping[str, float]:
             _capture_trim_metrics(parsed, metrics)
             _capture_review_latency(parsed, metrics, overwrite=True)
             _capture_compliance(parsed, metrics, overwrite=True)
-            for metric_key, (numerator_keys, denominator_keys) in _RATIO_CAPTURE_CONFIG.items():
-                _capture_ratio_metric(parsed, metrics, metric_key, numerator_keys, denominator_keys, overwrite=True)
+            for metric_key, numerator_keys, denominator_keys in _RATIO_CAPTURE_ENTRIES:
+                _capture_ratio_metric(
+                    parsed,
+                    metrics,
+                    metric_key,
+                    numerator_keys,
+                    denominator_keys,
+                    overwrite=True,
+                )
             nested = parsed.get("metrics")
             if isinstance(nested, Mapping):
                 _capture(nested, metrics)
                 _capture_trim_metrics(nested, metrics, overwrite=True)
                 _capture_review_latency(nested, metrics, overwrite=True)
                 _capture_compliance(nested, metrics, overwrite=True)
-                for metric_key, (numerator_keys, denominator_keys) in _RATIO_CAPTURE_CONFIG.items():
-                    _capture_ratio_metric(nested, metrics, metric_key, numerator_keys, denominator_keys, overwrite=True)
+                for metric_key, numerator_keys, denominator_keys in _RATIO_CAPTURE_ENTRIES:
+                    _capture_ratio_metric(
+                        nested,
+                        metrics,
+                        metric_key,
+                        numerator_keys,
+                        denominator_keys,
+                        overwrite=True,
+                    )
     return metrics
 
 
