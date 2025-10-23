@@ -63,6 +63,10 @@ def test_collects_metrics_from_prometheus_and_logs(tmp_path: Path) -> None:
         "trim_compress_ratio_avg 0.82\n"
         "trim_review_latency_seconds_sum 21600\n"
         "trim_review_latency_seconds_count 12\n"
+        "task_seed_cycle_time_seconds_sum 3600\n"
+        "task_seed_cycle_time_seconds_count 12\n"
+        "birdseye_refresh_delay_seconds_sum 9600\n"
+        "birdseye_refresh_delay_seconds_count 4\n"
         "katamari_reviews_reopened_total 3\n"
         "katamari_reviews_total 60\n",
         encoding="utf-8",
@@ -89,6 +93,28 @@ def test_collects_metrics_from_prometheus_and_logs(tmp_path: Path) -> None:
         "checklist_compliance_rate": 96.0,
         "task_seed_cycle_time_minutes": 5.0,
         "birdseye_refresh_delay_minutes": 40.0,
+    }
+
+
+def test_collects_average_metrics_from_prometheus(tmp_path: Path) -> None:
+    prometheus = tmp_path / "metrics.prom"
+    prometheus.write_text(
+        "checklist_compliance_rate 0.96\n"
+        "task_seed_cycle_time_seconds_sum 3600\n"
+        "task_seed_cycle_time_seconds_count 12\n"
+        "birdseye_refresh_delay_seconds_sum 7200\n"
+        "birdseye_refresh_delay_seconds_count 120\n",
+        encoding="utf-8",
+    )
+
+    result = _run_cli("--metrics-url", prometheus.as_uri())
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload == {
+        "checklist_compliance_rate": 96.0,
+        "task_seed_cycle_time_minutes": 5.0,
+        "birdseye_refresh_delay_minutes": 1.0,
     }
 
 
