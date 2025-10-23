@@ -26,6 +26,31 @@ PERCENTAGE_KEYS: tuple[str, ...] = (
     "spec_completeness",
 )
 
+_METRIC_SOURCE_PREFERENCES: Mapping[str, tuple[str, ...]] = {
+    "compress_ratio": (
+        "trim_compress_ratio_avg",
+        "trim_compress_ratio",
+        "compress_ratio",
+    ),
+    "semantic_retention": (
+        "trim_semantic_retention_avg",
+        "trim_semantic_retention",
+        "semantic_retention",
+    ),
+}
+
+REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
+    ("trim_review_latency_seconds", 3600.0),
+    ("review_latency_seconds", 3600.0),
+    ("trim_review_latency_hours", 1.0),
+    ("review_latency_hours", 1.0),
+)
+
+LEGACY_REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
+    ("katamari_review_latency_seconds", 3600.0),
+    ("katamari_review_latency_hours", 1.0),
+)
+
 
 @dataclass(frozen=True)
 class SuiteConfig:
@@ -58,10 +83,15 @@ def _capture(source: Mapping[str, object], target: MutableMapping[str, float]) -
     for key in METRIC_KEYS:
         if key in target:
             continue
-        value = source.get(key)
-        coerced = _coerce_float(value)
-        if coerced is not None:
-            target[key] = coerced
+        preferences = _METRIC_SOURCE_PREFERENCES.get(key, (key,))
+        for candidate in preferences:
+            value = source.get(candidate)
+            if value is None:
+                continue
+            coerced = _coerce_float(value)
+            if coerced is not None:
+                target[key] = coerced
+                break
 
 
 def _capture_spec_metrics(source: Mapping[str, object], target: MutableMapping[str, float]) -> None:
@@ -91,13 +121,7 @@ def _derive_review_latency(raw: Mapping[str, float]) -> float | None:
     direct = raw.get("review_latency")
     if direct is not None:
         return direct
-    candidates: Sequence[tuple[str, float]] = (
-        ("katamari_review_latency_seconds", 3600.0),
-        ("review_latency_seconds", 3600.0),
-        ("katamari_review_latency_hours", 1.0),
-        ("review_latency_hours", 1.0),
-    )
-    for prefix, scale in candidates:
+    for prefix, scale in (*REVIEW_LATENCY_PREFIXES, *LEGACY_REVIEW_LATENCY_PREFIXES):
         sum_key = f"{prefix}_sum"
         count_key = f"{prefix}_count"
         total = raw.get(sum_key)

@@ -24,10 +24,10 @@ next_review_due: 2025-11-21
 
 - ログ/メトリクスの確認点、失敗時の兆候（[ADR-021: メトリクスと可観測性の統合](docs/ADR/ADR-021-metrics-observability.md) を参照）
 - インシデント発生時は docs/IN-YYYYMMDD-XXX.md に記録し、最新サンプル（[IN-20250115-001](docs/IN-20250115-001.md)）を参照して検知し、ログ・メトリクスの抜粋を添付
-- QA メトリクス収集と確認（Katamari `tools/perf/` テンプレート準拠）
+- QA メトリクス収集と確認（`tools/perf/` 共通テンプレート準拠）
   - `python -m tools.perf.collect_metrics --suite qa --metrics-url <Prometheus URL> --log-path <Chainlit ログパス>`
     を実行する。`--suite qa` は `.ga/qa-metrics.json` への書き出しを既定とし、Prometheus
-    （`compress_ratio`/`review_latency`/`reopen_rate`）と Chainlit ログ（`semantic_retention`/`spec_completeness`）
+    （`trim_compress_ratio_*`/`review_latency`/`reopen_rate`）と Chainlit ログ（`trim_semantic_retention_*`/`spec_completeness`）
     から統合メトリクスを取得する。出力先を変更したい場合は `--output <JSON パス>` を追加指定する。
     `semantic_retention` を取得するには `tools/perf/context_trimmer.trim_messages` へ
     `semantic_options`（例: `{"embedder": <callable>}`）を渡せるよう、Chainlit 側で埋め込み関数を設定しておく。
@@ -43,13 +43,13 @@ next_review_due: 2025-11-21
     として初期化し、トリミング完了時に `observe_trim` を呼び出す。`compress_ratio=` を直接指定する新 API と、
     既存の `original_tokens=` / `trimmed_tokens=` を渡す後方互換 API のどちらでも動作し、`semantic_retention`
     の有無も任意。`@app.get("/metrics")` エンドポイントで `return PlainTextResponse(registry.export_prometheus())`
-    を返すと Prometheus が取得可能となる。収集 CLI は `compress_ratio` と `semantic_retention` を公開 API
-    として参照するため、同名 Gauge を引き続き公開する。
+    を返すと Prometheus が取得可能となる。収集 CLI は公開 API として `compress_ratio` / `semantic_retention`
+    を参照しつつ、Prometheus 上では `trim_compress_ratio_*` / `trim_semantic_retention_*` を優先的に解釈する。
   - 実行後に `.ga/qa-metrics.json` がリポジトリルート配下へ生成されていることを確認する。生成されない場合は
     `--output` に明示したパスと標準出力を突き合わせ、異常がないか確認する。
   - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8'));
      print({k: data[k] for k in ('compress_ratio', 'semantic_retention', 'review_latency', 'reopen_rate', 'spec_completeness')})`
-    で各メトリクスの値を抽出する。閾値は Katamari RUNBOOK の最新サンプルと突き合わせ、外れた場合は直近成功値との差分と再現条件を記録して共有する。
+    で各メトリクスの値を抽出する。閾値は最新サンプルと突き合わせ、外れた場合は直近成功値との差分と再現条件を記録して共有する。
   - FastAPI 等へ常駐組み込みする際は `tools.perf.metrics_registry.MetricsRegistry` を介し、トリミング結果を逐次記録する:
 
       ```python
@@ -81,18 +81,18 @@ next_review_due: 2025-11-21
         return Response(registry.export_prometheus(), media_type="text/plain")
       ```
 
-  - `snapshot()` で `{"katamari_trim_compress_ratio": [{"labels": {...}, "count": 2, ...}]}` 形式の統計を確認できる。
-    Prometheus エクスポートでは `katamari_trim_compress_ratio_{count,sum,avg,min,max}` および
-    `katamari_trim_semantic_retention_{count,sum,avg,min,max}` を同一ラベル集合ごとに出力する。
+  - `snapshot()` で `{"trim_compress_ratio": [{"labels": {...}, "count": 2, ...}]}` 形式の統計を確認できる。
+    Prometheus エクスポートでは `trim_compress_ratio_{count,sum,avg,min,max}` および
+    `trim_semantic_retention_{count,sum,avg,min,max}` を同一ラベル集合ごとに出力する。
     例:
 
     ```text
-    # HELP katamari_trim_compress_ratio_count Compression ratio observed after trimming. (count).
-    katamari_trim_compress_ratio_count{model="gpt-5",service="workflow"} 2
-    katamari_trim_compress_ratio_avg{model="gpt-5",service="workflow"} 0.45
+    # HELP trim_compress_ratio_count Compression ratio observed after trimming. (count).
+    trim_compress_ratio_count{model="gpt-5",service="workflow"} 2
+    trim_compress_ratio_avg{model="gpt-5",service="workflow"} 0.45
     ```
 
-  - 公開メトリクス名: `katamari_trim_compress_ratio` / `katamari_trim_semantic_retention`
+  - 公開メトリクス名: `trim_compress_ratio` / `trim_semantic_retention`
     （各 `_count`、`_sum`、`_avg`、`_min`、`_max` を同時出力）に加え、後方互換 Gauge
     `compress_ratio` / `semantic_retention` も平均値として公開する。
 

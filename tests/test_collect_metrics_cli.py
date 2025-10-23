@@ -58,11 +58,11 @@ def _mock_pushgateway(status_code: int = 202) -> Iterator[tuple[str, dict[str, o
 def test_collects_metrics_from_prometheus_and_chainlit(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text(
-        "# HELP compress_ratio Ratio\n"
-        "# TYPE compress_ratio gauge\n"
-        "compress_ratio 0.82\n"
-        "katamari_review_latency_seconds_sum 21600\n"
-        "katamari_review_latency_seconds_count 12\n"
+        "# HELP trim_compress_ratio_avg Ratio\n"
+        "# TYPE trim_compress_ratio_avg gauge\n"
+        "trim_compress_ratio_avg 0.82\n"
+        "trim_review_latency_seconds_sum 21600\n"
+        "trim_review_latency_seconds_count 12\n"
         "katamari_reviews_reopened_total 3\n"
         "katamari_reviews_total 60\n",
         encoding="utf-8",
