@@ -82,7 +82,9 @@ _LEGACY_REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
     ("legacy_review_latency_hours", 1.0),
 )
 
-_REVIEW_LATENCY_AGGREGATE_PREFIXES: Sequence[tuple[str, float]] = (
+# Prefer the workflow_review_* prefixed aggregates; keep legacy_* as a
+# compatibility fallback so existing exporters continue to work.
+_REVIEW_LATENCY_AGGREGATE_PREFIXES: tuple[tuple[str, float], ...] = (
     *WORKFLOW_REVIEW_LATENCY_PREFIXES,
     *REVIEW_LATENCY_PREFIXES,
     *_LEGACY_REVIEW_LATENCY_PREFIXES,
