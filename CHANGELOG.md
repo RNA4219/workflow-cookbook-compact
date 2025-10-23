@@ -8,6 +8,12 @@ next_review_due: 2025-11-14
 
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- 0007: `CHECKLISTS.md` に Development / Pull Request / Ops チェックリストを追加し、Release セクションが新設項目と重複しないよう参照構造へ更新
+
 ## 0.1.0 - 2025-10-13
 
 - 0001: 初版（MD一式 / Codex対応テンプレ含む）
