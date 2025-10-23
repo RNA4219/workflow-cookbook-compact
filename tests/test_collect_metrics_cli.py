@@ -81,6 +81,7 @@ def test_collects_metrics_from_prometheus_and_logs(tmp_path: Path) -> None:
     structured.write_text(
         "\n".join(
             (
+                '{"metrics": {"compress_ratio": 0.85, "semantic_retention": 0.92}}',
                 '{"metrics": {"checklist_compliance_rate": {"compliant": 48, "total": 50}}}',
                 '{"metrics": {"task_seed_cycle_time_minutes": 25.0}}',
                 '{"metrics": {"birdseye_refresh_delay_minutes": 150.0}}',
@@ -98,8 +99,8 @@ def test_collects_metrics_from_prometheus_and_logs(tmp_path: Path) -> None:
     payload = json.loads(result.stdout)
     assert payload == {
         "checklist_compliance_rate": 96.0,
-        "compress_ratio": pytest.approx(0.82),
-        "semantic_retention": pytest.approx(0.91),
+        "compress_ratio": pytest.approx(0.85),
+        "semantic_retention": pytest.approx(0.92),
         "task_seed_cycle_time_minutes": 5.0,
         "birdseye_refresh_delay_minutes": 40.0,
         "review_latency": 0.5,
