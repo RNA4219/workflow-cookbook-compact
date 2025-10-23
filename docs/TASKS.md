@@ -42,7 +42,7 @@ next_review_due: YYYY-MM-DD
 - PR 要約・Intent 明記・必要なドキュメント差分を記載。
 ```
 
-> **用語補足**: `Objective` は課題の目的、`Scope` は対象/非対象の境界、`Requirements` は受け入れ条件と制約を指す。各項は `TASK.codex.md` の定義と一致させ、独自の章立てを作らない。
+> **用語補足**: `Objective`・`Scope`・`Requirements` の定義は [`docs/addenda/A_Glossary.md`](addenda/A_Glossary.md) を参照し、`TASK.codex.md` の章立てと整合させる。
 
 ## 3. 検証ログ（TDD 前提）
 

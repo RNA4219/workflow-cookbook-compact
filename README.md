@@ -46,6 +46,8 @@ canary rules.
 3. 実行手順は `RUNBOOK.md`、評価基準は `EVALUATION.md` に記述し、
    以下で Birdseye の最小読込とタスク分割の前提を共有
 
+    - [`docs/addenda/A_Glossary.md`](docs/addenda/A_Glossary.md) …… Intent や Task Seed など頻出用語の定義を確認
+
     - [`GUARDRAILS.md`](GUARDRAILS.md) …… 行動指針と Birdseye の `deps_out`
       と整合する最小読込ガードレールを確認
     - [`docs/BIRDSEYE.md`](docs/BIRDSEYE.md) …… Birdseye の Edges / Hot / 更新手順をフォールバック用に把握
