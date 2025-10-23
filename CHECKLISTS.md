@@ -30,3 +30,4 @@ next_review_due: 2025-11-14
 
 - 命名・ディレクトリ整備
 - ドキュメント差分反映
+- フォーク差分記録の最新化（[`docs/FORK_NOTES.md`](docs/FORK_NOTES.md) をリリース前レビューと突合）

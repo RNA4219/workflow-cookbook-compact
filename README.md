@@ -41,6 +41,7 @@ canary rules.
      - `EVALUATION.md`
      - `CHECKLISTS.md`
      - `CHANGELOG.md`
+   - フォークで運用する場合は [`docs/FORK_NOTES.md`](docs/FORK_NOTES.md) をテンプレ通りに初期化し、差分管理を開始
 2. `BLUEPRINT.md` で要件と制約を1ページに集約
 3. 実行手順は `RUNBOOK.md`、評価基準は `EVALUATION.md` に記述し、
    以下で Birdseye の最小読込とタスク分割の前提を共有

@@ -15,6 +15,7 @@
 | 行動指針 | [GUARDRAILS.md](../GUARDRAILS.md) | 行動原則と Birdseye 読込手順を規定。 | 「[Birdseye / Minimal Context Intake Guardrails](../GUARDRAILS.md#birdseye--minimal-context-intake-guardrails鳥観図最小読込)」を参照し、タスク分割前に対象ノードを確定。 |
 | タスク統制 | [HUB.codex.md](../HUB.codex.md) | 仕様・運用ドキュメントを束ね、タスク化を自動分配。 | `TASK.*` シード生成時に [入力ファイル分類](../HUB.codex.md#2-入力ファイル分類)を参照。 |
 | リリース判定 | [CHECKLISTS.md](../CHECKLISTS.md) | 日次・リリース・衛生のチェック項目。 | リリース前に `EVALUATION.md` の[Verification Checklist](../EVALUATION.md#verification-checklist)と突き合わせ。 |
+| フォーク統制 | [docs/FORK_NOTES.md](FORK_NOTES.md) | 派生リポの独自差分・逆輸入方針・未解決課題を一元管理。 | フォーク更新時およびリリース前に `CHECKLISTS.md` の[Hygiene](../CHECKLISTS.md#hygiene)と突合。 |
 | セキュリティ統制 | [SECURITY.md](../SECURITY.md) / [security/SAC.md](security/SAC.md) | 報告窓口と SAC 原則の適用範囲・是正判断を集約。 | セキュリティレビュー準備で [security/Security_Review_Checklist.md](security/Security_Review_Checklist.md) と `CHECKLISTS.md` の[Release](../CHECKLISTS.md#release)を突合し、対応責務を同期。 |
 | 依存グラフ | [docs/BIRDSEYE.md](BIRDSEYE.md) / [docs/birdseye/index.json](birdseye/index.json) / [caps/*](birdseye/caps/) | ノード一覧とカプセルで Birdseye トポロジを提供し、Guardrails からの参照起点を集約。 | `codemap.update` で再生成し、`GUARDRAILS.md` の[鮮度管理](../GUARDRAILS.md#鮮度管理staleness-handling)に従って鮮度を監視。 |
 | ガバナンス | [governance/policy.yaml](../governance/policy.yaml) / [prioritization.yaml](../governance/prioritization.yaml) / [metrics.yaml](../governance/metrics.yaml) | セルフモディフィケーション制御、優先度算出基準、定常メトリクス。 | `HUB.codex.md` の優先度判定および `CHECKLISTS.md` の衛生チェックで参照。 |
