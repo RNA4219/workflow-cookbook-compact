@@ -12,7 +12,8 @@ Workflow Cookbook の標準手順を土台に、リポジトリ固有の要件�
 ## 2. 証跡と記録
 
 - QA / セキュリティ / 品質ゲートの証跡を PR またはリリースチケットへ添付し、確認者が追跡できるようにする。
-- 運用メトリクスの基準値は [`governance/metrics.yaml`](../governance/metrics.yaml) を参照し、[`RUNBOOK.md`](../RUNBOOK.md)・[`EVALUATION.md`](../EVALUATION.md) の閾値と齟齬がないことを確認する。
+- 運用メトリクスの基準値は [`governance/metrics.yaml`](../governance/metrics.yaml) を参照し、
+  [`RUNBOOK.md`](../RUNBOOK.md)・[`EVALUATION.md`](../EVALUATION.md) の閾値と齟齬がないことを確認する。
 - リリースノート（`CHANGELOG.md` など公開ドキュメント）へ今回の変更点と既知の制約を追記し、配布物のバージョンと紐付ける。
 
 ## 3. 依存ドキュメントの同期
