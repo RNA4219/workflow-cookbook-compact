@@ -47,10 +47,12 @@ next_review_due: 2025-11-21
     の有無も任意。`@app.get("/metrics")` エンドポイントで `return PlainTextResponse(registry.export_prometheus())`
     を返すと Prometheus が取得可能となる。収集 CLI は公開 API として `compress_ratio` / `semantic_retention`
     を参照しつつ、Prometheus 上では `trim_compress_ratio_*` / `trim_semantic_retention_*` を優先的に解釈する。
+    再オープン率は `workflow_reopen_rate_*` → `docops_reopen_rate` → `reopen_rate` を順に確認し、スペック充足率は
+    `workflow_spec_completeness_*` → `spec_completeness_*` → `spec_completeness` をフォールバックとして参照する。
   - 実行後に `.ga/qa-metrics.json` がリポジトリルート配下へ生成されていることを確認する。生成されない場合は
     `--output` に明示したパスと標準出力を突き合わせ、異常がないか確認する。
   - `python - <<'PY'` → `import json; data=json.load(open('.ga/qa-metrics.json', encoding='utf-8'));
-     print({k: data[k] for k in ('checklist_compliance_rate', 'task_seed_cycle_time_minutes', 'birdseye_refresh_delay_minutes', 'review_latency')})`
+     print({k: data[k] for k in ('checklist_compliance_rate', 'compress_ratio', 'semantic_retention', 'task_seed_cycle_time_minutes', 'birdseye_refresh_delay_minutes', 'review_latency', 'reopen_rate', 'spec_completeness')})`
     で各メトリクスの値を抽出する。閾値は最新サンプルと突き合わせ、外れた場合は直近成功値との差分と再現条件を記録して共有する。
   - FastAPI 等へ常駐組み込みする際は `tools.perf.metrics_registry.MetricsRegistry` を介し、トリミング結果を逐次記録する:
 
