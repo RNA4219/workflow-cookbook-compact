@@ -178,6 +178,7 @@ def trim_messages(
     compression_ratio = 1.0 if total_input_tokens == 0 else output_tokens / total_input_tokens
 
     statistics: Dict[str, Any] = {
+        "compress_ratio": compression_ratio,
         "compression_ratio": compression_ratio,
         "input_tokens": total_input_tokens,
         "output_tokens": output_tokens,
