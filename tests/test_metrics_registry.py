@@ -55,7 +55,7 @@ def test_export_prometheus_after_observing_trim() -> None:
     )
 
     snapshot = registry.snapshot()
-    compress_entries = snapshot["trim_compress_ratio"]
+    compress_entries = snapshot["context_compression_ratio"]
     compress = _by_labels(
         compress_entries,
         labels={"model": "gpt-5", "service": "workflow"},
@@ -66,7 +66,7 @@ def test_export_prometheus_after_observing_trim() -> None:
     assert compress["min"] == pytest.approx(0.4)
     assert compress["max"] == pytest.approx(0.5)
 
-    semantic_entries = snapshot["trim_semantic_retention"]
+    semantic_entries = snapshot["context_semantic_retention"]
     semantic = _by_labels(
         semantic_entries,
         labels={"model": "gpt-5", "service": "workflow"},
@@ -81,17 +81,17 @@ def test_export_prometheus_after_observing_trim() -> None:
     metrics = _parse_prometheus(prometheus)
     labels = (("model", "gpt-5"), ("service", "workflow"))
 
-    assert metrics[("trim_compress_ratio_count", labels)] == pytest.approx(2)
-    assert metrics[("trim_compress_ratio_sum", labels)] == pytest.approx(0.9)
-    assert metrics[("trim_compress_ratio_avg", labels)] == pytest.approx(0.45)
-    assert metrics[("trim_compress_ratio_min", labels)] == pytest.approx(0.4)
-    assert metrics[("trim_compress_ratio_max", labels)] == pytest.approx(0.5)
+    assert metrics[("context_compression_ratio_count", labels)] == pytest.approx(2)
+    assert metrics[("context_compression_ratio_sum", labels)] == pytest.approx(0.9)
+    assert metrics[("context_compression_ratio_avg", labels)] == pytest.approx(0.45)
+    assert metrics[("context_compression_ratio_min", labels)] == pytest.approx(0.4)
+    assert metrics[("context_compression_ratio_max", labels)] == pytest.approx(0.5)
 
-    assert metrics[("trim_semantic_retention_count", labels)] == pytest.approx(1)
-    assert metrics[("trim_semantic_retention_sum", labels)] == pytest.approx(0.92)
-    assert metrics[("trim_semantic_retention_avg", labels)] == pytest.approx(0.92)
-    assert metrics[("trim_semantic_retention_min", labels)] == pytest.approx(0.92)
-    assert metrics[("trim_semantic_retention_max", labels)] == pytest.approx(0.92)
+    assert metrics[("context_semantic_retention_count", labels)] == pytest.approx(1)
+    assert metrics[("context_semantic_retention_sum", labels)] == pytest.approx(0.92)
+    assert metrics[("context_semantic_retention_avg", labels)] == pytest.approx(0.92)
+    assert metrics[("context_semantic_retention_min", labels)] == pytest.approx(0.92)
+    assert metrics[("context_semantic_retention_max", labels)] == pytest.approx(0.92)
 
 
 def test_observe_trim_accepts_token_counts_and_exports_gauges() -> None:
@@ -114,8 +114,8 @@ def test_observe_trim_accepts_token_counts_and_exports_gauges() -> None:
     metrics = _parse_prometheus(registry.export_prometheus())
     label_tuple = tuple(sorted(target_labels.items()))
     expectations = {
-        "trim_compress_ratio": ((token_ratio, 0.52), "compress_ratio"),
-        "trim_semantic_retention": ((0.83, 0.9), "semantic_retention"),
+        "context_compression_ratio": ((token_ratio, 0.52), "compress_ratio"),
+        "context_semantic_retention": ((0.83, 0.9), "semantic_retention"),
     }
     for metric_name, (values, gauge) in expectations.items():
         total = sum(values)
