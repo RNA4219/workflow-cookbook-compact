@@ -92,3 +92,42 @@ def test_export_prometheus_after_observing_trim() -> None:
     assert metrics[("katamari_trim_semantic_retention_avg", labels)] == pytest.approx(0.92)
     assert metrics[("katamari_trim_semantic_retention_min", labels)] == pytest.approx(0.92)
     assert metrics[("katamari_trim_semantic_retention_max", labels)] == pytest.approx(0.92)
+
+
+def test_observe_trim_accepts_token_counts_and_exports_gauges() -> None:
+    registry = MetricsRegistry(default_labels={"service": "workflow"})
+
+    registry.observe_trim(
+        original_tokens=1200,
+        trimmed_tokens=660,
+        semantic_retention=0.83,
+        labels={"model": "gpt-5"},
+    )
+    registry.observe_trim(
+        compress_ratio=0.52,
+        semantic_retention=0.9,
+        labels={"model": "gpt-5"},
+    )
+    token_ratio = 660 / 1200
+    snapshot = registry.snapshot()
+    target_labels = {"model": "gpt-5", "service": "workflow"}
+    metrics = _parse_prometheus(registry.export_prometheus())
+    label_tuple = tuple(sorted(target_labels.items()))
+    expectations = {
+        "katamari_trim_compress_ratio": ((token_ratio, 0.52), "compress_ratio"),
+        "katamari_trim_semantic_retention": ((0.83, 0.9), "semantic_retention"),
+    }
+    for metric_name, (values, gauge) in expectations.items():
+        total = sum(values)
+        expectation = {
+            "count": len(values),
+            "sum": total,
+            "avg": total / len(values),
+            "min": min(values),
+            "max": max(values),
+        }
+        entry = _by_labels(snapshot[metric_name], labels=target_labels)
+        for key, value in expectation.items():
+            assert entry[key] == pytest.approx(value)
+            assert metrics[(f"{metric_name}_{key}", label_tuple)] == pytest.approx(value)
+        assert metrics[(gauge, label_tuple)] == pytest.approx(expectation["avg"])
