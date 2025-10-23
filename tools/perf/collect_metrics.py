@@ -16,10 +16,16 @@ METRIC_KEYS: tuple[str, ...] = (
     "task_seed_cycle_time_minutes",
     "birdseye_refresh_delay_minutes",
     "review_latency",
+    "compress_ratio",
+    "semantic_retention",
+    "reopen_rate",
+    "spec_completeness",
 )
 
 PERCENTAGE_KEYS: tuple[str, ...] = (
     "checklist_compliance_rate",
+    "reopen_rate",
+    "spec_completeness",
 )
 
 _METRIC_SOURCE_PREFERENCES: Mapping[str, tuple[str, ...]] = {
@@ -32,6 +38,20 @@ _METRIC_SOURCE_PREFERENCES: Mapping[str, tuple[str, ...]] = {
         "trim_semantic_retention_avg",
         "trim_semantic_retention",
         "semantic_retention",
+    ),
+    "reopen_rate": (
+        "workflow_reopen_rate_avg",
+        "workflow_reopen_rate",
+        "docops_reopen_rate",
+        "reopen_rate",
+    ),
+    "spec_completeness": (
+        "workflow_spec_completeness_ratio_avg",
+        "workflow_spec_completeness_avg",
+        "workflow_spec_completeness_ratio",
+        "workflow_spec_completeness",
+        "spec_completeness_ratio",
+        "spec_completeness",
     ),
 }
 
@@ -161,6 +181,38 @@ def _capture_compliance(
             target["checklist_compliance_rate"] = ratio
 
 
+def _capture_ratio_metric(
+    source: Mapping[str, object],
+    target: MutableMapping[str, float],
+    metric_key: str,
+    numerator_keys: Sequence[str],
+    denominator_keys: Sequence[str],
+    *,
+    overwrite: bool = False,
+) -> None:
+    if not overwrite and metric_key in target:
+        return
+    raw = source.get(metric_key)
+    if not isinstance(raw, Mapping):
+        return
+    numerator = None
+    denominator = None
+    for candidate in numerator_keys:
+        numerator = _coerce_float(raw.get(candidate))
+        if numerator is not None:
+            break
+    for candidate in denominator_keys:
+        denominator = _coerce_float(raw.get(candidate))
+        if denominator is not None and denominator != 0:
+            break
+    if numerator is not None and denominator is not None and denominator != 0:
+        target[metric_key] = numerator / denominator
+        return
+    ratio = _coerce_float(raw.get("ratio"))
+    if ratio is not None:
+        target[metric_key] = ratio
+
+
 def _derive_review_latency(raw: Mapping[str, float]) -> float | None:
     direct = raw.get("review_latency")
     if direct is not None:
@@ -168,6 +220,45 @@ def _derive_review_latency(raw: Mapping[str, float]) -> float | None:
     # Prefer the workflow_review_* prefixed aggregates; keep legacy_* as a
     # compatibility fallback so existing exporters continue to work.
     return _derive_average(raw, _REVIEW_LATENCY_AGGREGATE_PREFIXES)
+
+
+def _derive_ratio_by_suffixes(
+    raw: Mapping[str, float],
+    numerator_suffixes: Sequence[str],
+    denominator_suffixes: Sequence[str],
+) -> float | None:
+    for numerator_suffix in numerator_suffixes:
+        for name, value in raw.items():
+            if not name.endswith(numerator_suffix):
+                continue
+            base = name[: -len(numerator_suffix)]
+            numerator = value
+            for suffix in denominator_suffixes:
+                denominator_key = f"{base}{suffix}"
+                denominator = raw.get(denominator_key)
+                if denominator in (None, 0.0):
+                    continue
+                return numerator / denominator
+    return None
+
+
+def _derive_ratio_metric(
+    raw: Mapping[str, float],
+    metric_key: str,
+    *,
+    numerator_suffixes: Sequence[str],
+    denominator_suffixes: Sequence[str],
+    prefixes: Sequence[tuple[str, float]] = (),
+) -> float | None:
+    direct = raw.get(metric_key)
+    if direct is not None:
+        return direct
+    ratio = _derive_ratio_by_suffixes(raw, numerator_suffixes, denominator_suffixes)
+    if ratio is not None:
+        return ratio
+    if prefixes:
+        return _derive_average(raw, prefixes)
+    return None
 
 
 def _derive_checklist_compliance(raw: Mapping[str, float]) -> float | None:
@@ -191,6 +282,13 @@ def _derive_checklist_compliance(raw: Mapping[str, float]) -> float | None:
                 if denominator in (None, 0.0):
                     continue
                 return numerator / denominator
+    ratio = _derive_ratio_by_suffixes(
+        raw,
+        ("_compliant",),
+        ("_total", "_count", "_all"),
+    )
+    if ratio is not None:
+        return ratio
     return None
 
 
@@ -275,6 +373,19 @@ def _parse_prometheus(text: str) -> dict[str, float]:
     ):
         metrics["birdseye_refresh_delay_minutes"] = birdseye_delay
 
+    for metric_key, (numerator_suffixes, denominator_suffixes, prefixes) in _RATIO_PROMETHEUS_CONFIG.items():
+        if metric_key in metrics:
+            continue
+        derived = _derive_ratio_metric(
+            raw,
+            metric_key,
+            numerator_suffixes=numerator_suffixes,
+            denominator_suffixes=denominator_suffixes,
+            prefixes=prefixes,
+        )
+        if derived is not None:
+            metrics[metric_key] = derived
+
     return metrics
 
 
@@ -302,11 +413,15 @@ def _load_structured_log(path: Path) -> Mapping[str, float]:
             _capture(parsed, metrics)
             _capture_review_latency(parsed, metrics, overwrite=True)
             _capture_compliance(parsed, metrics, overwrite=True)
+            for metric_key, (numerator_keys, denominator_keys) in _RATIO_CAPTURE_CONFIG.items():
+                _capture_ratio_metric(parsed, metrics, metric_key, numerator_keys, denominator_keys, overwrite=True)
             nested = parsed.get("metrics")
             if isinstance(nested, Mapping):
                 _capture(nested, metrics)
                 _capture_review_latency(nested, metrics, overwrite=True)
                 _capture_compliance(nested, metrics, overwrite=True)
+                for metric_key, (numerator_keys, denominator_keys) in _RATIO_CAPTURE_CONFIG.items():
+                    _capture_ratio_metric(nested, metrics, metric_key, numerator_keys, denominator_keys, overwrite=True)
     return metrics
 
 
@@ -318,6 +433,10 @@ def _merge(sources: Iterable[Mapping[str, float]]) -> dict[str, float]:
             combined["checklist_compliance_rate"] = mapping["checklist_compliance_rate"]
         if "review_latency" in mapping:
             combined["review_latency"] = mapping["review_latency"]
+        if "reopen_rate" in mapping:
+            combined["reopen_rate"] = mapping["reopen_rate"]
+        if "spec_completeness" in mapping:
+            combined["spec_completeness"] = mapping["spec_completeness"]
     missing = [key for key in METRIC_KEYS if key not in combined]
     if missing:
         raise MetricsCollectionError("Missing metrics: " + ", ".join(missing))
