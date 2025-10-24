@@ -34,6 +34,7 @@ next_review_due: 2025-11-21
     出力先を変更したい場合は `--output <JSON パス>` を追加指定する。
     `semantic_retention` を取得するには `tools/perf/context_trimmer.trim_messages` へ
     `semantic_options`（例: `{"embedder": <callable>}`）を渡せるよう、Chainlit 側で埋め込み関数を設定しておく。
+    指標と検証手順の詳細は [docs/addenda/D_Context_Trimming.md](docs/addenda/D_Context_Trimming.md) を参照する。
     埋め込み関数はテキストを `Sequence[float]` へ変換できる必要があり、トリミング後の意味保持率は
     このベクトル間のコサイン類似度として集計される。
     `--metrics-url` または `--log-path` のどちらか片方しか利用できない場合は、利用可能な入力のみ指定する。
