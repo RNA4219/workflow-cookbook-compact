@@ -15,6 +15,7 @@ next_review_due: 2025-11-14
 - テストを先行させ、[docs/ROADMAP_AND_SPECS.md](docs/ROADMAP_AND_SPECS.md) で定義された TDD フロー（`EVALUATION.md#test-outline` 参照）を完了
 - 例外や設定変更は [docs/security/Security_Review_Checklist.md](docs/security/Security_Review_Checklist.md) の該当フェーズで可否を確認
 - Runbook 連携が必要な作業は [`RUNBOOK.md`](RUNBOOK.md) へ手順差分を反映し、参照リンクを Task Seed に追記
+- コンテキストトリミングを変更・追加する場合は [docs/addenda/D_Context_Trimming.md](docs/addenda/D_Context_Trimming.md) と [docs/addenda/I_Test_Cases.md#i-04-コンテキストトリミング検証](docs/addenda/I_Test_Cases.md#i-04-コンテキストトリミング検証) に沿って検証ログと指標を同期
 
 ## Pull Request / Review
 
