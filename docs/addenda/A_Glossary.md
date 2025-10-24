@@ -3,6 +3,7 @@
 | 用語 | 定義 | 関連資料 |
 | :--- | :--- | :--- |
 | Intent | ガバナンス下で作業を管理するための識別子。`INT-xxx` 形式で発行し、PR/Issue/タスクに紐づけて承認履歴を追跡する。 | [`POLICY.md`](../../POLICY.md), [`README.md`](../../README.md) |
+| <a id="priority-score"></a>Priority Score | Intent や PR を triage する際の優先度指標。`governance/prioritization.yaml` の重み付けから算出し、承認・レビューの順番を揃える。 | [`POLICY.md`](../../POLICY.md), [`governance/prioritization.yaml`](../../governance/prioritization.yaml) |
 | Task Seed | `TASK.codex.md` テンプレートに基づき作成する作業ドラフト。Objective・Scope・Requirements を揃えてタスク化の起点とする。 | [`docs/TASKS.md`](../TASKS.md), [`TASK.codex.md`](../../TASK.codex.md) |
 | Birdseye | `docs/birdseye/` 配下のインデックス/カプセルから成る依存グラフ。ノードIDと `deps_out` を基に、作業範囲±2 hop の影響を可視化する。 | [`docs/BIRDSEYE.md`](../BIRDSEYE.md), [`tools/codemap/README.md`](../../tools/codemap/README.md) |
 | チェックリスト | リリースやレビュー時に必須項目の抜け漏れを防ぐための項目集。`CHECKLISTS.md` や各種テンプレートで段階別に定義する。 | [`CHECKLISTS.md`](../../CHECKLISTS.md), [`docs/Release_Checklist.md`](../Release_Checklist.md) |
