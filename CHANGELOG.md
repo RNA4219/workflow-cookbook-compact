@@ -19,6 +19,7 @@ next_review_due: 2025-11-14
 - 0011: `docs/Release_Checklist.md` に上流同期確認のチェック項目を追加し、`docs/UPSTREAM*.md` とのリンクを明示
 - 0012: `EVALUATION.md` の KPI 定義を `governance/metrics.yaml` と同期し、`RUNBOOK.md#Observability` と相互参照するリンクを追加
 - 0013: `EVALUATION.md` の KPI を目的・収集方法・目標値付きの表形式へ整理し、`RUNBOOK.md#Observability` の手順と整合させた
+- 0014: `docs/security/SAC.md` の対象範囲を運用UIカテゴリへ一般化し、特定UI名称への依存を排除
 
 ## 0.1.0 - 2025-10-13
 
