@@ -17,58 +17,18 @@ next_review_due: 2025-11-14
 
 ## KPIs
 
-- checklist_compliance_rate
-  - 目的: ドキュメント出荷時に必須チェックリストへ準拠できた割合を可視化し、ヒューマンエラーの早期検知につなげる。
-  - 収集方法:
-    - 以下のコマンドを実行して `.ga/qa-metrics.json` を生成する。
+| 指標 | 目的 | 収集方法 | 目標値 |
+| --- | --- | --- | --- |
+| `checklist_compliance_rate` | ドキュメント出荷時に必須チェックリストへ準拠できた割合を可視化し、ヒューマンエラーの早期検知につなげる。 | `python -m tools.perf.collect_metrics --suite qa --metrics-url <Prometheus URL> --log-path <Chainlit ログ>` で `.ga/qa-metrics.json` を生成し、`checklist_compliance_rate` を参照する。必要に応じて構成管理ログ（例: `docs/logs/docops.log`）で完了数と対象総数を突合する。詳細は [RUNBOOK.md#Observability](RUNBOOK.md#observability)。 | 週次平均で 0.95 以上。 |
+| `task_seed_cycle_time_minutes` | Task Seed の受付から初回処理完了までの所要時間を把握し、着手遅延を抑制する。 | `.ga/qa-metrics.json` に正規化される `task_seed_cycle_time_*` 系イベントを参照する（収集 CLI は [RUNBOOK.md#Observability](RUNBOOK.md#observability) に準拠）。 | 1440 分（24 時間）以下を維持。 |
+| `birdseye_refresh_delay_minutes` | Birdseye ダッシュボードの更新遅延を監視し、情報可視化の鮮度を保証する。 | Prometheus の `birdseye_refresh_delay_*` 系メトリクスを CLI が平均化し `.ga/qa-metrics.json` に書き出す。必要に応じてジョブ監視ログで遅延の有無を確認する。 | 60 分以下を維持。 |
+| `review_latency` | レビュー待機時間を定量化し、ボトルネックを可視化する。 | Prometheus の `workflow_review_latency_*` / `legacy_review_latency_*` を CLI が正規化した値を `.ga/qa-metrics.json` から取得する。詳細は [RUNBOOK.md#Observability](RUNBOOK.md#observability)。 | 12 時間以下を維持。 |
+| `compress_ratio` | トリミング後コンテキストの圧縮率を測定し、情報損失を防ぐ。 | `tools.perf.metrics_registry.MetricsRegistry.observe_trim` を通じてエクスポートし、収集 CLI が `.ga/qa-metrics.json` に書き出した値を確認する。 | 0.60 以下を維持し、過剰圧縮を回避。 |
+| `semantic_retention` | コンテキストトリミング後に保持された意味情報の割合を監視し、質の劣化を検知する。 | Chainlit などの埋め込みログまたは `StructuredLogger` 経由の `semantic_retention` を CLI が統合し `.ga/qa-metrics.json` へ出力する。手順は [RUNBOOK.md#Observability](RUNBOOK.md#observability) を参照。 | 0.85 以上を維持。 |
+| `reopen_rate` | 再オープン率を追跡し、運用完了後の手戻りを抑制する。 | Prometheus の `workflow_reopen_rate_*` → `docops_reopen_rate` → `reopen_rate` を収集 CLI が正規化し `.ga/qa-metrics.json` に出力する。 | 5% 以下を維持。 |
+| `spec_completeness` | スペック充足率を定量化し、要求事項の欠落を防ぐ。 | Prometheus の `workflow_spec_completeness_*` と Chainlit ログの `spec_completeness_*` を CLI が統合し `.ga/qa-metrics.json` で欠損や乖離を確認する。 | 90% 以上を維持。 |
 
-      ```bash
-      python -m tools.perf.collect_metrics --suite qa --metrics-url <Prometheus URL> --log-path <Chainlit ログ>
-      ```
-
-    - `checklist_compliance_rate` を JSON から取得し、必要に応じて構成管理ログ（`docs/logs/docops.log` など）で完了数と対象総数を突合する。
-  - 目標値: 0.95 以上を週次で維持。
-- task_seed_cycle_time_minutes
-  - 目的: Task Seed の受付から初回処理完了までの所要時間を把握し、着手遅延を抑制する。
-  - 収集方法:
-    - 構造化ログ内の `task_seed_cycle_time_*` 系イベントを `tools.perf.collect_metrics` が正規化する値として `.ga/qa-metrics.json` から取得する。
-  - 目標値: 1440 分（24 時間）以下を維持。
-- birdseye_refresh_delay_minutes
-  - 目的: Birdseye ダッシュボードの更新遅延を監視し、情報可視化の鮮度を保証する。
-  - 収集方法:
-    - Prometheus の `birdseye_refresh_delay_*` 系メトリクスまたはジョブ監視ログを `tools.perf.collect_metrics` で平均化した値を採用する。
-  - 目標値: 60 分以下を維持。
-- review_latency
-  - 目的: レビュー待機時間を定量化し、レビューのボトルネックを可視化する。
-  - 収集方法:
-    - Prometheus の `workflow_review_latency_*` および `legacy_review_latency_*` を `tools.perf.collect_metrics` が正規化する。
-    - 正規化後の値を `.ga/qa-metrics.json` から取得する。
-  - 目標値: 12 時間以下を維持。
-- compress_ratio
-  - 目的: トリミング後コンテキストの圧縮率を測定し、コンテキスト削減による情報損失を防ぐ。
-  - 収集方法:
-    - `tools.perf.metrics_registry.MetricsRegistry.observe_trim` から `compress_ratio` をエクスポートする。
-    - エクスポート済みの値を `tools.perf.collect_metrics` で収集する。
-  - 目標値: 0.60 以下に抑え、過剰圧縮を避ける。
-- semantic_retention
-  - 目的: コンテキストトリミング後に保持された意味情報の割合を監視し、質の劣化を検知する。
-  - 収集方法:
-    - Chainlit の埋め込みログまたは `StructuredLogger` が出力する `semantic_retention` を取り込む。
-    - 取り込んだ値を `tools.perf.collect_metrics` で統合し、`.ga/qa-metrics.json` から取得する。
-  - 目標値: 0.85 以上を維持。
-- reopen_rate
-  - 目的: 再オープン率を追跡し、運用完了後の手戻りを抑制する。
-  - 収集方法:
-    - Prometheus の `workflow_reopen_rate_*` から `docops_reopen_rate` を経て正規化された値を `tools.perf.collect_metrics` で取得する。
-  - 目標値: 5% 以下を維持。
-- spec_completeness
-  - 目的: スペック充足率を定量化し、要求事項の欠落を防ぐ。
-  - 収集方法:
-    - Prometheus の `workflow_spec_completeness_*` を参照し、`tools.perf.collect_metrics` が正規化した値を取得する。
-    - Chainlit ログの `spec_completeness_*` を取り込み、`.ga/qa-metrics.json` で欠損や乖離がないか確認する。
-  - 目標値: 90% 以上を維持。
-
-> KPI の収集手順は [`RUNBOOK.md#Observability`](RUNBOOK.md#observability) と同期し、CLI やログ出力の設定に差異がないことを確認する。
+> KPI の収集手順と CLI オプションは常に [`RUNBOOK.md#Observability`](RUNBOOK.md#observability) と同期し、差異があれば双方を更新する。
 
 ## Test Outline
 
