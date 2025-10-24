@@ -1,6 +1,6 @@
 # Security Architecture Contract (SAC) v0.1
 
-対象: 全リポジトリ／エージェント実装／運用UIカテゴリ（運用・監視向けWeb UI 全般）
+対象: 全リポジトリ／エージェント実装／運用系Web UIカテゴリ（例: 運用・監視向けWeb UI 全般）
 
 ## 原則
 
