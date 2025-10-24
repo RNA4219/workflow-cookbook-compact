@@ -13,7 +13,7 @@
 | インシデントログ | 重大事象の発生・影響・再発防止を記録する文書。Task Seed や Birdseye ノードと相互リンクし、再発テストの設計根拠を提供する。 | [`docs/IN-20250115-001.md`](../IN-20250115-001.md), [`docs/INCIDENT_TEMPLATE.md`](../INCIDENT_TEMPLATE.md) |
 | Evaluation | 受入基準と品質指標を列挙した基準書。Intent/Task Seed の完了判定やリリース前検証の最低条件を定義する。 | [`EVALUATION.md`](../../EVALUATION.md) |
 
-### Priority Score
+## Priority Score
 
 上表の Priority Score 行と同一内容を指し示す内部リンク用のアンカー。
 
