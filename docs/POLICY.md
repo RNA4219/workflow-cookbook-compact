@@ -18,15 +18,15 @@
 ## 3. 正規表現
 
 - Intent 検証: `Intent\s*[：:]\s*INT-[0-9A-Z]+(?:-[0-9A-Z]+)*`
-- Priority スコア: `Priority\s*Score\s*:\s*[0-9]+`
+- [`Priority Score`](addenda/A_Glossary.md#priority-score): `Priority\s*Score\s*:\s*[0-9]+`
 - INT Logs の日付行: `^\s*-\s*[0-9]{4}-[0-9]{2}-[0-9]{2}:`
 - すべてのパターンは `tools/ci/check_governance_gate.py` の検証ロジックと同期させ、変更時は双方を同時更新する。
 
 ## 4. 運用ルール
 
 1. すべての PR は `.github/pull_request_template.md` の Intent Metadata テーブルを埋める。
-   `Intent: INT-xxx` と EVALUATION アンカー、Priority Score を明示する。
+   `Intent: INT-xxx` と EVALUATION アンカー、[`Priority Score`](addenda/A_Glossary.md#priority-score) を明示する。
 2. `INT Logs` セクションでは Intent の承認・変更履歴を時系列で記録し、日付・概要・関係者を箇条書きで残す。
 3. Intent 番号は `governance/policy.yaml` の禁止パスに抵触しない作業のみ紐づけ、逸脱する場合は事前に承認を得る。
-4. Priority Score の算定根拠は `governance/prioritization.yaml` を参照し、該当セクションをコメントで示す。
+4. [`Priority Score`](addenda/A_Glossary.md#priority-score) の算定根拠は `governance/prioritization.yaml` を参照し、該当セクションをコメントで示す。
 5. テンプレートや検証ロジックを変更する場合は、本ドキュメントを更新し、関連する CI テスト（`test_pr_template_contains_required_sections`）を緑の状態で維持する。

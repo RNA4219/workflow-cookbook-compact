@@ -230,8 +230,8 @@ files copied from this repo into other projects remain Apache-2.0 and require re
 - `EVALUATION` 見出し（例:
   `[Acceptance Criteria](EVALUATION.md#acceptance-criteria)`）へのリンクを本文に
   明示すること。
-- 可能であれば `Priority Score: number` を追記し、`prioritization.yaml` の
-  値を参照する。
+- 可能であれば [`Priority Score`](docs/addenda/A_Glossary.md#priority-score):
+  `<number>` を追記し、`governance/prioritization.yaml` の重み付けを参照する。
 - ローカルでゲートを確認する場合は `PR_BODY` に PR 本文を渡してから
   `python tools/ci/check_governance_gate.py` を実行する。
 
