@@ -92,8 +92,9 @@ next_review_due: 2025-11-14
 - `.github/workflows/release-drafter.yml`: Release Drafter の CI 設定
 - `docs/UPSTREAM.md`: Workflow Cookbook 派生リポからの知見取り込み手順と評価基準
 - `docs/UPSTREAM_WEEKLY_LOG.md`: Upstream 差分確認の週次ログテンプレート
+- `docs/addenda/A_Glossary.md`: 用語定義を参照するための補足資料
 
-更新日: 2025-10-13
+更新日: 2025-10-24
 
 ## 3. 自動タスク分割フロー
 
