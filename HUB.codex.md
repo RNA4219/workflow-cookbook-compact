@@ -95,6 +95,7 @@ next_review_due: 2025-11-14
 - `docs/addenda/A_Glossary.md`: 用語定義を参照するための補足資料
 - `docs/addenda/D_Context_Trimming.md`: コンテキストトリミング指標・検証フローの詳細ガイド
 - `docs/addenda/G_Security_Privacy.md`: SAC 原則に準拠したキー管理・ログマスキング等の運用ディテールを参照
+- `datasets/README.md`: データセット取得履歴とハッシュを管理。データ保持レビュー時は本表で収集状況を確認
 
 更新日: 2025-10-24
 
