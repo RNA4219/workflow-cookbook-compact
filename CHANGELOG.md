@@ -24,7 +24,8 @@ next_review_due: 2025-11-14
 - 0016: `RUNBOOK.md` に外部通信承認フローを追加し、`docs/addenda/G_Security_Privacy.md` の参照内容を同期
 - 0017: `datasets/README.md` を新設し、データ保持レビューで参照するデータセット管理手順を整備
 - 0018: セキュリティゲート CI（`.github/workflows/security.yml`）を追加し、SAST/Secrets/依存/Container 検証を直列実行で整備
-- 0019: `docs/addenda/G_Security_Privacy.md` のセキュリティゲート参照を [`.github/workflows/security.yml`](../../.github/workflows/security.yml) へ更新
+- 0019: `docs/addenda/G_Security_Privacy.md` のセキュリティゲート参照を
+  [`.github/workflows/security.yml`](../../.github/workflows/security.yml) へ更新
 
 ## 0.1.0 - 2025-10-13
 
