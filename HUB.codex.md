@@ -94,6 +94,7 @@ next_review_due: 2025-11-14
 - `docs/UPSTREAM_WEEKLY_LOG.md`: Upstream 差分確認の週次ログテンプレート
 - `docs/addenda/A_Glossary.md`: 用語定義を参照するための補足資料
 - `docs/addenda/D_Context_Trimming.md`: コンテキストトリミング指標・検証フローの詳細ガイド
+- `docs/addenda/G_Security_Privacy.md`: SAC 原則に準拠したキー管理・ログマスキング等の運用ディテールを参照
 
 更新日: 2025-10-24
 
