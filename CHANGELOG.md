@@ -26,6 +26,7 @@ next_review_due: 2025-11-14
 - 0018: セキュリティゲート CI（`.github/workflows/security.yml`）を追加し、SAST/Secrets/依存/Container 検証を直列実行で整備
 - 0019: `docs/addenda/G_Security_Privacy.md` のセキュリティゲート参照を
   [`.github/workflows/security.yml`](../../.github/workflows/security.yml) へ更新
+- 0020: `docs/addenda/G_Security_Privacy.md` から旧 `ci/security.yml` 参照を排除し、CI 手順のリンクを現行構成へ揃えた
 
 ## 0.1.0 - 2025-10-13
 
