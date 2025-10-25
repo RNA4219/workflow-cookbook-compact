@@ -32,27 +32,36 @@
 ## 3. データ保持と削除
 
 - **原則対応**: SAC-6, SAC-7, SAC-8。
-- 監査ログの保持期間は 180 日。期日を超過したファイルは `python tools/audit/purge_logs.py /var/log/workflow/ --older-than 180`
-  を用いて削除し、削除後は [セキュリティ監査ログ削除レポート](../reports/security-retention.md) に実行結果を記録する。
+- 監査ログの保持期間は 180 日。期日を超過したファイルは
+  `python tools/audit/purge_logs.py /var/log/workflow/ --older-than 180`
+  を用いて削除し、削除後は
+  [セキュリティ監査ログ削除レポート](../reports/security-retention.md)
+  に実行結果を記録する。
 - 学習や検証のためのデータセットはバージョン固定し、`datasets/README.md` にハッシュを記録する。
-  - テンプレート: `データセット名` / `バージョン / タグ` / `取得元 (URL / リポジトリ)` / `ハッシュ値 (SHA256)` の4列を必須とし、取得時点で空欄なく記入する。
+  - テンプレート: `データセット名` / `バージョン / タグ` /
+    `取得元 (URL / リポジトリ)` / `ハッシュ値 (SHA256)` の4列を必須とし、取得時点で空欄なく記入する。
   - `記録テンプレート` と `記入例` を同ファイルに保持し、追加登録時はテンプレート行をコピーして追記する。
-  既知脆弱性が公開された依存バージョンは 24h 以内に差し替える。
+    既知脆弱性が公開された依存バージョンは 24h 以内に差し替える。
 - ユーザ削除リクエスト受領時は 72h 以内に対象データを特定し、削除証跡をチケットへ添付する。
   再生成が必要な場合は匿名化済みスナップショットのみ使用する。
 
 ## 4. 通信制御とツール実行
 
 - **原則対応**: SAC-3, SAC-4, SAC-5, SAC-10。
-- 外部通信は [`network/allowlist.yaml`](../../network/allowlist.yaml) に登録されたドメインへ限定し、`.github/workflows/reusable/security-ci.yml` の差分検証で逸脱を検知する。
-  ホワイトリスト外の通信要求は RUNBOOK の外部通信承認手順（`RUNBOOK.md#outbound-request-approval`）に従い、申請項目・承認者・記録方法を満たした場合のみ許可される。
-- ツール実行リクエストは JSON Schema [`schemas/tool-request.schema.json`](../../schemas/tool-request.schema.json) を通過し、`connect-src` は SAC 付録Aの CSP を最低限とする。
+- 外部通信は [`network/allowlist.yaml`](../../network/allowlist.yaml) に登録されたドメインへ限定し、
+  `.github/workflows/reusable/security-ci.yml` の差分検証で逸脱を検知する。
+  ホワイトリスト外の通信要求は RUNBOOK の外部通信承認手順（`RUNBOOK.md#outbound-request-approval`）に従い、
+  申請項目・承認者・記録方法を満たした場合のみ許可される。
+- ツール実行リクエストは JSON Schema [`schemas/tool-request.schema.json`](../../schemas/tool-request.schema.json) を通過し、
+  `connect-src` は SAC 付録Aの CSP を最低限とする。
   Schema 違反時は失敗ログのみ記録し、リトライは3回まで。検証例:
 
   ```bash
   jq '.' tool-request.json | jsonschema -i - ../../schemas/tool-request.schema.json
   ```
-- CSRF/CORS/CSP ヘッダは [`security_headers/middleware.py`](../../security_headers/middleware.py) を FastAPI/Starlette に適用して強制し、`pytest -m security_headers` の CI ジョブで逸脱を検出する。
+
+- CSRF/CORS/CSP ヘッダは [`security_headers/middleware.py`](../../security_headers/middleware.py) を FastAPI/Starlette に適用して
+  強制し、`pytest -m security_headers` の CI ジョブで逸脱を検出する。
   運用例:
 
   ```python
@@ -68,6 +77,7 @@
       ),
   )
   ```
+
 - リリース前は SAST・Secrets・依存・Container の 4 ゲートを `ci/security.yml` で順次実行し、いずれか失敗時は本番リリースを禁止する。
 
 ## 5. 運用レビュー

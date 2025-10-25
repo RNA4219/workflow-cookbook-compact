@@ -12,4 +12,4 @@
 
 | データセット名 | バージョン / タグ | 取得元 (URL / リポジトリ) | ハッシュ値 (SHA256) |
 | --- | --- | --- | --- |
-| sample-intent-log | v2025.10.14 | https://example.com/datasets/sample-intent-log-v2025.10.14.zip | 7f70a0b1c8b0b5e9e770ddcc936ef4c16a75d6a5a23f25fbe5a2f0c3e8d91b52 |
+| sample-intent-log | v2025.10.14 | [https://example.com/datasets/sample-intent-log-v2025.10.14.zip](https://example.com/datasets/sample-intent-log-v2025.10.14.zip) | 7f70a0b1c8b0b5e9e770ddcc936ef4c16a75d6a5a23f25fbe5a2f0c3e8d91b52 |
