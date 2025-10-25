@@ -38,7 +38,7 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
       - run: pip install bandit
-      - run: bandit -q -r tools security_headers -s B404,B603
+      - run: bandit -q -r tools security_headers tests -s B404,B603
 
   gitleaks:
     name: Gitleaks
@@ -63,7 +63,7 @@ jobs:
           python-version: ${{ inputs.python-version }}
       - run: pip install pip-audit safety
       - run: pip-audit
-      - run: safety check || true
+      - run: safety check
 
   trivy:
     name: Trivy
