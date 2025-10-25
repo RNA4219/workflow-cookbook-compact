@@ -46,6 +46,7 @@ next_review_due: 2025-11-14
 
 - 実装・レビューの完了条件は「Development」「Pull Request / Review」を満たしていることを前提に進行
 - [docs/Release_Checklist.md](docs/Release_Checklist.md) を参照して全体手順を確認
+- `.github/workflows/security.yml` の最新実行結果を確認し、4 ゲートが成功していること
 - 変更点の要約
 - リリースノート（`CHANGELOG.md` など）へ必要最小の項目を追記
 - 未反映の `TASK.*` が残っていないか確認し、成果を `[Unreleased](CHANGELOG.md#unreleased)` へ通番付きで転記済みかチェック
