@@ -42,11 +42,30 @@
 ## 4. 通信制御とツール実行
 
 - **原則対応**: SAC-3, SAC-4, SAC-5, SAC-10。
-- 外部通信は `network/allowlist.yaml` に登録されたドメインへ限定し、CI で差分検証する。
+- 外部通信は [`network/allowlist.yaml`](../../network/allowlist.yaml) に登録されたドメインへ限定し、`.github/workflows/reusable/security-ci.yml` の差分検証で逸脱を検知する。
   ホワイトリスト外の通信要求は RUNBOOK の外部通信承認手順（`RUNBOOK.md#outbound-request-approval`）に従い、申請項目・承認者・記録方法を満たした場合のみ許可される。
-- ツール実行リクエストは JSON Schema `schemas/tool-request.schema.json` を通過し、`connect-src` は SAC 付録Aの CSP を最低限とする。
-  Schema 違反時は失敗ログのみ記録し、リトライは3回まで。
-- CSRF/CORS/CSP ヘッダは `security_headers.middleware` で強制し、`pytest -m security_headers` の CI ジョブで逸脱を検出する。
+- ツール実行リクエストは JSON Schema [`schemas/tool-request.schema.json`](../../schemas/tool-request.schema.json) を通過し、`connect-src` は SAC 付録Aの CSP を最低限とする。
+  Schema 違反時は失敗ログのみ記録し、リトライは3回まで。検証例:
+
+  ```bash
+  jq '.' tool-request.json | jsonschema -i - ../../schemas/tool-request.schema.json
+  ```
+- CSRF/CORS/CSP ヘッダは [`security_headers/middleware.py`](../../security_headers/middleware.py) を FastAPI/Starlette に適用して強制し、`pytest -m security_headers` の CI ジョブで逸脱を検出する。
+  運用例:
+
+  ```python
+  from fastapi import FastAPI
+  from security_headers import SecurityHeadersConfig, SecurityHeadersMiddleware
+
+  app = FastAPI()
+  app.add_middleware(
+      SecurityHeadersMiddleware,
+      config=SecurityHeadersConfig(
+          strict_transport_security="max-age=63072000; includeSubDomains",
+          content_security_policy="default-src 'self'",
+      ),
+  )
+  ```
 - リリース前は SAST・Secrets・依存・Container の 4 ゲートを `ci/security.yml` で順次実行し、いずれか失敗時は本番リリースを禁止する。
 
 ## 5. 運用レビュー
