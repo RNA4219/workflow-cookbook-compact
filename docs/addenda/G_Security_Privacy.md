@@ -66,7 +66,7 @@
       ),
   )
   ```
-- リリース前は SAST・Secrets・依存・Container の 4 ゲートを `ci/security.yml` で順次実行し、いずれか失敗時は本番リリースを禁止する。
+- リリース前は SAST・Secrets・依存・Container の 4 ゲートを `.github/workflows/security.yml` で順次実行し、いずれか失敗時は本番リリースを禁止する。
 
 ## 5. 運用レビュー
 

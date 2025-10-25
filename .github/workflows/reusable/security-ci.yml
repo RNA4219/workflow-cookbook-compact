@@ -30,6 +30,7 @@ jobs:
 
   bandit:
     name: Bandit
+    needs: semgrep
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -39,8 +40,21 @@ jobs:
       - run: pip install bandit
       - run: bandit -q -r src -s B404,B603 || true
 
+  gitleaks:
+    name: Gitleaks
+    needs: bandit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+        with:
+          args: "--no-banner detect -v"
+
   dep_audit:
     name: Dependency Audit
+    needs: gitleaks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -51,19 +65,9 @@ jobs:
       - run: pip-audit
       - run: safety check || true
 
-  gitleaks:
-    name: Gitleaks
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
-        with:
-          args: "--no-banner detect -v"
-
   trivy:
     name: Trivy
+    needs: dep_audit
     if: ${{ hashFiles('Dockerfile') != '' }}
     runs-on: ubuntu-latest
     steps:
