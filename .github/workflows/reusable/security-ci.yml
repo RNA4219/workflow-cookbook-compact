@@ -63,7 +63,7 @@ jobs:
           python-version: ${{ inputs.python-version }}
       - run: pip install pip-audit safety
       - run: pip-audit
-      - run: safety check
+      - run: safety check --exit-code 1
 
   trivy:
     name: Trivy
