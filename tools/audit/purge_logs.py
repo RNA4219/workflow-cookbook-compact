@@ -44,6 +44,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    removed: list[Path] = []
     try:
         removed = purge_expired_logs(args.path, args.older_than)
     except ValueError as exc:
