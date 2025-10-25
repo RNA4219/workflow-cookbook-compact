@@ -21,6 +21,7 @@ next_review_due: 2025-11-14
 - 0013: `EVALUATION.md` の KPI を目的・収集方法・目標値付きの表形式へ整理し、`RUNBOOK.md#Observability` の手順と整合させた
 - 0014: `docs/security/SAC.md` の対象範囲を運用UIカテゴリへ一般化し、特定UI名称への依存を排除
 - 0015: `docs/security/SAC.md` の SAC 対象説明を運用系 Web UI として再定義し、特定製品前提を除去
+- 0016: `RUNBOOK.md` に外部通信承認フローを追加し、`docs/addenda/G_Security_Privacy.md` の参照内容を同期
 
 ## 0.1.0 - 2025-10-13
 
