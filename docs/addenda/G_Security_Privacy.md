@@ -19,13 +19,14 @@
 - LLM 応答は HTML エスケープ後に保存し、外部リンクは `rel="noopener"` を強制する。
   違反レスポンスは `security@workflow-cookbook.example` へ自動通知。
 - ログ署名には HMAC-SHA256 を使用し、日次で鍵をローテーションする。
-  検証スクリプト `tools/audit/verify_log_chain.py` を CI 週次ジョブに組み込み、改ざん検知を実行する。
+  署名検証は `python tools/audit/verify_log_chain.py /var/log/workflow/audit.log --secret $AUDIT_HMAC_KEY --initial-signature $(cat /var/log/workflow/audit.seed)`
+  の形式で実行し、異常検知時は非ゼロ終了コードとともに原因を stderr に出力する。CI 週次ジョブへ組み込み、失敗時はリリースを停止する。
 
 ## 3. データ保持と削除
 
 - **原則対応**: SAC-6, SAC-7, SAC-8。
-- 監査ログの保持期間は 180 日。期日を超過したファイルは `tools/audit/purge_logs.py --older-than 180d` で削除し、
-  削除レポートを `docs/reports/security-retention.md` に追記する。
+- 監査ログの保持期間は 180 日。期日を超過したファイルは `python tools/audit/purge_logs.py /var/log/workflow/ --older-than 180`
+  を用いて削除し、削除後は [セキュリティ監査ログ削除レポート](../reports/security-retention.md) に実行結果を記録する。
 - 学習や検証のためのデータセットはバージョン固定し、`datasets/README.md` にハッシュを記録する。
   既知脆弱性が公開された依存バージョンは 24h 以内に差し替える。
 - ユーザ削除リクエスト受領時は 72h 以内に対象データを特定し、削除証跡をチケットへ添付する。
