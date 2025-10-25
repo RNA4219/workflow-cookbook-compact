@@ -14,4 +14,5 @@ next_review_due: 2025-11-14
 
 ## Architecture Contract
 
-上流の非機能要件やヘッダ、ネットワーク制約は [docs/security/SAC.md](docs/security/SAC.md) を参照してください。運用手順やレビュー頻度は [docs/addenda/G_Security_Privacy.md](docs/addenda/G_Security_Privacy.md) を確認してください。
+上流の非機能要件やヘッダ、ネットワーク制約は [docs/security/SAC.md](docs/security/SAC.md) を参照してください。
+運用手順やレビュー頻度は [docs/addenda/G_Security_Privacy.md](docs/addenda/G_Security_Privacy.md) を確認してください。
