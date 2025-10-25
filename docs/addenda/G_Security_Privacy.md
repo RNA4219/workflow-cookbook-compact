@@ -19,8 +19,15 @@
 - LLM 応答は HTML エスケープ後に保存し、外部リンクは `rel="noopener"` を強制する。
   違反レスポンスは `security@workflow-cookbook.example` へ自動通知。
 - ログ署名には HMAC-SHA256 を使用し、日次で鍵をローテーションする。
-  署名検証は `python tools/audit/verify_log_chain.py /var/log/workflow/audit.log --secret $AUDIT_HMAC_KEY --initial-signature $(cat /var/log/workflow/audit.seed)`
-  の形式で実行し、異常検知時は非ゼロ終了コードとともに原因を stderr に出力する。CI 週次ジョブへ組み込み、失敗時はリリースを停止する。
+  署名検証は以下のコマンドで実行し、異常検知時は非ゼロ終了コードとともに原因を stderr に出力する。
+
+  ```bash
+  python tools/audit/verify_log_chain.py /var/log/workflow/audit.log \
+    --secret "$AUDIT_HMAC_KEY" \
+    --initial-signature "$(cat /var/log/workflow/audit.seed)"
+  ```
+
+  CI 週次ジョブへ組み込み、失敗時はリリースを停止する。
 
 ## 3. データ保持と削除
 
