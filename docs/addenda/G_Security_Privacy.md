@@ -35,7 +35,7 @@
 
 - **原則対応**: SAC-3, SAC-4, SAC-5, SAC-10。
 - 外部通信は `network/allowlist.yaml` に登録されたドメインへ限定し、CI で差分検証する。
-  ホワイトリスト外の通信要求は SRE 承認ワークフロー（`RUNBOOK.md#Outbound-Request-Approval`）を経る。
+  ホワイトリスト外の通信要求は RUNBOOK の外部通信承認手順（`RUNBOOK.md#outbound-request-approval`）に従い、申請項目・承認者・記録方法を満たした場合のみ許可される。
 - ツール実行リクエストは JSON Schema `schemas/tool-request.schema.json` を通過し、`connect-src` は SAC 付録Aの CSP を最低限とする。
   Schema 違反時は失敗ログのみ記録し、リトライは3回まで。
 - CSRF/CORS/CSP ヘッダは `security_headers.middleware` で強制し、`pytest -m security_headers` の CI ジョブで逸脱を検出する。
