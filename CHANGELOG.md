@@ -30,6 +30,10 @@ next_review_due: 2025-11-14
 - 0021: `security-ci.yml` の Bandit 対象を実在する Python ソースへ更新し、検出時に失敗するゲートへ修正
 - 0022: `.github/workflows/reusable/security-ci.yml` の Bandit 監査範囲を `tests` へ拡張し、`safety` ステップの戻り値を尊重
 - 0023: `reusable/security-ci.yml` の Bandit 対象ディレクトリを明示し、Secrets/依存診断の失敗を許容しないよう `safety` ゲートを修正
+- 0024: `.github/workflows/reusable/security-ci.yml` の Safety 検出で GitHub Actions/`act` が失敗することを次の手順で確認
+  1. 脆弱バージョンの依存（例: `pip install 'urllib3==1.25.8'`）を一時的に追加してブランチを作成する
+  2. `act -j dep_audit -W .github/workflows/reusable/security-ci.yml --input python-version=3.11`
+  3. `safety check --exit-code 1` ステップが非ゼロ終了し、ジョブ全体が失敗することを確認する（GitHub Actions 上でも同様）
 
 ## 0.1.0 - 2025-10-13
 
