@@ -26,24 +26,24 @@ next_review_due: 2025-11-21
 - KPI の目的・閾値は [EVALUATION.md#KPIs](EVALUATION.md#kpis) を参照し、収集手順と解釈を同期する。
 - インシデント発生時は docs/IN-YYYYMMDD-XXX.md に記録し、最新サンプル（[IN-20250115-001](docs/IN-20250115-001.md)）を参照して検知し、ログ・メトリクスの抜粋を添付
 - QA メトリクス収集と確認（`tools/perf/` 共通テンプレート準拠）
-  - `python -m tools.perf.collect_metrics --suite qa --metrics-url <Prometheus URL> --log-path <Chainlit ログパス>`
+  - `python -m tools.perf.collect_metrics --suite qa --metrics-url <Prometheus URL> --log-path <StructuredLogger 等の運用ログ>`
     を実行する。`--suite qa` は `.ga/qa-metrics.json` への書き出しを既定とし、Prometheus
     （`workflow_review_latency_*` は `review_latency` に正規化され、旧 `legacy_review_latency_*`
     も互換処理で継続利用可能。`task_seed_cycle_time_*`／`birdseye_refresh_delay_*` も同様に平均化）と
-    Chainlit ログ（`checklist_compliance_rate` の比率計算も含む）から統合メトリクスを取得する。
+    運用ログ（`checklist_compliance_rate` の比率計算も含む）から統合メトリクスを取得する。
     出力先を変更したい場合は `--output <JSON パス>` を追加指定する。
     `semantic_retention` を取得するには `tools/perf/context_trimmer.trim_messages` へ
-    `semantic_options`（例: `{"embedder": <callable>}`）を渡せるよう、Chainlit 側で埋め込み関数を設定しておく。
+    `semantic_options`（例: `{"embedder": <callable>}`）を渡せるよう、ログエミッタ側で埋め込み関数を設定しておく。
     指標と検証手順の詳細は [docs/addenda/D_Context_Trimming.md](docs/addenda/D_Context_Trimming.md) を参照する。
     埋め込み関数はテキストを `Sequence[float]` へ変換できる必要があり、トリミング後の意味保持率は
     このベクトル間のコサイン類似度として集計される。
     `--metrics-url` または `--log-path` のどちらか片方しか利用できない場合は、利用可能な入力のみ指定する。
-  - Chainlit（または同等のUI）からメトリクスを出力する場合は `tools.perf.structured_logger.StructuredLogger`
+  - 対話 UI や運用ツールからメトリクスを出力する場合は `tools.perf.structured_logger.StructuredLogger`
     を利用する。例: `from tools.perf.structured_logger import StructuredLogger` →
-    `StructuredLogger(name="chainlit", path="~/.chainlit/logs/metrics.log")`
+    `StructuredLogger(name="ops-ui", path="~/.logs/ops/metrics.log")`
     `.inference(metrics={"semantic_retention": 0.9})`。
-    こうして生成された JSON ログ行は `collect_metrics --log-path ~/.chainlit/logs/metrics.log` で取り込まれ、
-    `metrics` キー配下の辞書がそのまま Chainlit メトリクスとして集計される。
+    こうして生成された JSON ログ行は `collect_metrics --log-path ~/.logs/ops/metrics.log` で取り込まれ、
+    `metrics` キー配下の辞書がそのまま運用ログ由来メトリクスとして集計される。
   - FastAPI などの Web サービスに組み込む場合は `tools.perf.metrics_registry.MetricsRegistry` を共有シングルトン
     として初期化し、トリミング完了時に `observe_trim` を呼び出す。`compress_ratio=` を直接指定する新 API と、
     既存の `original_tokens=` / `trimmed_tokens=` を渡す後方互換 API のどちらでも動作し、`semantic_retention`
