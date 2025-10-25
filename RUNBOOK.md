@@ -130,7 +130,7 @@ next_review_due: 2025-11-21
 
 ## Outbound Request Approval
 
-- 申請項目: `tickets/outbound-request.md` テンプレートで依頼者・宛先ドメイン/ポート・用途・送信データ分類・想定期間・
+- 申請項目: [`tickets/outbound-request.md`](tickets/outbound-request.md) テンプレートで依頼者・宛先ドメイン/ポート・用途・送信データ分類・想定期間・
   フォールバック手順・再試行上限を記入し、最新の `network/allowlist.yaml` 差分を添付する。
 - 承認者: 当番 SRE（一次）とセキュリティ/プライバシー担当（`docs/addenda/G_Security_Privacy.md#4-通信制御とツール実行`）が双方承認して初めて通信開始可とする。
 - 記録: 承認完了後に `audit/outbound-requests.log` へ記録し、関連チケットへ決裁ログと実行結果リンクを残す。失敗時はインシデントテンプレ（`docs/IN-YYYYMMDD-XXX.md`）へ転記する。

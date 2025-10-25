@@ -50,8 +50,8 @@
 - **原則対応**: SAC-3, SAC-4, SAC-5, SAC-10。
 - 外部通信は [`network/allowlist.yaml`](../../network/allowlist.yaml) に登録されたドメインへ限定し、
   `.github/workflows/reusable/security-ci.yml` の差分検証で逸脱を検知する。
-  ホワイトリスト外の通信要求は RUNBOOK の外部通信承認手順（`RUNBOOK.md#outbound-request-approval`）に従い、
-  申請項目・承認者・記録方法を満たした場合のみ許可される。
+  ホワイトリスト外の通信要求は RUNBOOK の外部通信承認手順（[`RUNBOOK.md#outbound-request-approval`](../../RUNBOOK.md#outbound-request-approval)）に従い、
+  申請テンプレート（[`tickets/outbound-request.md`](../../tickets/outbound-request.md)）で申請項目を記入し、承認者・記録方法を満たした場合のみ許可される。
 - ツール実行リクエストは JSON Schema [`schemas/tool-request.schema.json`](../../schemas/tool-request.schema.json) を通過し、
   `connect-src` は SAC 付録Aの CSP を最低限とする。
   Schema 違反時は失敗ログのみ記録し、リトライは3回まで。検証例:
