@@ -28,7 +28,8 @@ next_review_due: 2025-11-14
   [`.github/workflows/security.yml`](../../.github/workflows/security.yml) へ更新
 - 0020: `docs/addenda/G_Security_Privacy.md` から旧 `ci/security.yml` 参照を排除し、CI 手順のリンクを現行構成へ揃えた
 - 0021: `security-ci.yml` の Bandit 対象を実在する Python ソースへ更新し、検出時に失敗するゲートへ修正
-- 0022: `reusable/security-ci.yml` の Bandit 対象ディレクトリを明示し、Secrets/依存診断の失敗を許容しないよう `safety` ゲートを修正
+- 0022: `.github/workflows/reusable/security-ci.yml` の Bandit 監査範囲を `tests` へ拡張し、`safety` ステップの戻り値を尊重
+- 0023: `reusable/security-ci.yml` の Bandit 対象ディレクトリを明示し、Secrets/依存診断の失敗を許容しないよう `safety` ゲートを修正
 
 ## 0.1.0 - 2025-10-13
 
