@@ -50,7 +50,8 @@
 - **原則対応**: SAC-3, SAC-4, SAC-5, SAC-10。
 - 外部通信は [`network/allowlist.yaml`](../../network/allowlist.yaml) に登録されたドメインへ限定し、
   `.github/workflows/reusable/security-ci.yml` の差分検証で逸脱を検知する。
-  `Allowlist Guard` ジョブが `python -m tools.security.allowlist_guard --base-ref "$BASE_REF"` を実行し、
+  `Allowlist Guard` ジョブの `Validate network allowlist changes` ステップが
+  `python -m tools.security.allowlist_guard --base-ref "$BASE_REF"` を実行し、
   Pull Request 時は `${{ github.base_ref }}` を基準に比較する。未承認のドメイン追加や目的変更が検出された場合、
   ワークフローが失敗してマージを停止する。ローカル検証は `python -m tools.security.allowlist_guard --base-ref origin/main`
   で実施する。
