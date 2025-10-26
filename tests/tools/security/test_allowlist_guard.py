@@ -51,3 +51,44 @@ def test_detects_unapproved_domain_addition() -> None:
     )
 
     assert any("evil.example.com" in message for message in violations)
+
+
+def test_detects_unapproved_deletions() -> None:
+    base_content = (
+        "allowlist:\n"
+        "  - domain: 'kept.example.com'\n"
+        "    purposes:\n"
+        "      - id: 'ci'\n"
+        "  - domain: 'removed.example.com'\n"
+        "    purposes:\n"
+        "      - id: 'deploy'\n"
+    )
+    current_without_domain = (
+        "allowlist:\n"
+        "  - domain: 'kept.example.com'\n"
+        "    purposes:\n"
+        "      - id: 'ci'\n"
+    )
+    domain_violations = detect_violations(
+        base_content=base_content, current_content=current_without_domain
+    )
+    assert any(
+        "removed.example.com" in message and "removed" in message
+        for message in domain_violations
+    )
+
+    current_without_purpose = (
+        "allowlist:\n"
+        "  - domain: 'kept.example.com'\n"
+        "    purposes:\n"
+        "      - id: 'ci'\n"
+        "  - domain: 'removed.example.com'\n"
+        "    purposes:\n"
+    )
+    purpose_violations = detect_violations(
+        base_content=base_content, current_content=current_without_purpose
+    )
+    assert any(
+        "removed.example.com" in message and "purpose 'deploy'" in message
+        for message in purpose_violations
+    )
