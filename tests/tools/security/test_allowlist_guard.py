@@ -1,4 +1,5 @@
 import sys
+import textwrap
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -11,6 +12,19 @@ import pytest
 
 from tools.security import allowlist_guard
 from tools.security.allowlist_guard import detect_violations
+
+
+BASE_ALLOWLIST = textwrap.dedent(
+    """
+    allowlist:
+      - domain: 'kept.example.com'
+        purposes:
+          - id: 'ci'
+      - domain: 'removed.example.com'
+        purposes:
+          - id: 'deploy'
+    """
+)
 
 
 def test_cli_returns_error_on_unapproved_domain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -53,42 +67,63 @@ def test_detects_unapproved_domain_addition() -> None:
     assert any("evil.example.com" in message for message in violations)
 
 
-def test_detects_unapproved_deletions() -> None:
-    base_content = (
-        "allowlist:\n"
-        "  - domain: 'kept.example.com'\n"
-        "    purposes:\n"
-        "      - id: 'ci'\n"
-        "  - domain: 'removed.example.com'\n"
-        "    purposes:\n"
-        "      - id: 'deploy'\n"
-    )
-    current_without_domain = (
-        "allowlist:\n"
-        "  - domain: 'kept.example.com'\n"
-        "    purposes:\n"
-        "      - id: 'ci'\n"
-    )
-    domain_violations = detect_violations(
-        base_content=base_content, current_content=current_without_domain
-    )
-    assert any(
-        "removed.example.com" in message and "removed" in message
-        for message in domain_violations
+@pytest.mark.parametrize(
+    ("current_content", "expected_fragment"),
+    [
+        (
+            textwrap.dedent(
+                """
+                allowlist:
+                  - domain: 'kept.example.com'
+                    purposes:
+                      - id: 'ci'
+                """
+            ),
+            "domain 'removed.example.com' removed without approval",
+        ),
+        (
+            textwrap.dedent(
+                """
+                allowlist:
+                  - domain: 'kept.example.com'
+                    purposes:
+                      - id: 'ci'
+                  - domain: 'removed.example.com'
+                    purposes:
+                """
+            ),
+            "domain 'removed.example.com' purpose 'deploy' removed without approval",
+        ),
+    ],
+)
+def test_detects_unapproved_deletions(current_content: str, expected_fragment: str) -> None:
+    violations = detect_violations(
+        base_content=BASE_ALLOWLIST,
+        current_content=current_content,
     )
 
-    current_without_purpose = (
-        "allowlist:\n"
-        "  - domain: 'kept.example.com'\n"
-        "    purposes:\n"
-        "      - id: 'ci'\n"
-        "  - domain: 'removed.example.com'\n"
-        "    purposes:\n"
+    assert any(expected_fragment in message for message in violations)
+
+
+def test_cli_returns_error_on_removed_domain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    allowlist_path = tmp_path / "allowlist.yaml"
+    current_content = textwrap.dedent(
+        """
+        allowlist:
+          - domain: 'kept.example.com'
+            purposes:
+              - id: 'ci'
+        """
     )
-    purpose_violations = detect_violations(
-        base_content=base_content, current_content=current_without_purpose
+    allowlist_path.write_text(current_content)
+
+    monkeypatch.setattr(allowlist_guard, "_git_show", lambda ref: BASE_ALLOWLIST)
+    monkeypatch.setattr(
+        allowlist_guard,
+        "_parse_args",
+        lambda argv: SimpleNamespace(base_ref="origin/main", allowlist_path=allowlist_path),
     )
-    assert any(
-        "removed.example.com" in message and "purpose 'deploy'" in message
-        for message in purpose_violations
-    )
+
+    exit_code = allowlist_guard.main([])
+
+    assert exit_code == 1

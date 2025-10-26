@@ -169,15 +169,18 @@ def detect_violations(*, base_content: str, current_content: str) -> list[str]:
                 violations.append(
                     f"domain '{domain}' purpose '{identifier}' changed fields: {detail}"
                 )
+
+    for domain, base_entry in base_entries.items():
+        if domain not in current_entries:
+            violations.append(f"domain '{domain}' removed without approval")
+            continue
+        base_purposes = _index_purposes(base_entry)
+        current_purposes = _index_purposes(current_entries[domain])
         for identifier in base_purposes:
             if identifier not in current_purposes:
                 violations.append(
                     f"domain '{domain}' purpose '{identifier}' removed without approval"
                 )
-
-    for domain in base_entries:
-        if domain not in current_entries:
-            violations.append(f"domain '{domain}' removed without approval")
     return violations
 
 
