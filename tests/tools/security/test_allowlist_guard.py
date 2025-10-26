@@ -18,6 +18,7 @@ BASE_ALLOWLIST = textwrap.dedent(
     """
     allowlist:
       - domain: 'kept.example.com'
+        owner: 'SecOps'
         purposes:
           - id: 'ci'
       - domain: 'removed.example.com'
@@ -65,6 +66,34 @@ def test_detects_unapproved_domain_addition() -> None:
     )
 
     assert any("evil.example.com" in message for message in violations)
+
+
+def test_detects_domain_field_changes() -> None:
+    base_content = textwrap.dedent(
+        """
+        allowlist:
+          - domain: 'kept.example.com'
+            owner: 'SecOps'
+            purposes:
+              - id: 'ci'
+        """
+    )
+    current_content = textwrap.dedent(
+        """
+        allowlist:
+          - domain: 'kept.example.com'
+            owner: 'Platform'
+            purposes:
+              - id: 'ci'
+        """
+    )
+
+    violations = detect_violations(
+        base_content=base_content,
+        current_content=current_content,
+    )
+
+    assert violations == ["domain 'kept.example.com' field 'owner' changed"]
 
 
 @pytest.mark.parametrize(

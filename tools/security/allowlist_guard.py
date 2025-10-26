@@ -150,6 +150,14 @@ def detect_violations(*, base_content: str, current_content: str) -> list[str]:
             violations.append(f"domain '{domain}' added without approval")
             continue
         base_entry = base_entries[domain]
+        differing_fields = sorted(
+            key
+            for key in (set(base_entry) | set(entry))
+            if key not in {"domain", "purposes"}
+            if base_entry.get(key) != entry.get(key)
+        )
+        for field in differing_fields:
+            violations.append(f"domain '{domain}' field '{field}' changed")
         base_purposes = _index_purposes(base_entry)
         current_purposes = _index_purposes(entry)
         for identifier, purpose in current_purposes.items():
