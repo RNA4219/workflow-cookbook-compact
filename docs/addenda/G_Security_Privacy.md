@@ -50,6 +50,10 @@
 - **原則対応**: SAC-3, SAC-4, SAC-5, SAC-10。
 - 外部通信は [`network/allowlist.yaml`](../../network/allowlist.yaml) に登録されたドメインへ限定し、
   `.github/workflows/reusable/security-ci.yml` の差分検証で逸脱を検知する。
+  `Allowlist Guard` ジョブが `python -m tools.security.allowlist_guard --base-ref "$BASE_REF"` を実行し、
+  Pull Request 時は `${{ github.base_ref }}` を基準に比較する。未承認のドメイン追加や目的変更が検出された場合、
+  ワークフローが失敗してマージを停止する。ローカル検証は `python -m tools.security.allowlist_guard --base-ref origin/main`
+  で実施する。
   ホワイトリスト外の通信要求は RUNBOOK の外部通信承認手順（[`RUNBOOK.md#outbound-request-approval`](../../RUNBOOK.md#outbound-request-approval)）に従い、
   申請テンプレート（[アウトバウンド通信申請テンプレート](../../tickets/outbound-request.md#申請テンプレート)）で申請項目を記入し、承認者・記録方法を満たした場合のみ許可される。
 - ツール実行リクエストは JSON Schema [`schemas/tool-request.schema.json`](../../schemas/tool-request.schema.json) を通過し、
