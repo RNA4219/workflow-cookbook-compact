@@ -5,9 +5,33 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if (repo_root := str(REPO_ROOT)) not in sys.path:
     sys.path.insert(0, repo_root)
 
+from types import SimpleNamespace
+
+import pytest
+
+from tools.security import allowlist_guard
 from tools.security.allowlist_guard import detect_violations
 
 
+def test_cli_returns_error_on_unapproved_domain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    allowlist_path = tmp_path / "allowlist.yaml"
+    base_content = "allowlist:\n  - domain: 'allowed.example.com'\n"
+    allowlist_path.write_text(
+        base_content
+        + "  - domain: 'evil.example.com'\n"
+        + "    owner: 'Unknown'\n"
+    )
+
+    monkeypatch.setattr(allowlist_guard, "_git_show", lambda ref: base_content)
+    monkeypatch.setattr(
+        allowlist_guard,
+        "_parse_args",
+        lambda argv: SimpleNamespace(base_ref="origin/main", allowlist_path=allowlist_path),
+    )
+
+    exit_code = allowlist_guard.main([])
+
+    assert exit_code == 1
 def test_detects_unapproved_domain_addition() -> None:
     allowlist_path = REPO_ROOT / "network" / "allowlist.yaml"
     base_content = allowlist_path.read_text()
