@@ -65,7 +65,9 @@ def test_detects_unapproved_domain_addition() -> None:
         base_content=base_content, current_content=current_content
     )
 
-    assert any("evil.example.com" in message for message in violations)
+    expected_message = "domain 'evil.example.com' added without approval"
+
+    assert expected_message in violations
 
 
 def test_detects_domain_field_changes() -> None:
