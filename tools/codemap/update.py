@@ -89,7 +89,8 @@ def parse_args(argv: Iterable[str] | None = None) -> UpdateOptions:
             derived = _derive_targets_from_since(args.since)
         except subprocess.CalledProcessError as exc:
             parser.error(f"Failed to resolve git diff for --since: {exc}")
-        target_paths.extend(derived)
+        else:
+            target_paths.extend(derived)
     unique_targets = tuple(dict.fromkeys(target_paths))
     if not unique_targets:
         parser.error("Specify --targets, --since, or both")
