@@ -164,6 +164,3 @@ jobs:
                 await github.rest.issues.create(t);
               }
             }
-          has_req: ${{ steps.detect.outputs.has_req }}
-          has_spec: ${{ steps.detect.outputs.has_spec }}
-          has_des: ${{ steps.detect.outputs.has_des }}
