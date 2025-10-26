@@ -83,7 +83,7 @@ class MetricsRegistry:
         semantic_retention: float | None = None,
         labels: Mapping[str, str] | None = None,
     ) -> None:
-        ...
+        pass
 
     @overload
     def observe_trim(
@@ -94,7 +94,7 @@ class MetricsRegistry:
         semantic_retention: float | None = None,
         labels: Mapping[str, str] | None = None,
     ) -> None:
-        ...
+        pass
 
     def observe_trim(
         self,
