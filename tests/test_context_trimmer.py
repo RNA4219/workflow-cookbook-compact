@@ -8,7 +8,7 @@ from itertools import zip_longest
 from math import sqrt
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Sequence
 
 import pytest
 
@@ -163,3 +163,47 @@ def test_trim_messages_semantic_retention_matches_cosine_similarity() -> None:
 
     expected = max(0.0, min(1.0, expected))
     assert retention == pytest.approx(expected)
+
+
+def test_measure_tokens_reports_totals() -> None:
+    module = _reload_context_trimmer(fake_tiktoken=None)
+
+    counter = module._TokenCounter("test-model")
+    result = module.TokenCounterResult.from_messages(counter, _messages())
+
+    assert isinstance(result.total_tokens, int)
+    assert list(result.per_message_tokens) == [
+        counter.count_message(message) for message in _messages()
+    ]
+    assert result.total_tokens == sum(result.per_message_tokens)
+
+
+def test_select_messages_respects_budget() -> None:
+    module = _reload_context_trimmer(fake_tiktoken=None)
+    counter = module._TokenCounter("test-model")
+    messages = _messages()
+    per_message_tokens = [counter.count_message(message) for message in messages]
+
+    trimmed = module.select_messages(messages, per_message_tokens, max_tokens=per_message_tokens[0] + 1)
+
+    assert trimmed[0]["role"] == "system"
+    assert len(trimmed) == 2
+    assert trimmed[-1]["role"] == "user"
+
+
+def test_compute_semantic_metrics_propagates_retention() -> None:
+    module = _reload_context_trimmer(fake_tiktoken=None)
+
+    def embedder(text: str) -> Sequence[float]:
+        return [float(len(text)) or 1.0]
+
+    original = _messages()
+    trimmed = original[:-1]
+    options, retention = module.compute_semantic_metrics(
+        original,
+        trimmed,
+        {"embedder": embedder},
+    )
+
+    assert options["embedder"] is embedder
+    assert 0.0 <= (retention or 0.0) <= 1.0
