@@ -100,6 +100,26 @@
       "role": "template",
       "caps": "docs/birdseye/caps/docs.INCIDENT_TEMPLATE.md.json",
       "mtime": "00013"
+    },
+    "docs/IMPLEMENTATION-PLAN.md": {
+      "role": "plan",
+      "caps": "docs/birdseye/caps/docs.IMPLEMENTATION-PLAN.md.json",
+      "mtime": "00021"
+    },
+    "docs/AUTOSAVE-DESIGN-IMPL.md": {
+      "role": "design",
+      "caps": "docs/birdseye/caps/docs.AUTOSAVE-DESIGN-IMPL.md.json",
+      "mtime": "00022"
+    },
+    "docs/MERGE-DESIGN-IMPL.md": {
+      "role": "design",
+      "caps": "docs/birdseye/caps/docs.MERGE-DESIGN-IMPL.md.json",
+      "mtime": "00023"
+    },
+    "docs/tasks/task-autosave-project-locks.md": {
+      "role": "task",
+      "caps": "docs/birdseye/caps/docs.tasks.task-autosave-project-locks.md.json",
+      "mtime": "00024"
     }
   },
   "edges": [
@@ -426,6 +446,66 @@
     [
       "governance/prioritization.yaml",
       "TASK.codex.md"
+    ],
+    [
+      "README.md",
+      "docs/IMPLEMENTATION-PLAN.md"
+    ],
+    [
+      "HUB.codex.md",
+      "docs/IMPLEMENTATION-PLAN.md"
+    ],
+    [
+      "docs/IMPLEMENTATION-PLAN.md",
+      "docs/tasks/task-autosave-project-locks.md"
+    ],
+    [
+      "docs/IMPLEMENTATION-PLAN.md",
+      "docs/AUTOSAVE-DESIGN-IMPL.md"
+    ],
+    [
+      "docs/IMPLEMENTATION-PLAN.md",
+      "docs/MERGE-DESIGN-IMPL.md"
+    ],
+    [
+      "docs/tasks/task-autosave-project-locks.md",
+      "docs/AUTOSAVE-DESIGN-IMPL.md"
+    ],
+    [
+      "docs/tasks/task-autosave-project-locks.md",
+      "docs/MERGE-DESIGN-IMPL.md"
+    ],
+    [
+      "docs/tasks/task-autosave-project-locks.md",
+      "docs/TASKS.md"
+    ],
+    [
+      "docs/tasks/task-autosave-project-locks.md",
+      "README.md"
+    ],
+    [
+      "docs/tasks/task-autosave-project-locks.md",
+      "HUB.codex.md"
+    ],
+    [
+      "docs/AUTOSAVE-DESIGN-IMPL.md",
+      "docs/MERGE-DESIGN-IMPL.md"
+    ],
+    [
+      "docs/AUTOSAVE-DESIGN-IMPL.md",
+      "README.md"
+    ],
+    [
+      "docs/AUTOSAVE-DESIGN-IMPL.md",
+      "HUB.codex.md"
+    ],
+    [
+      "docs/MERGE-DESIGN-IMPL.md",
+      "README.md"
+    ],
+    [
+      "docs/MERGE-DESIGN-IMPL.md",
+      "HUB.codex.md"
     ]
   ]
 }
