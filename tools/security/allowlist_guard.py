@@ -140,6 +140,17 @@ def _index_purposes(entry: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return indexed
 
 
+def _domain_field_differences(
+    base_entry: dict[str, Any], current_entry: dict[str, Any]
+) -> list[str]:
+    domain_fields = (set(base_entry) | set(current_entry)) - {"domain", "purposes"}
+    differences: list[str] = []
+    for field in sorted(domain_fields):
+        if base_entry.get(field) != current_entry.get(field):
+            differences.append(field)
+    return differences
+
+
 def detect_violations(*, base_content: str, current_content: str) -> list[str]:
     violations: list[str] = []
     base_entries = {entry["domain"]: entry for entry in _load_allowlist(base_content)}
@@ -150,12 +161,7 @@ def detect_violations(*, base_content: str, current_content: str) -> list[str]:
             violations.append(f"domain '{domain}' added without approval")
             continue
         base_entry = base_entries[domain]
-        differing_fields = sorted(
-            key
-            for key in (set(base_entry) | set(entry))
-            if key not in {"domain", "purposes"}
-            if base_entry.get(key) != entry.get(key)
-        )
+        differing_fields = _domain_field_differences(base_entry, entry)
         for field in differing_fields:
             violations.append(f"domain '{domain}' field '{field}' changed")
         base_purposes = _index_purposes(base_entry)
