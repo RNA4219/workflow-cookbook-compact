@@ -4,29 +4,36 @@
 from __future__ import annotations
 
 import argparse
+import functools
 import json
+import logging
+import os
 import sys
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Iterable, Mapping, MutableMapping, Protocol, Sequence
 
-METRIC_KEYS: tuple[str, ...] = (
-    "checklist_compliance_rate",
-    "task_seed_cycle_time_minutes",
-    "birdseye_refresh_delay_minutes",
-    "review_latency",
-    "compress_ratio",
-    "semantic_retention",
-    "reopen_rate",
-    "spec_completeness",
-)
+try:
+    import yaml
+except ModuleNotFoundError:  # pragma: no cover - fallback for minimal env
+    class _MiniYamlModule:
+        @staticmethod
+        def safe_load(content: str) -> dict[str, str]:
+            result: dict[str, str] = {}
+            for line in content.splitlines():
+                stripped = line.strip()
+                if not stripped or stripped.startswith("#"):
+                    continue
+                key, _, value = stripped.partition(":")
+                result[key.strip()] = value.strip()
+            return result
 
-PERCENTAGE_KEYS: tuple[str, ...] = (
-    "checklist_compliance_rate",
-    "reopen_rate",
-    "spec_completeness",
-)
+    yaml = _MiniYamlModule()  # type: ignore[assignment]
+
+LOGGER = logging.getLogger(__name__)
+_METRICS_PATH_ENV = "GOVERNANCE_METRICS_PATH"
+_DEFAULT_METRICS_PATH = Path(__file__).resolve().parents[2] / "governance/metrics.yaml"
 
 _TRIM_COMPRESS_PREFIXES: Sequence[tuple[str, float]] = (
     ("trim_compress_ratio", 1.0),
@@ -261,6 +268,7 @@ class MetricExtractor:
         self._ordered_keys = tuple(definition.key for definition in definitions)
         self._ordered_definitions = tuple(definitions)
         self._percentage_keys = tuple(percentage_keys)
+        self._key_set = frozenset(self._ordered_keys)
 
     def capture_structured(
         self,
@@ -296,7 +304,17 @@ class MetricExtractor:
 
     def merge(self, sources: Iterable[Mapping[str, float]]) -> dict[str, float]:
         combined: dict[str, float] = {}
+        reported_unexpected: set[str] = set()
         for mapping in sources:
+            unexpected = [
+                key for key in mapping if key not in self._key_set and key not in reported_unexpected
+            ]
+            if unexpected:
+                reported_unexpected.update(unexpected)
+                LOGGER.warning(
+                    "Ignoring metrics not defined in governance/metrics.yaml: %s",
+                    ", ".join(sorted(unexpected)),
+                )
             for key in self._ordered_keys:
                 if key in mapping and key not in combined:
                     combined[key] = mapping[key]
@@ -435,7 +453,7 @@ def _derive_birdseye_refresh_delay_minutes(raw: Mapping[str, float]) -> float | 
     return _derive_average(raw, prefixes)
 
 
-METRIC_DEFINITIONS: tuple[MetricDefinition, ...] = (
+_BASE_METRIC_DEFINITIONS: tuple[MetricDefinition, ...] = (
     MetricDefinition(
         key="checklist_compliance_rate",
         structured_rules=(
@@ -603,6 +621,68 @@ METRIC_DEFINITIONS: tuple[MetricDefinition, ...] = (
     ),
 )
 
+_KNOWN_METRIC_DEFINITIONS: Mapping[str, MetricDefinition] = {
+    definition.key: definition for definition in _BASE_METRIC_DEFINITIONS
+}
+
+
+@dataclass(frozen=True)
+class _MetricConfig:
+    keys: tuple[str, ...]
+    percentage_keys: tuple[str, ...]
+    definitions: tuple[MetricDefinition, ...]
+
+
+@functools.lru_cache(maxsize=1)
+def _load_metric_config() -> _MetricConfig:
+    override = os.environ.get(_METRICS_PATH_ENV)
+    if override:
+        candidate = Path(override)
+        path = candidate if candidate.is_absolute() else (_DEFAULT_METRICS_PATH.parent / candidate)
+    else:
+        path = _DEFAULT_METRICS_PATH
+    try:
+        content = path.read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise MetricsCollectionError(f"Metrics definition file not found: {path}") from exc
+    try:
+        loaded = yaml.safe_load(content)
+    except Exception as exc:  # pragma: no cover - PyYAML specific errors
+        raise MetricsCollectionError(f"Failed to parse metrics definition from {path}: {exc}") from exc
+    if loaded is None:
+        loaded = {}
+    if not isinstance(loaded, Mapping):
+        raise MetricsCollectionError(f"Metrics definition in {path} must be a mapping")
+    keys: list[str] = []
+    percentage_keys: list[str] = []
+    definitions: list[MetricDefinition] = []
+    missing: list[str] = []
+    for raw_key, raw_description in loaded.items():
+        key = str(raw_key)
+        keys.append(key)
+        description = "" if raw_description is None else str(raw_description)
+        if "(%)" in description:
+            percentage_keys.append(key)
+        definition = _KNOWN_METRIC_DEFINITIONS.get(key)
+        if definition is None:
+            missing.append(key)
+        else:
+            definitions.append(definition)
+    if missing:
+        raise MetricsCollectionError(
+            "Missing metric extractor definitions for: " + ", ".join(sorted(missing))
+        )
+    return _MetricConfig(
+        keys=tuple(keys),
+        percentage_keys=tuple(percentage_keys),
+        definitions=tuple(definitions),
+    )
+
+
+_METRIC_CONFIG = _load_metric_config()
+METRIC_KEYS: tuple[str, ...] = _METRIC_CONFIG.keys
+PERCENTAGE_KEYS: tuple[str, ...] = _METRIC_CONFIG.percentage_keys
+METRIC_DEFINITIONS: tuple[MetricDefinition, ...] = _METRIC_CONFIG.definitions
 
 METRICS_EXTRACTOR = MetricExtractor(
     METRIC_DEFINITIONS,
