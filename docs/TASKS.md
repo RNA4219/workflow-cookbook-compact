@@ -38,6 +38,10 @@ next_review_due: YYYY-MM-DD
 ## Local Commands
 - 利用スタックに応じたゲートコマンドを `TASK.codex.md` の雛形から抜粋。
 
+## 3. 登録済み Task Seeds
+
+- [docs/tasks/task-autosave-project-locks.md](tasks/task-autosave-project-locks.md): AutoSave と Merge のロック整合性を段階導入で検証するタスク。
+
 ## Deliverables
 - PR 要約・Intent 明記・必要なドキュメント差分を記載。
 ```
