@@ -640,3 +640,129 @@ def test_parse_args_supports_since_and_limits_scope(tmp_path, monkeypatch):
     assert untouched["deps_out"] == ["stale"]
     assert untouched["deps_in"] == ["old"]
 
+
+def test_group_targets_resolves_caps_paths(tmp_path):
+    root = tmp_path / "docs" / "birdseye"
+    caps_dir = root / "caps"
+    caps_dir.mkdir(parents=True)
+    index_path = root / "index.json"
+    hot_path = root / "hot.json"
+    cap_file = caps_dir / "alpha.json"
+    for path in (index_path, hot_path, cap_file):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("{}", encoding="utf-8")
+
+    grouped = update._group_targets((root, index_path, caps_dir, cap_file))
+
+    assert set(grouped) == {root}
+    assert grouped[root] == [root, index_path, caps_dir, cap_file]
+
+
+def test_resolve_focus_nodes_includes_two_hop_neighbours(tmp_path):
+    root = tmp_path / "docs" / "birdseye"
+    caps_dir = root / "caps"
+    caps_dir.mkdir(parents=True)
+    cap_alpha = caps_dir / "alpha.json"
+    cap_beta = caps_dir / "beta.json"
+    cap_gamma = caps_dir / "gamma.json"
+    cap_delta = caps_dir / "delta.json"
+    cap_paths = {
+        "alpha": cap_alpha,
+        "beta": cap_beta,
+        "gamma": cap_gamma,
+        "delta": cap_delta,
+    }
+    for path in cap_paths.values():
+        path.write_text("{}", encoding="utf-8")
+
+    caps_state = {
+        cap_id: (cap_path, {"id": cap_id}, "{}")
+        for cap_id, cap_path in cap_paths.items()
+    }
+    cap_lookup = {cap_path.resolve(): cap_id for cap_id, cap_path in cap_paths.items()}
+    graph_out = {"alpha": ["beta"], "beta": ["gamma"], "gamma": ["delta"], "delta": []}
+    graph_in = {"beta": ["alpha"], "gamma": ["beta"], "delta": ["gamma"], "alpha": []}
+
+    focus = update._resolve_focus_nodes(
+        (cap_beta,),
+        root,
+        graph_out,
+        graph_in,
+        caps_state,
+        cap_lookup,
+    )
+
+    assert focus == {"alpha", "beta", "gamma", "delta"}
+
+
+def test_refresh_hot_updates_serial_and_preserves_metadata(tmp_path):
+    hot_path = tmp_path / "hot.json"
+    _write_json(
+        hot_path,
+        {
+            "generated_at": "00042",
+            **_HOT_HOTLIST_METADATA,
+            "nodes": list(_HOT_NODES_FIXTURE),
+        },
+    )
+
+    planned: set[Path] = set()
+    performed: set[Path] = set()
+    timestamp = "2025-01-02T00:00:00Z"
+    update._refresh_hot(
+        hot_path,
+        timestamp,
+        dry_run=False,
+        planned=planned,
+        performed=performed,
+        remember_generated=lambda _: None,
+    )
+
+    assert planned == {hot_path}
+    assert performed == {hot_path}
+    refreshed = json.loads(hot_path.read_text(encoding="utf-8"))
+    assert refreshed["generated_at"] == "00043"
+    assert refreshed["index_snapshot"] == _HOT_INDEX_SNAPSHOT
+    assert refreshed["refresh_command"] == _HOT_REFRESH_COMMAND
+    assert refreshed["curation_notes"] == _HOT_CURATION_NOTES
+    for node in refreshed["nodes"]:
+        assert node["refresh_command"] == _HOT_REFRESH_COMMAND
+        assert node["index_snapshot"] == _HOT_INDEX_SNAPSHOT
+        assert node["curation_notes"] == _HOT_CURATION_NOTES
+
+
+def test_refresh_capsule_updates_dependencies_and_serial(tmp_path):
+    cap_path = tmp_path / "caps" / "alpha.json"
+    cap_path.parent.mkdir(parents=True)
+    _write_json(
+        cap_path,
+        _caps_payload(
+            "alpha",
+            deps_out=["stale"],
+            deps_in=["obsolete"],
+        )
+        | {"generated_at": "00010"},
+    )
+    cap_original = cap_path.read_text(encoding="utf-8")
+    caps_state = {"alpha": (cap_path, json.loads(cap_original), cap_original)}
+    planned: set[Path] = set()
+    performed: set[Path] = set()
+
+    update._refresh_capsule(
+        "alpha",
+        caps_state["alpha"],
+        {"alpha": ["beta"]},
+        {"alpha": ["gamma"]},
+        "2025-01-02T00:00:00Z",
+        dry_run=False,
+        planned=planned,
+        performed=performed,
+        remember_generated=lambda _: None,
+    )
+
+    assert planned == {cap_path}
+    assert performed == {cap_path}
+    refreshed = json.loads(cap_path.read_text(encoding="utf-8"))
+    assert refreshed["deps_out"] == ["beta"]
+    assert refreshed["deps_in"] == ["gamma"]
+    assert refreshed["generated_at"] == "00011"
