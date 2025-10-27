@@ -6,12 +6,19 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if (repo_root := str(REPO_ROOT)) not in sys.path:
     sys.path.insert(0, repo_root)
 
+# ruff: noqa: E402
+
 from types import SimpleNamespace
 
 import pytest
 
 from tools.security import allowlist_guard
-from tools.security.allowlist_guard import detect_violations
+from tools.security.allowlist_guard import (
+    AllowlistEntry,
+    Purpose,
+    _load_document_for_testing,
+    detect_violations,
+)
 
 
 BASE_ALLOWLIST = textwrap.dedent(
@@ -26,6 +33,77 @@ BASE_ALLOWLIST = textwrap.dedent(
           - id: 'deploy'
     """
 )
+
+
+def test_data_model_is_consistent_between_yaml_and_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
+    content = textwrap.dedent(
+        """
+        version: 1
+        allowlist:
+          - domain: 'example.com'
+            owner: 'SecOps'
+            purposes:
+              - id: 'ci'
+                runtime: ['ci']
+        """
+    )
+
+    yaml_payload = {
+        "version": 1,
+        "allowlist": [
+            {
+                "domain": "example.com",
+                "owner": "SecOps",
+                "purposes": [
+                    {
+                        "id": "ci",
+                        "runtime": ["ci"],
+                    }
+                ],
+            }
+        ],
+    }
+
+    monkeypatch.setattr(
+        allowlist_guard,
+        "yaml",
+        SimpleNamespace(safe_load=lambda raw: yaml_payload),
+        raising=False,
+    )
+    yaml_document = _load_document_for_testing(content)
+
+    monkeypatch.setattr(allowlist_guard, "yaml", None, raising=False)
+    fallback_document = _load_document_for_testing(content)
+
+    assert yaml_document == fallback_document
+
+
+def test_allowlist_entry_diff_helpers() -> None:
+    entry = AllowlistEntry(
+        domain="example.com",
+        fields=(
+            ("owner", "SecOps"),
+            ("note", "keep"),
+        ),
+        purposes=(
+            Purpose(id="ci", fields=(("runtime", ("ci",)),)),
+        ),
+    )
+    modified = AllowlistEntry(
+        domain="example.com",
+        fields=(("owner", "Platform"),),
+        purposes=(
+            Purpose(id="ci", fields=(("runtime", ("deploy",)),)),
+            Purpose(id="ops", fields=()),
+        ),
+    )
+
+    assert entry.field_differences(modified) == ["note", "owner"]
+    added, removed = entry.compare_purposes(modified)
+
+    assert sorted(added) == ["ops"]
+    assert removed == []
+    assert modified.purposes_by_id()["ci"].fields != entry.purposes_by_id()["ci"].fields
 
 
 def test_cli_returns_error_on_unapproved_domain(
