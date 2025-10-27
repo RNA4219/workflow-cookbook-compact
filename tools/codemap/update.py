@@ -14,7 +14,12 @@ from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any, Callable, Iterable, Mapping, Sequence
+
+
+CapsuleEntry = tuple[Path, dict[str, Any], str]
+CapsuleState = dict[str, CapsuleEntry]
+Graph = dict[str, list[str]]
 
 
 @dataclass(frozen=True)
@@ -166,6 +171,170 @@ def _finalise(paths: set[Path]) -> tuple[Path, ...]:
     return tuple(sorted(paths, key=lambda candidate: candidate.as_posix()))
 
 
+def _group_targets(targets: Iterable[Path]) -> dict[Path, list[Path]]:
+    grouped: dict[Path, list[Path]] = {}
+    for target in targets:
+        root = _resolve_root(target)
+        grouped.setdefault(root, []).append(target)
+    return grouped
+
+
+def _build_graph(index_data: Mapping[str, Any]) -> tuple[Graph, Graph]:
+    raw_nodes = index_data.get("nodes", {})
+    if not isinstance(raw_nodes, Mapping):
+        raw_nodes = {}
+    graph_out: Graph = {node: [] for node in raw_nodes if isinstance(node, str)}
+    graph_in: Graph = {node: [] for node in raw_nodes if isinstance(node, str)}
+    for raw_edge in index_data.get("edges", []):
+        if not isinstance(raw_edge, Sequence) or len(raw_edge) != 2:
+            continue
+        source, destination = raw_edge
+        if not isinstance(source, str) or not isinstance(destination, str):
+            continue
+        graph_out.setdefault(source, []).append(destination)
+        graph_in.setdefault(destination, []).append(source)
+        graph_out.setdefault(destination, graph_out.get(destination, []))
+        graph_in.setdefault(source, graph_in.get(source, []))
+    for values in graph_out.values():
+        values.sort()
+    for values in graph_in.values():
+        values.sort()
+    return graph_out, graph_in
+
+
+def _resolve_focus_nodes(
+    root_targets: Iterable[Path],
+    root: Path,
+    graph_out: Mapping[str, Sequence[str]],
+    graph_in: Mapping[str, Sequence[str]],
+    caps_state: CapsuleState,
+    cap_path_lookup: Mapping[Path, str],
+) -> set[str]:
+    if not caps_state:
+        return set()
+    focus_nodes: set[str] = set()
+    root_resolved = root.resolve()
+    index_resolved = (root / "index.json").resolve()
+    caps_dir_resolved = (root / "caps").resolve()
+    hot_resolved = (root / "hot.json").resolve()
+    special_roots = {root_resolved, index_resolved, caps_dir_resolved, hot_resolved}
+    for candidate in root_targets:
+        resolved = candidate.resolve()
+        if resolved in special_roots:
+            return set(caps_state)
+        cap_id = cap_path_lookup.get(resolved)
+        if cap_id:
+            focus_nodes.add(cap_id)
+    if not focus_nodes:
+        focus_nodes = set(caps_state)
+    seen: set[str] = set()
+    queue: deque[tuple[str, int]] = deque((node, 0) for node in focus_nodes)
+    while queue:
+        node, distance = queue.popleft()
+        if node in seen or distance > 2:
+            continue
+        seen.add(node)
+        if distance == 2:
+            continue
+        for neighbour in graph_out.get(node, ()): 
+            if neighbour not in seen:
+                queue.append((neighbour, distance + 1))
+        for neighbour in graph_in.get(node, ()): 
+            if neighbour not in seen:
+                queue.append((neighbour, distance + 1))
+    return {node for node in seen if node in caps_state}
+
+
+def _refresh_index(
+    index_path: Path,
+    index_data: dict[str, Any],
+    index_original: str,
+    *,
+    timestamp: str,
+    dry_run: bool,
+    planned: set[Path],
+    performed: set[Path],
+    remember_generated: Callable[[str], None],
+) -> None:
+    new_generated = _next_generated_at(index_data.get("generated_at"), timestamp)
+    if index_data.get("generated_at") != new_generated:
+        index_data["generated_at"] = new_generated
+        remember_generated(new_generated)
+    _maybe_write(
+        index_path,
+        index_data,
+        index_original,
+        planned=planned,
+        performed=performed,
+        dry_run=dry_run,
+    )
+
+
+def _refresh_hot(
+    hot_path: Path,
+    timestamp: str,
+    *,
+    dry_run: bool,
+    planned: set[Path],
+    performed: set[Path],
+    remember_generated: Callable[[str], None],
+) -> None:
+    if not hot_path.exists():
+        return
+    hot_data, hot_original = _load_json(hot_path)
+    if not isinstance(hot_data, dict):
+        return
+    new_generated = _next_generated_at(hot_data.get("generated_at"), timestamp)
+    if hot_data.get("generated_at") != new_generated:
+        hot_data["generated_at"] = new_generated
+        remember_generated(new_generated)
+    _maybe_write(
+        hot_path,
+        hot_data,
+        hot_original,
+        planned=planned,
+        performed=performed,
+        dry_run=dry_run,
+    )
+
+
+def _refresh_capsule(
+    cap_id: str,
+    capsule: CapsuleEntry,
+    graph_out: Mapping[str, Sequence[str]],
+    graph_in: Mapping[str, Sequence[str]],
+    timestamp: str,
+    *,
+    dry_run: bool,
+    planned: set[Path],
+    performed: set[Path],
+    remember_generated: Callable[[str], None],
+) -> None:
+    cap_path, cap_data, cap_original = capsule
+    expected_out = _sorted_unique(graph_out.get(cap_id, []))
+    expected_in = _sorted_unique(graph_in.get(cap_id, []))
+    updated = False
+    if cap_data.get("deps_out") != expected_out:
+        cap_data["deps_out"] = expected_out
+        updated = True
+    if cap_data.get("deps_in") != expected_in:
+        cap_data["deps_in"] = expected_in
+        updated = True
+    new_generated = _next_generated_at(cap_data.get("generated_at"), timestamp)
+    if cap_data.get("generated_at") != new_generated:
+        cap_data["generated_at"] = new_generated
+        updated = True
+        remember_generated(new_generated)
+    if updated:
+        _maybe_write(
+            cap_path,
+            cap_data,
+            cap_original,
+            planned=planned,
+            performed=performed,
+            dry_run=dry_run,
+        )
+
 def run_update(options: UpdateOptions) -> UpdateReport:
     emit_index = options.emit in {"index", "index+caps"}
     emit_caps = options.emit in {"caps", "index+caps"}
@@ -179,10 +348,7 @@ def run_update(options: UpdateOptions) -> UpdateReport:
         if applied_generated_at is None:
             applied_generated_at = value
 
-    grouped: dict[Path, list[Path]] = {}
-    for target in options.targets:
-        root = _resolve_root(target)
-        grouped.setdefault(root, []).append(target)
+    grouped = _group_targets(options.targets)
 
     for root, root_targets in grouped.items():
         index_path = root / "index.json"
@@ -194,29 +360,11 @@ def run_update(options: UpdateOptions) -> UpdateReport:
         if emit_caps and not caps_dir.is_dir():
             raise FileNotFoundError(caps_dir)
 
-        index_data, index_original = _load_json(index_path)
-        raw_nodes = index_data.get("nodes", {})
-        if not isinstance(raw_nodes, dict):
-            raw_nodes = {}
-        graph_out: dict[str, list[str]] = {node: [] for node in raw_nodes}
-        graph_in: dict[str, list[str]] = {node: [] for node in raw_nodes}
-        for raw_edge in index_data.get("edges", []):
-            if not isinstance(raw_edge, Sequence) or len(raw_edge) != 2:
-                continue
-            source, destination = raw_edge
-            if not isinstance(source, str) or not isinstance(destination, str):
-                continue
-            graph_out.setdefault(source, []).append(destination)
-            graph_in.setdefault(destination, []).append(source)
-            graph_out.setdefault(destination, graph_out.get(destination, []))
-            graph_in.setdefault(source, graph_in.get(source, []))
+        loaded_index, index_original = _load_json(index_path)
+        index_data = loaded_index if isinstance(loaded_index, dict) else {}
+        graph_out, graph_in = _build_graph(index_data)
 
-        for values in graph_out.values():
-            values.sort()
-        for values in graph_in.values():
-            values.sort()
-
-        caps_state: dict[str, tuple[Path, dict[str, Any], str]] = {}
+        caps_state: CapsuleState = {}
         cap_path_lookup: dict[Path, str] = {}
         if emit_caps:
             for cap_path in sorted(caps_dir.glob("*.json")):
@@ -232,99 +380,46 @@ def run_update(options: UpdateOptions) -> UpdateReport:
                 cap_path_lookup[cap_path.resolve()] = cap_id
 
         if emit_index:
-            new_generated = _next_generated_at(index_data.get("generated_at"), timestamp)
-            if index_data.get("generated_at") != new_generated:
-                index_data["generated_at"] = new_generated
-                remember_generated(new_generated)
-            _maybe_write(
+            _refresh_index(
                 index_path,
                 index_data,
                 index_original,
+                timestamp=timestamp,
+                dry_run=options.dry_run,
                 planned=planned,
                 performed=performed,
+                remember_generated=remember_generated,
+            )
+            _refresh_hot(
+                hot_path,
+                timestamp,
                 dry_run=options.dry_run,
+                planned=planned,
+                performed=performed,
+                remember_generated=remember_generated,
             )
 
-            if hot_path.exists():
-                hot_data, hot_original = _load_json(hot_path)
-                if isinstance(hot_data, dict):
-                    new_hot_generated = _next_generated_at(
-                        hot_data.get("generated_at"), timestamp
-                    )
-                    if hot_data.get("generated_at") != new_hot_generated:
-                        hot_data["generated_at"] = new_hot_generated
-                        remember_generated(new_hot_generated)
-                    _maybe_write(
-                        hot_path,
-                        hot_data,
-                        hot_original,
-                        planned=planned,
-                        performed=performed,
-                        dry_run=options.dry_run,
-                    )
-
         if emit_caps and caps_state:
-            focus_nodes: set[str] = set()
-            root_resolved = root.resolve()
-            index_resolved = (root / "index.json").resolve()
-            caps_dir_resolved = caps_dir.resolve()
-            hot_resolved = (root / "hot.json").resolve()
-            for candidate in root_targets:
-                resolved = candidate.resolve()
-                if resolved in {
-                    root_resolved,
-                    index_resolved,
-                    caps_dir_resolved,
-                    hot_resolved,
-                }:
-                    focus_nodes = set(caps_state)
-                    break
-                cap_id = cap_path_lookup.get(resolved)
-                if cap_id:
-                    focus_nodes.add(cap_id)
-            if not focus_nodes:
-                focus_nodes = set(caps_state)
-            seen: set[str] = set()
-            queue: deque[tuple[str, int]] = deque((node, 0) for node in focus_nodes)
-            while queue:
-                node, distance = queue.popleft()
-                if node in seen or distance > 2:
-                    continue
-                seen.add(node)
-                if distance == 2:
-                    continue
-                for neighbour in graph_out.get(node, []):
-                    if neighbour not in seen:
-                        queue.append((neighbour, distance + 1))
-                for neighbour in graph_in.get(node, []):
-                    if neighbour not in seen:
-                        queue.append((neighbour, distance + 1))
-            nodes_to_refresh = sorted(node for node in seen if node in caps_state)
-            for cap_id in nodes_to_refresh:
-                cap_path, cap_data, cap_original = caps_state[cap_id]
-                expected_out = _sorted_unique(graph_out.get(cap_id, []))
-                expected_in = _sorted_unique(graph_in.get(cap_id, []))
-                updated = False
-                if cap_data.get("deps_out") != expected_out:
-                    cap_data["deps_out"] = expected_out
-                    updated = True
-                if cap_data.get("deps_in") != expected_in:
-                    cap_data["deps_in"] = expected_in
-                    updated = True
-                new_generated = _next_generated_at(cap_data.get("generated_at"), timestamp)
-                if cap_data.get("generated_at") != new_generated:
-                    cap_data["generated_at"] = new_generated
-                    updated = True
-                    remember_generated(new_generated)
-                if updated:
-                    _maybe_write(
-                        cap_path,
-                        cap_data,
-                        cap_original,
-                        planned=planned,
-                        performed=performed,
-                        dry_run=options.dry_run,
-                    )
+            focus_nodes = _resolve_focus_nodes(
+                root_targets,
+                root,
+                graph_out,
+                graph_in,
+                caps_state,
+                cap_path_lookup,
+            )
+            for cap_id in sorted(focus_nodes):
+                _refresh_capsule(
+                    cap_id,
+                    caps_state[cap_id],
+                    graph_out,
+                    graph_in,
+                    timestamp,
+                    dry_run=options.dry_run,
+                    planned=planned,
+                    performed=performed,
+                    remember_generated=remember_generated,
+                )
 
     return UpdateReport(
         generated_at=applied_generated_at or timestamp,
