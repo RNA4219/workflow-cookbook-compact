@@ -253,6 +253,59 @@ def test_structured_log_overrides_prometheus_with_latest_scale(tmp_path: Path) -
     }
 
 
+def test_cli_uses_yaml_scale_annotations(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    metrics_yaml = tmp_path / "metrics.yaml"
+    metrics_yaml.write_text(
+        "\n".join(
+            (
+                "checklist_compliance_rate: チェックリスト準拠率(%)",
+                "task_seed_cycle_time_minutes: Task Seed 処理時間(分)",
+                "birdseye_refresh_delay_minutes: Birdseye 更新遅延(分)",
+                "review_latency: レビュー待機時間(時間)",
+                "compress_ratio: トリミング後のコンテキスト圧縮率(0-1)",
+                "semantic_retention: トリミング後に保持された意味情報の割合(0-1)",
+                "reopen_rate: 再オープン率(0-1)",
+                "spec_completeness: スペック充足率(%)",
+            )
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    prometheus = tmp_path / "metrics.prom"
+    prometheus.write_text(
+        "checklist_compliance_rate 0.96\n"
+        "task_seed_cycle_time_minutes 5.0\n"
+        "birdseye_refresh_delay_minutes 1.0\n"
+        "review_latency 0.5\n"
+        "compress_ratio 0.82\n"
+        "semantic_retention 0.91\n"
+        "workflow_reopen_rate 0.2\n"
+        "workflow_spec_completeness_ratio 0.95\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setenv("GOVERNANCE_METRICS_PATH", str(metrics_yaml))
+
+    result = _run_cli("--metrics-url", prometheus.as_uri())
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert list(payload) == [
+        "checklist_compliance_rate",
+        "task_seed_cycle_time_minutes",
+        "birdseye_refresh_delay_minutes",
+        "review_latency",
+        "compress_ratio",
+        "semantic_retention",
+        "reopen_rate",
+        "spec_completeness",
+    ]
+    assert payload["checklist_compliance_rate"] == pytest.approx(96.0)
+    assert payload["reopen_rate"] == pytest.approx(0.2)
+    assert payload["spec_completeness"] == pytest.approx(95.0)
+
+
 def test_pushgateway_receives_metrics_payload(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text(

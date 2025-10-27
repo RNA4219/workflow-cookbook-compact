@@ -1,5 +1,5 @@
 # 可観測性の指標定義は ADR-021 を参照: docs/ADR/ADR-021-metrics-observability.md
-checklist_compliance_rate: チェックリスト準拠率(0-1)
+checklist_compliance_rate: チェックリスト準拠率(%)
 task_seed_cycle_time_minutes: Task Seed 処理時間(分)
 birdseye_refresh_delay_minutes: Birdseye 更新遅延(分)
 review_latency: レビュー待機時間(時間)
