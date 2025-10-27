@@ -34,6 +34,7 @@ next_review_due: 2025-11-14
   1. 脆弱バージョンの依存（例: `pip install 'urllib3==1.25.8'`）を一時的に追加してブランチを作成する
   2. `act -j dep_audit -W .github/workflows/reusable/security-ci.yml --input python-version=3.11`
   3. `safety check --exit-code 1` ステップが非ゼロ終了し、ジョブ全体が失敗することを確認する（GitHub Actions 上でも同様）
+- 0025: `.github/workflows/labels-sync.yml` の `concurrency` ブロックをガイド記載の配置へ整え、`.github/workflows/security.yml` と同一形式となることを確認
 
 ## 0.1.0 - 2025-10-13
 
