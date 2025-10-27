@@ -9,8 +9,9 @@ import os
 import re
 import subprocess
 import sys
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable, List, Sequence
+from typing import Iterable, Iterator, List, Sequence, TextIO, Tuple
 
 
 def get_changed_paths(refspec: str) -> List[str]:
@@ -140,56 +141,81 @@ def collect_recent_category_hints() -> List[str]:
     return infer_categories_from_paths(changed_paths)
 
 
-def validate_pr_body(body: str | None) -> bool:
+@dataclass
+class ValidationOutcome:
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    _messages: list[Tuple[str, str]] = field(default_factory=list, repr=False)
+
+    @property
+    def is_success(self) -> bool:
+        return not self.errors
+
+    def add_error(self, message: str) -> None:
+        self.errors.append(message)
+        self._messages.append(("error", message))
+
+    def add_warning(self, message: str) -> None:
+        self.warnings.append(message)
+        self._messages.append(("warning", message))
+
+    def iter_messages(self) -> Iterator[Tuple[str, str]]:
+        return iter(self._messages)
+
+    def emit(self, *, stream: TextIO = sys.stderr) -> None:
+        for _, message in self._messages:
+            print(message, file=stream)
+
+
+def collect_validation_outcome(body: str | None) -> ValidationOutcome:
     normalized_body = body or ""
-    success = True
+    outcome = ValidationOutcome()
 
     if not INTENT_PATTERN.search(normalized_body):
-        print("PR body must include 'Intent: INT-xxx'", file=sys.stderr)
-        success = False
+        outcome.add_error("PR body must include 'Intent: INT-xxx'")
     else:
         category_matches = list(INTENT_CATEGORY_PATTERN.findall(normalized_body))
         if category_matches:
             for _, raw_category in category_matches:
                 category = raw_category.upper()
                 if category not in ALLOWED_INTENT_CATEGORIES:
-                    print(
+                    outcome.add_error(
                         f"Intent category '{category}' is not allowed."
-                        f" Allowed categories: {', '.join(sorted(ALLOWED_INTENT_CATEGORIES))}.",
-                        file=sys.stderr,
+                        f" Allowed categories: {', '.join(sorted(ALLOWED_INTENT_CATEGORIES))}."
                     )
-                    success = False
         else:
             base_ids = {match.upper() for match in INTENT_ID_PATTERN.findall(normalized_body)}
             intent_reference = ", ".join(sorted(base_ids)) or "INT-???"
             hints = collect_recent_category_hints()
             if hints:
                 suggestion = ", ".join(hints)
-                print(
+                outcome.add_warning(
                     "No intent category pattern (INT-###-CAT-) detected for"
-                    f" {intent_reference}. Consider categories: {suggestion}.",
-                    file=sys.stderr,
+                    f" {intent_reference}. Consider categories: {suggestion}."
                 )
             else:
-                print(
+                outcome.add_warning(
                     "No intent category pattern (INT-###-CAT-) detected and unable"
-                    " to infer category from recent changes.",
-                    file=sys.stderr,
+                    " to infer category from recent changes."
                 )
 
     has_evaluation_heading = bool(EVALUATION_HEADING_PATTERN.search(normalized_body))
     has_evaluation_anchor = bool(EVALUATION_ANCHOR_PATTERN.search(normalized_body))
     has_evaluation_reference = has_evaluation_heading or has_evaluation_anchor
     if not has_evaluation_reference:
-        print("PR must reference EVALUATION (acceptance) anchor", file=sys.stderr)
-        success = False
+        outcome.add_error("PR must reference EVALUATION (acceptance) anchor")
     if not PRIORITY_PATTERN.search(normalized_body):
-        print(
-            "Consider adding 'Priority Score: <number>' based on prioritization.yaml",
-            file=sys.stderr,
+        outcome.add_warning(
+            "Consider adding 'Priority Score: <number>' based on prioritization.yaml"
         )
 
-    return success
+    return outcome
+
+
+def validate_pr_body(body: str | None) -> bool:
+    outcome = collect_validation_outcome(body)
+    outcome.emit(stream=sys.stderr)
+    return outcome.is_success
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -211,7 +237,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     if body is None:
         return 1
-    if not validate_pr_body(body):
+
+    outcome = collect_validation_outcome(body)
+    outcome.emit(stream=sys.stderr)
+    if not outcome.is_success:
         return 1
 
     return 0

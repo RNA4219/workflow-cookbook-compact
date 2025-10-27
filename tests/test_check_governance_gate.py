@@ -137,6 +137,38 @@ Priority Score: 2
     assert "OPS" in captured.err
 
 
+def test_collect_validation_outcome_matches_cli(monkeypatch, capsys):
+    monkeypatch.setattr(check_governance_gate, "collect_recent_category_hints", lambda: ["OPS"])
+
+    body = """Intent: INT-4242
+"""
+
+    outcome = check_governance_gate.collect_validation_outcome(body)
+    expected_messages = [
+        (
+            "warning",
+            "No intent category pattern (INT-###-CAT-) detected for INT-4242. Consider categories: OPS.",
+        ),
+        ("error", "PR must reference EVALUATION (acceptance) anchor"),
+        (
+            "warning",
+            "Consider adding 'Priority Score: <number>' based on prioritization.yaml",
+        ),
+    ]
+
+    assert list(outcome.iter_messages()) == expected_messages
+    assert outcome.errors == [expected_messages[1][1]]
+    assert outcome.warnings == [expected_messages[0][1], expected_messages[2][1]]
+    assert outcome.is_success is False
+
+    captured = capsys.readouterr()
+    assert captured.err == ""
+
+    assert check_governance_gate.validate_pr_body(body) is False
+    captured = capsys.readouterr()
+    assert captured.err.splitlines() == [message for _, message in expected_messages]
+
+
 def test_pr_template_contains_required_sections():
     template = Path(".github/pull_request_template.md").read_text(encoding="utf-8")
 
