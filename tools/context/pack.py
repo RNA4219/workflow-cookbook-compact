@@ -28,6 +28,38 @@ class GraphEdge(TypedDict, total=False):
 ConfigDict = Dict[str, object]
 
 
+class SectionWhy(TypedDict):
+    intent: float
+    diff: float
+    recency: float
+    hub: float
+    role: float
+    ppr: float
+    score: float
+
+
+class SectionEntry(TypedDict):
+    id: str
+    tok: int
+    filters: List[str]
+    why: SectionWhy
+
+
+class PackMetrics(TypedDict):
+    token_in: int
+    token_src: int
+    dup_rate: float
+    ppr_entropy: float
+    diversity_penalty: float
+
+
+class PackOutput(TypedDict):
+    intent: str
+    budget: str
+    sections: List[SectionEntry]
+    metrics: PackMetrics
+
+
 DEFAULT_CONFIG: ConfigDict = {
     "pagerank": {"lambda": 0.85, "theta": 0.6},
     "weights": {"intent": 0.40, "diff": 0.25, "recency": 0.20, "hub": 0.10, "role": 0.05},
@@ -75,8 +107,8 @@ class CandidateRanking:
 
 @dataclass
 class AssemblyResult:
-    sections: List[Dict[str, object]]
-    metrics: Dict[str, float]
+    sections: List[SectionEntry]
+    metrics: PackMetrics
 
 
 def load_config(path: Path | None = None) -> ConfigDict:
@@ -471,7 +503,7 @@ def assemble_sections(
 ) -> AssemblyResult:
     path_counter: Counter[str] = Counter()
     role_counter: Counter[str] = Counter()
-    sections: List[Dict[str, object]] = []
+    sections: List[SectionEntry] = []
     token_in = 0
     ranked_nodes = ranking.ranked_nodes
     token_src = sum(_token_budget(node) for node in ranked_nodes)
@@ -502,22 +534,21 @@ def assemble_sections(
         adjusted = ranking.scores.get(node_id, 0.0) * penalty
         total_penalty += 1 - penalty
         signals = view.base_signals[node_id]
-        sections.append(
-            {
-                "id": node_id,
-                "tok": tokens,
-                "filters": ["lossless", "pointer", "role_extract"],
-                "why": {
-                    "intent": signals.intent,
-                    "diff": signals.diff,
-                    "recency": signals.recency,
-                    "hub": signals.hub,
-                    "role": signals.role,
-                    "ppr": ranking.ppr_scores.get(node_id, 0.0),
-                    "score": adjusted,
-                },
-            }
-        )
+        section: SectionEntry = {
+            "id": node_id,
+            "tok": tokens,
+            "filters": ["lossless", "pointer", "role_extract"],
+            "why": {
+                "intent": signals.intent,
+                "diff": signals.diff,
+                "recency": signals.recency,
+                "hub": signals.hub,
+                "role": signals.role,
+                "ppr": ranking.ppr_scores.get(node_id, 0.0),
+                "score": adjusted,
+            },
+        }
+        sections.append(section)
         token_in += tokens
         path_counter[path_str] += 1
         role_counter[role_str or "unknown"] += 1
@@ -533,7 +564,7 @@ def assemble_sections(
     if sections:
         unique_paths = {str(section["id"]).split("#", 1)[0] for section in sections}
         dup_rate = 1.0 - len(unique_paths) / len(sections)
-    metrics: Dict[str, float] = {
+    metrics: PackMetrics = {
         "token_in": token_in,
         "token_src": token_src,
         "dup_rate": dup_rate,
@@ -549,18 +580,19 @@ def pack_graph(
     budget_tokens: int,
     diff_paths: Sequence[str],
     config: Mapping[str, object] | None = None,
-) -> Dict[str, object]:
+) -> PackOutput:
     config = config or load_config()
     graph = json.loads(Path(graph_path).read_text())
     view = build_graph_view(graph, intent, diff_paths, config)
     ranking = score_candidates(view, config)
     assembly = assemble_sections(view, ranking, budget_tokens, config)
-    return {
+    result: PackOutput = {
         "intent": intent,
         "budget": str(budget_tokens),
         "sections": assembly.sections,
         "metrics": assembly.metrics,
     }
+    return result
 
 
 def main() -> None:
