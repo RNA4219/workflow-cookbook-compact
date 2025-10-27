@@ -66,6 +66,9 @@
 - **CI テンプレ整備**
   - `ci-config.md` の設定例を `README.md` の[再利用CIの呼び出し例](../README.md#再利用ciの呼び出し例下流リポ側)と整合させる。
   - `governance/policy.yaml` の `ci.required_jobs` を基準に、`CHECKLISTS.md` の[Daily](../CHECKLISTS.md#daily)で稼働状況をモニタ。
+- **CI 段階的導入フレームの実装**
+  - [docs/ci_phased_rollout_requirements.md](ci_phased_rollout_requirements.md) に定義した Phase 0〜3 の要件を順次満たし、CI 負荷を段階的に引き上げる。
+  - フェーズ移行ごとに `governance/policy.yaml`・`RUNBOOK.md`・`CHECKLISTS.md` を更新し、`CHANGELOG.md` の `[Unreleased]` へ通番付きで記録する。
 
 ## 参照クイックリンク
 
