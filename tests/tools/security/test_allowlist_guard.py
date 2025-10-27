@@ -28,14 +28,27 @@ BASE_ALLOWLIST = textwrap.dedent(
 )
 
 
-def test_cli_returns_error_on_unapproved_domain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cli_returns_error_on_unapproved_domain(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
     allowlist_path = tmp_path / "allowlist.yaml"
-    base_content = "allowlist:\n  - domain: 'allowed.example.com'\n"
-    allowlist_path.write_text(
-        base_content
-        + "  - domain: 'evil.example.com'\n"
-        + "    owner: 'Unknown'\n"
+    base_content = textwrap.dedent(
+        """
+        allowlist:
+          - domain: 'allowed.example.com'
+            owner: 'SecOps'
+        """
     )
+    current_content = textwrap.dedent(
+        """
+        allowlist:
+          - domain: 'allowed.example.com'
+            owner: 'Platform'
+          - domain: 'evil.example.com'
+            owner: 'Unknown'
+        """
+    )
+    allowlist_path.write_text(current_content)
 
     monkeypatch.setattr(allowlist_guard, "_git_show", lambda ref: base_content)
     monkeypatch.setattr(
@@ -45,8 +58,17 @@ def test_cli_returns_error_on_unapproved_domain(tmp_path: Path, monkeypatch: pyt
     )
 
     exit_code = allowlist_guard.main([])
+    captured = capsys.readouterr()
 
     assert exit_code == 1
+    assert (
+        "allowlist-guard: domain 'allowed.example.com' field 'owner' changed"
+        in captured.out.splitlines()
+    )
+    assert (
+        "allowlist-guard: domain 'evil.example.com' added without approval"
+        in captured.out.splitlines()
+    )
 def test_detects_unapproved_domain_addition() -> None:
     allowlist_path = REPO_ROOT / "network" / "allowlist.yaml"
     base_content = allowlist_path.read_text()
@@ -99,6 +121,43 @@ def test_detects_domain_field_changes() -> None:
 
 
 @pytest.mark.parametrize(
+    "current_content",
+    [
+        textwrap.dedent(
+            """
+            allowlist:
+              - domain: 'kept.example.com'
+                owner: 'Platform'
+                purposes:
+                  - id: 'ci'
+              - domain: 'removed.example.com'
+                purposes:
+                  - id: 'deploy'
+            """
+        ),
+        textwrap.dedent(
+            """
+            allowlist:
+              - domain: 'kept.example.com'
+                purposes:
+                  - id: 'ci'
+              - domain: 'removed.example.com'
+                purposes:
+                  - id: 'deploy'
+            """
+        ),
+    ],
+)
+def test_detects_owner_change_violations(current_content: str) -> None:
+    violations = detect_violations(
+        base_content=BASE_ALLOWLIST,
+        current_content=current_content,
+    )
+
+    assert "domain 'kept.example.com' field 'owner' changed" in violations
+
+
+@pytest.mark.parametrize(
     ("current_content", "expected_fragment"),
     [
         (
@@ -136,7 +195,11 @@ def test_detects_unapproved_deletions(current_content: str, expected_fragment: s
     assert any(expected_fragment in message for message in violations)
 
 
-def test_cli_returns_error_on_removed_domain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cli_returns_error_on_removed_domain(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     allowlist_path = tmp_path / "allowlist.yaml"
     current_content = textwrap.dedent(
         """
@@ -156,5 +219,10 @@ def test_cli_returns_error_on_removed_domain(tmp_path: Path, monkeypatch: pytest
     )
 
     exit_code = allowlist_guard.main([])
+    captured = capsys.readouterr()
 
     assert exit_code == 1
+    assert (
+        "allowlist-guard: domain 'removed.example.com' removed without approval"
+        in captured.out.splitlines()
+    )
