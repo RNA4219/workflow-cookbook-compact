@@ -9,7 +9,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from itertools import zip_longest
 from math import sqrt
-from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, cast
+from typing import Any, Dict, Iterable, List, Mapping, MutableMapping
 
 _Message = Mapping[str, Any]
 _MutableMessage = MutableMapping[str, Any]
@@ -195,7 +195,7 @@ def build_statistics(
 
 
 def select_messages(
-    messages: Sequence[_Message],
+    messages: Sequence[_MutableMessage],
     per_message_tokens: Sequence[int],
     *,
     max_tokens: int,
@@ -205,8 +205,7 @@ def select_messages(
     if len(messages) != len(per_message_tokens):
         raise ValueError("messages and per_message_tokens must align")
 
-    mutable_messages = [cast(_MutableMessage, dict(message)) for message in messages]
-    paired = list(zip(mutable_messages, per_message_tokens))
+    paired = list(zip(messages, per_message_tokens))
     system_pair: tuple[_MutableMessage, int] | None = None
     remainder_pairs: List[tuple[_MutableMessage, int]] = []
     for message, tokens in paired:
