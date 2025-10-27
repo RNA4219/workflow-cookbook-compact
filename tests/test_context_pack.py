@@ -9,7 +9,15 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 import pytest
 
-from tools.context.pack import DEFAULT_CONFIG, pack_graph, load_config
+from tools.context.pack import (
+    DEFAULT_CONFIG,
+    assemble_sections,
+    build_graph_view,
+    load_config,
+    pack_graph,
+    score_candidates,
+)
+from tools.context.pack import _recency_score
 
 
 def _recent(days: int) -> str:
@@ -105,3 +113,84 @@ limits:
     )
 
     assert result["metrics"]["token_src"] >= result["metrics"]["token_in"]
+
+
+def test_build_graph_view_base_signals(sample_graph: Path) -> None:
+    graph = json.loads(sample_graph.read_text())
+    view = build_graph_view(
+        graph=graph,
+        intent="INT-9 implement rollout",
+        diff_paths=["docs/b.md"],
+        config=DEFAULT_CONFIG,
+    )
+
+    signals_ops = view.base_signals["docs/b.md#ops"]
+    signals_root = view.base_signals["docs/a.md#root"]
+    signals_impl = view.base_signals["docs/a.md#impl"]
+
+    assert signals_ops.diff == pytest.approx(1.0)
+    assert signals_root.diff == pytest.approx(0.7)
+    assert signals_impl.diff == pytest.approx(0.7)
+    expected_recency_ops = _recency_score(
+        graph["nodes"][2]["mtime"], view.intent_profile.halflife
+    )
+    assert signals_ops.recency == pytest.approx(expected_recency_ops, rel=1e-6)
+    assert signals_root.hub == pytest.approx(1.0)
+    assert signals_ops.hub == pytest.approx(0.0)
+    assert signals_ops.role == pytest.approx(0.4)
+
+
+def test_score_candidates_respects_existing_ordering(sample_graph: Path) -> None:
+    graph = json.loads(sample_graph.read_text())
+    view = build_graph_view(
+        graph=graph,
+        intent="INT-9 implement rollout",
+        diff_paths=["docs/b.md"],
+        config=DEFAULT_CONFIG,
+    )
+
+    ranking = score_candidates(view=view, config=DEFAULT_CONFIG)
+
+    candidate_ids = [node["id"] for node in ranking.candidate_nodes]
+    assert candidate_ids == [
+        "docs/a.md#root",
+        "docs/a.md#impl",
+        "docs/b.md#ops",
+    ]
+    assert ranking.ppr_scores["docs/b.md#ops"] >= ranking.ppr_scores["docs/a.md#root"]
+
+
+def test_assemble_sections_matches_pack_graph(sample_graph: Path) -> None:
+    graph = json.loads(sample_graph.read_text())
+    view = build_graph_view(
+        graph=graph,
+        intent="INT-9 implement rollout",
+        diff_paths=["docs/b.md"],
+        config=DEFAULT_CONFIG,
+    )
+    ranking = score_candidates(view=view, config=DEFAULT_CONFIG)
+    assembly = assemble_sections(
+        view=view,
+        ranking=ranking,
+        budget_tokens=400,
+        config=DEFAULT_CONFIG,
+    )
+
+    result = pack_graph(
+        graph_path=sample_graph,
+        intent="INT-9 implement rollout",
+        budget_tokens=400,
+        diff_paths=["docs/b.md"],
+        config=DEFAULT_CONFIG,
+    )
+
+    for helper_section, packed_section in zip(assembly.sections, result["sections"]):
+        assert helper_section["id"] == packed_section["id"]
+        assert helper_section["tok"] == packed_section["tok"]
+        assert helper_section["filters"] == packed_section["filters"]
+        for key in ["intent", "diff", "recency", "hub", "role", "ppr", "score"]:
+            assert helper_section["why"][key] == pytest.approx(
+                packed_section["why"][key], rel=1e-6, abs=1e-9
+            )
+    for key, value in assembly.metrics.items():
+        assert value == pytest.approx(result["metrics"][key], rel=1e-6, abs=1e-9)

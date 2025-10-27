@@ -4,11 +4,63 @@ import argparse
 import json
 import math
 from collections import Counter, deque
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Iterable, List, Mapping, MutableMapping, Sequence
+from typing import Dict, Iterable, List, Mapping, MutableMapping, Sequence, TypedDict, cast
 
-DEFAULT_CONFIG: Dict[str, MutableMapping[str, float]] = {
+class GraphNode(TypedDict, total=False):
+    id: str
+    path: str
+    heading: str
+    depth: int
+    mtime: str
+    token_estimate: int
+    role: str
+
+
+class GraphEdge(TypedDict, total=False):
+    src: str
+    dst: str
+    type: str
+
+
+ConfigDict = Dict[str, object]
+
+
+class SectionWhy(TypedDict):
+    intent: float
+    diff: float
+    recency: float
+    hub: float
+    role: float
+    ppr: float
+    score: float
+
+
+class SectionEntry(TypedDict):
+    id: str
+    tok: int
+    filters: List[str]
+    why: SectionWhy
+
+
+class PackMetrics(TypedDict):
+    token_in: int
+    token_src: int
+    dup_rate: float
+    ppr_entropy: float
+    diversity_penalty: float
+
+
+class PackOutput(TypedDict):
+    intent: str
+    budget: str
+    sections: List[SectionEntry]
+    metrics: PackMetrics
+
+
+DEFAULT_CONFIG: ConfigDict = {
     "pagerank": {"lambda": 0.85, "theta": 0.6},
     "weights": {"intent": 0.40, "diff": 0.25, "recency": 0.20, "hub": 0.10, "role": 0.05},
     "recency_halflife_days": 45,
@@ -17,16 +69,58 @@ DEFAULT_CONFIG: Dict[str, MutableMapping[str, float]] = {
 }
 
 
-def load_config(path: Path | None = None) -> Dict[str, MutableMapping[str, float]]:
+@dataclass(frozen=True)
+class IntentProfile:
+    keywords: list[str]
+    role: str | None
+    halflife: int
+
+
+@dataclass(frozen=True)
+class BaseSignals:
+    intent: float
+    diff: float
+    recency: float
+    hub: float
+    role: float
+
+
+@dataclass
+class GraphView:
+    nodes: Sequence[GraphNode]
+    edges: Sequence[GraphEdge]
+    intent_profile: IntentProfile
+    adjacency: Dict[str, List[str]]
+    reverse_adjacency: Dict[str, List[str]]
+    base_signals: Dict[str, BaseSignals]
+    base_scores: Dict[str, float]
+    hits: List[str]
+
+
+@dataclass
+class CandidateRanking:
+    candidate_nodes: List[GraphNode]
+    ppr_scores: Dict[str, float]
+    scores: Dict[str, float]
+    ranked_nodes: List[GraphNode]
+
+
+@dataclass
+class AssemblyResult:
+    sections: List[SectionEntry]
+    metrics: PackMetrics
+
+
+def load_config(path: Path | None = None) -> ConfigDict:
     target = path or Path("tools/context/config.yaml")
     if not target.exists():
         return json.loads(json.dumps(DEFAULT_CONFIG))
     return _parse_simple_yaml(target.read_text())
 
 
-def _parse_simple_yaml(text: str) -> Dict[str, MutableMapping[str, float]]:
-    root: Dict[str, MutableMapping[str, float]] = {}
-    stack: List[tuple[int, MutableMapping[str, float]]] = [(0, root)]
+def _parse_simple_yaml(text: str) -> ConfigDict:
+    root: Dict[str, object] = {}
+    stack: List[tuple[int, MutableMapping[str, object]]] = [(0, root)]
     for raw in text.splitlines():
         line = raw.split("#", 1)[0].rstrip()
         if not line.strip():
@@ -39,7 +133,7 @@ def _parse_simple_yaml(text: str) -> Dict[str, MutableMapping[str, float]]:
         key = key.strip()
         value = rest.strip()
         if not value:
-            node: MutableMapping[str, float] = {}
+            node: MutableMapping[str, object] = {}
             parent[key] = node
             stack.append((indent + 2, node))
         else:
@@ -82,15 +176,20 @@ def _recency_score(iso_ts: str, halflife: int) -> float:
     return math.exp(-age / max(halflife, 1))
 
 
-def _hub_scores(nodes: Sequence[Mapping[str, object]], edges: Sequence[Mapping[str, str]]) -> Dict[str, float]:
+def _hub_scores(nodes: Sequence[GraphNode], edges: Sequence[GraphEdge]) -> Dict[str, float]:
     degree: Counter[str] = Counter()
     for edge in edges:
-        degree[edge["src"]] += 1
+        src = edge.get("src")
+        if isinstance(src, str):
+            degree[src] += 1
     max_deg = max(degree.values(), default=1)
     result: Dict[str, float] = {}
     for node in nodes:
-        out_deg = degree.get(node["id"], 0)
-        result[node["id"]] = math.log1p(out_deg) / math.log1p(max_deg) if max_deg else 0.0
+        node_id = node.get("id")
+        if not isinstance(node_id, str):
+            continue
+        out_deg = degree.get(node_id, 0)
+        result[node_id] = math.log1p(out_deg) / math.log1p(max_deg) if max_deg else 0.0
     return result
 
 
@@ -124,27 +223,38 @@ def _diff_hit(path: str, diff_paths: Sequence[str]) -> float:
 
 
 def personalize_scores(
-    nodes: Sequence[Mapping[str, object]],
-    edges: Sequence[Mapping[str, str]],
+    nodes: Sequence[GraphNode],
+    edges: Sequence[GraphEdge],
     base_scores: Mapping[str, float],
     lam: float,
     iters: int,
     tol: float,
 ) -> Dict[str, float]:
-    n = len(nodes)
+    indexed_nodes: List[GraphNode] = []
+    node_ids: List[str] = []
+    for node in nodes:
+        node_id = node.get("id")
+        if isinstance(node_id, str):
+            indexed_nodes.append(node)
+            node_ids.append(node_id)
+    n = len(indexed_nodes)
     if n == 0:
         return {}
-    id_to_index = {node["id"]: idx for idx, node in enumerate(nodes)}
-    adjacency = [[] for _ in range(n)]
+    id_to_index = {node_id: idx for idx, node_id in enumerate(node_ids)}
+    adjacency: List[List[int]] = [[] for _ in range(n)]
     outdeg = [0] * n
     for edge in edges:
-        src = id_to_index.get(edge["src"])
-        dst = id_to_index.get(edge["dst"])
-        if src is None or dst is None:
+        src = edge.get("src")
+        dst = edge.get("dst")
+        if not (isinstance(src, str) and isinstance(dst, str)):
             continue
-        adjacency[src].append(dst)
-        outdeg[src] += 1
-    teleport = [max(base_scores.get(node["id"], 0.0), 0.0) for node in nodes]
+        src_idx = id_to_index.get(src)
+        dst_idx = id_to_index.get(dst)
+        if src_idx is None or dst_idx is None:
+            continue
+        adjacency[src_idx].append(dst_idx)
+        outdeg[src_idx] += 1
+    teleport = [max(base_scores.get(node_ids[i], 0.0), 0.0) for i in range(n)]
     total = sum(teleport) or 1.0
     teleport = [value / total for value in teleport]
     state = [1.0 / n] * n
@@ -163,7 +273,7 @@ def personalize_scores(
         if delta < tol:
             break
     normaliser = sum(state) or 1.0
-    return {nodes[i]["id"]: state[i] / normaliser for i in range(n)}
+    return {node_ids[i]: state[i] / normaliser for i in range(n)}
 
 
 def _candidate_ids(
@@ -187,9 +297,11 @@ def _candidate_ids(
 
 
 def _token_budget(node: Mapping[str, object]) -> int:
-    if "token_estimate" in node:
-        return int(node["token_estimate"])
-    heading = node.get("heading", "")
+    estimate = node.get("token_estimate")
+    if isinstance(estimate, (int, float)):
+        return int(estimate)
+    heading_value = node.get("heading")
+    heading = heading_value if isinstance(heading_value, str) else ""
     return max(32, len(heading.split()) * 10)
 
 
@@ -210,132 +322,277 @@ def _diversity_penalty(
     return max(0.1, penalty)
 
 
-def pack_graph(
-    graph_path: Path,
+def _as_mapping(value: object) -> Mapping[str, object]:
+    if isinstance(value, Mapping):
+        return cast(Mapping[str, object], value)
+    return {}
+
+
+def _config_int(config: Mapping[str, object], key: str, default: int) -> int:
+    value = config.get(key, default)
+    if isinstance(value, (int, float)):
+        return int(value)
+    if isinstance(value, str):
+        try:
+            return int(float(value))
+        except ValueError:
+            return default
+    return default
+
+
+def _config_float(config: Mapping[str, object], key: str, default: float) -> float:
+    value = config.get(key, default)
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return default
+    return default
+
+
+def build_graph_view(
+    graph: Mapping[str, object],
     intent: str,
-    budget_tokens: int,
     diff_paths: Sequence[str],
-    config: Mapping[str, Mapping[str, float]] | None = None,
-) -> Dict[str, object]:
-    config = config or load_config()
-    graph = json.loads(Path(graph_path).read_text())
-    nodes = graph.get("nodes", [])
-    edges = graph.get("edges", [])
-    halflife = int(config.get("recency_halflife_days", 45))
-    intent_profile = _intent_profile(intent, halflife)
-    hub_scores = _hub_scores(nodes, edges)
+    config: Mapping[str, object],
+) -> GraphView:
+    nodes_raw = graph.get("nodes", [])
+    if not isinstance(nodes_raw, list):
+        nodes_raw = []
+    nodes: List[GraphNode] = [cast(GraphNode, node) for node in nodes_raw]
+    edges_raw = graph.get("edges", [])
+    if not isinstance(edges_raw, list):
+        edges_raw = []
+    edges: List[GraphEdge] = [cast(GraphEdge, edge) for edge in edges_raw]
+    halflife = _config_int(config, "recency_halflife_days", 45)
+    raw_intent = _intent_profile(intent, halflife)
+    keywords_value = raw_intent.get("keywords", [])
+    keywords = (
+        [str(item) for item in keywords_value]
+        if isinstance(keywords_value, list)
+        else []
+    )
+    role_value = raw_intent.get("role")
+    role = role_value if isinstance(role_value, str) else None
+    intent_profile = IntentProfile(keywords=keywords, role=role, halflife=halflife)
     adjacency: Dict[str, List[str]] = {}
     reverse_adj: Dict[str, List[str]] = {}
-    node_tokens: Dict[str, set[str]] = {}
-    base_signals: Dict[str, Dict[str, float]] = {}
-    hits: list[str] = []
-    diff_paths = list(diff_paths)
     for edge in edges:
-        adjacency.setdefault(edge["src"], []).append(edge["dst"])
-        reverse_adj.setdefault(edge["dst"], []).append(edge["src"])
+        src = edge.get("src")
+        dst = edge.get("dst")
+        if isinstance(src, str) and isinstance(dst, str):
+            adjacency.setdefault(src, []).append(dst)
+            reverse_adj.setdefault(dst, []).append(src)
+    hub_scores = _hub_scores(nodes, edges)
+    base_signals: Dict[str, BaseSignals] = {}
+    base_scores: Dict[str, float] = {}
+    hits: List[str] = []
+    weights_map = _as_mapping(config.get("weights"))
+    weight_intent = _config_float(weights_map, "intent", 0.0)
+    weight_diff = _config_float(weights_map, "diff", 0.0)
+    weight_recency = _config_float(weights_map, "recency", 0.0)
+    weight_hub = _config_float(weights_map, "hub", 0.0)
+    weight_role = _config_float(weights_map, "role", 0.0)
+    diff_paths_list = [str(path) for path in diff_paths]
     for node in nodes:
-        tokens = _token_set(node.get("heading", ""), node.get("path", ""))
-        node_tokens[node["id"]] = tokens
-        intent_hit = _intent_hit(intent_profile["keywords"], tokens)
-        diff_hit = _diff_hit(node.get("path", ""), diff_paths)
-        recency = _recency_score(node.get("mtime", datetime.now(timezone.utc).isoformat()), halflife)
-        hub = hub_scores.get(node["id"], 0.0)
-        role_score = _role_weight(node.get("role"), intent_profile["role"])
-        base_signals[node["id"]] = {
-            "intent": intent_hit,
-            "diff": diff_hit,
-            "recency": recency,
-            "hub": hub,
-            "role": role_score,
-        }
+        node_id = node.get("id")
+        if not isinstance(node_id, str):
+            continue
+        heading = node.get("heading") or ""
+        path = node.get("path") or ""
+        tokens = _token_set(str(heading), str(path))
+        intent_hit = _intent_hit(intent_profile.keywords, tokens)
+        diff_hit = _diff_hit(str(path), diff_paths_list)
+        mtime_value = node.get("mtime")
+        mtime = mtime_value if isinstance(mtime_value, str) else datetime.now(timezone.utc).isoformat()
+        recency = _recency_score(mtime, intent_profile.halflife)
+        hub = hub_scores.get(node_id, 0.0)
+        role_value_node = node.get("role")
+        role_score = _role_weight(role_value_node if isinstance(role_value_node, str) else None, intent_profile.role)
+        signals = BaseSignals(intent_hit, diff_hit, recency, hub, role_score)
+        base_signals[node_id] = signals
         if intent_hit > 0 or diff_hit > 0:
-            hits.append(node["id"])
-    weights = config.get("weights", {})
-    base_scores = {
-        node_id: sum(base_signals[node_id][key] * float(weights.get(key, 0.0)) for key in base_signals[node_id])
-        for node_id in base_signals
-    }
-    candidates = _candidate_ids(hits, adjacency, reverse_adj, 2) if hits else set(base_scores.keys())
-    sorted_candidates = sorted(candidates, key=lambda nid: base_scores.get(nid, 0.0), reverse=True)
-    ncand = int(config.get("limits", {}).get("ncand", 2000))
-    selected_candidates = sorted_candidates[:ncand]
-    candidate_nodes = [node for node in nodes if node["id"] in selected_candidates]
+            hits.append(node_id)
+        base_scores[node_id] = (
+            signals.intent * weight_intent
+            + signals.diff * weight_diff
+            + signals.recency * weight_recency
+            + signals.hub * weight_hub
+            + signals.role * weight_role
+        )
+    return GraphView(
+        nodes=nodes,
+        edges=edges,
+        intent_profile=intent_profile,
+        adjacency=adjacency,
+        reverse_adjacency=reverse_adj,
+        base_signals=base_signals,
+        base_scores=base_scores,
+        hits=hits,
+    )
+
+
+def score_candidates(
+    view: GraphView,
+    config: Mapping[str, object],
+) -> CandidateRanking:
+    limits = _as_mapping(config.get("limits"))
+    if view.hits:
+        candidate_ids = _candidate_ids(view.hits, view.adjacency, view.reverse_adjacency, 2)
+    else:
+        candidate_ids = set(view.base_scores.keys())
+    sorted_candidates = sorted(
+        candidate_ids, key=lambda nid: view.base_scores.get(nid, 0.0), reverse=True
+    )
+    ncand = _config_int(limits, "ncand", 2000)
+    selected = {candidate for candidate in sorted_candidates[:ncand]}
+    candidate_nodes: List[GraphNode] = []
+    for node in view.nodes:
+        node_id = node.get("id")
+        if isinstance(node_id, str) and node_id in selected:
+            candidate_nodes.append(node)
     if not candidate_nodes:
-        candidate_nodes = nodes
-    pagerank_cfg = config.get("pagerank", {})
+        candidate_nodes = [node for node in view.nodes if isinstance(node.get("id"), str)]
+    else:
+        candidate_nodes = [node for node in candidate_nodes if isinstance(node.get("id"), str)]
+        if not candidate_nodes:
+            candidate_nodes = [node for node in view.nodes if isinstance(node.get("id"), str)]
+    pagerank_cfg = _as_mapping(config.get("pagerank"))
     ppr_scores = personalize_scores(
         candidate_nodes,
-        edges,
-        base_scores,
-        float(pagerank_cfg.get("lambda", 0.85)),
-        int(config.get("limits", {}).get("iters", 50)),
-        float(config.get("limits", {}).get("tol", 1e-6)),
+        view.edges,
+        view.base_scores,
+        _config_float(pagerank_cfg, "lambda", 0.85),
+        _config_int(limits, "iters", 50),
+        _config_float(limits, "tol", 1e-6),
     )
-    theta = float(pagerank_cfg.get("theta", 0.6))
-    scores = {
-        node["id"]: theta * ppr_scores.get(node["id"], 0.0) + (1 - theta) * base_scores.get(node["id"], 0.0)
-        for node in candidate_nodes
-    }
-    ranked_nodes = sorted(candidate_nodes, key=lambda node: scores.get(node["id"], 0.0), reverse=True)
+    theta = _config_float(pagerank_cfg, "theta", 0.6)
+    scores: Dict[str, float] = {}
+    for node in candidate_nodes:
+        node_id = node.get("id")
+        if not isinstance(node_id, str):
+            continue
+        base_score = view.base_scores.get(node_id, 0.0)
+        ppr_score = ppr_scores.get(node_id, 0.0)
+        scores[node_id] = theta * ppr_score + (1 - theta) * base_score
+
+    def _node_score(node: GraphNode) -> float:
+        node_id = node.get("id")
+        if isinstance(node_id, str):
+            return scores.get(node_id, 0.0)
+        return 0.0
+
+    ranked_nodes = sorted(candidate_nodes, key=_node_score, reverse=True)
+    if not ranked_nodes:
+        ranked_nodes = candidate_nodes
+    return CandidateRanking(
+        candidate_nodes=candidate_nodes,
+        ppr_scores=ppr_scores,
+        scores=scores,
+        ranked_nodes=ranked_nodes,
+    )
+
+
+def assemble_sections(
+    view: GraphView,
+    ranking: CandidateRanking,
+    budget_tokens: int,
+    config: Mapping[str, object],
+) -> AssemblyResult:
     path_counter: Counter[str] = Counter()
     role_counter: Counter[str] = Counter()
-    sections = []
+    sections: List[SectionEntry] = []
     token_in = 0
+    ranked_nodes = ranking.ranked_nodes
     token_src = sum(_token_budget(node) for node in ranked_nodes)
-    diversity_cfg = config.get("diversity", {})
-    mu_file = float(diversity_cfg.get("mu_file", 0.15))
-    mu_role = float(diversity_cfg.get("mu_role", 0.10))
+    diversity_cfg = _as_mapping(config.get("diversity"))
+    mu_file = _config_float(diversity_cfg, "mu_file", 0.15)
+    mu_role = _config_float(diversity_cfg, "mu_role", 0.10)
     total_penalty = 0.0
     for node in ranked_nodes:
+        node_id = node.get("id")
+        if not isinstance(node_id, str):
+            continue
         tokens = _token_budget(node)
         if token_in + tokens > budget_tokens:
             continue
+        path_value = node.get("path")
+        path_str = path_value if isinstance(path_value, str) else ""
+        role_value = node.get("role")
+        role_str = role_value if isinstance(role_value, str) else None
         penalty = _diversity_penalty(
-            node.get("path", ""),
-            node.get("role"),
+            path_str,
+            role_str,
             path_counter,
             role_counter,
             len(sections),
             mu_file,
             mu_role,
         )
-        adjusted = scores.get(node["id"], 0.0) * penalty
+        adjusted = ranking.scores.get(node_id, 0.0) * penalty
         total_penalty += 1 - penalty
-        sections.append(
-            {
-                "id": node["id"],
-                "tok": tokens,
-                "filters": ["lossless", "pointer", "role_extract"],
-                "why": {
-                    "intent": base_signals[node["id"]]["intent"],
-                    "diff": base_signals[node["id"]]["diff"],
-                    "recency": base_signals[node["id"]]["recency"],
-                    "hub": base_signals[node["id"]]["hub"],
-                    "role": base_signals[node["id"]]["role"],
-                    "ppr": ppr_scores.get(node["id"], 0.0),
-                    "score": adjusted,
-                },
-            }
-        )
+        signals = view.base_signals[node_id]
+        section: SectionEntry = {
+            "id": node_id,
+            "tok": tokens,
+            "filters": ["lossless", "pointer", "role_extract"],
+            "why": {
+                "intent": signals.intent,
+                "diff": signals.diff,
+                "recency": signals.recency,
+                "hub": signals.hub,
+                "role": signals.role,
+                "ppr": ranking.ppr_scores.get(node_id, 0.0),
+                "score": adjusted,
+            },
+        }
+        sections.append(section)
         token_in += tokens
-        path_counter[node.get("path", "")] += 1
-        role_counter[node.get("role", "unknown")] += 1
+        path_counter[path_str] += 1
+        role_counter[role_str or "unknown"] += 1
     diversity_penalty = total_penalty / max(len(sections), 1)
-    ppr_values = [ppr_scores.get(node["id"], 0.0) for node in candidate_nodes]
+    ppr_values: List[float] = []
+    for node in ranking.candidate_nodes:
+        node_id = node.get("id")
+        if isinstance(node_id, str):
+            ppr_values.append(ranking.ppr_scores.get(node_id, 0.0))
     normaliser = sum(ppr_values) or 1.0
     entropy = -sum((val / normaliser) * math.log(val / normaliser) for val in ppr_values if val > 0)
     dup_rate = 0.0
     if sections:
-        unique_paths = {section["id"].split("#", 1)[0] for section in sections}
+        unique_paths = {str(section["id"]).split("#", 1)[0] for section in sections}
         dup_rate = 1.0 - len(unique_paths) / len(sections)
-    metrics = {
+    metrics: PackMetrics = {
         "token_in": token_in,
         "token_src": token_src,
         "dup_rate": dup_rate,
         "ppr_entropy": entropy,
         "diversity_penalty": diversity_penalty,
     }
-    return {"intent": intent, "budget": str(budget_tokens), "sections": sections, "metrics": metrics}
+    return AssemblyResult(sections=sections, metrics=metrics)
+
+
+def pack_graph(
+    graph_path: Path,
+    intent: str,
+    budget_tokens: int,
+    diff_paths: Sequence[str],
+    config: Mapping[str, object] | None = None,
+) -> PackOutput:
+    config = config or load_config()
+    graph = json.loads(Path(graph_path).read_text())
+    view = build_graph_view(graph, intent, diff_paths, config)
+    ranking = score_candidates(view, config)
+    assembly = assemble_sections(view, ranking, budget_tokens, config)
+    result: PackOutput = {
+        "intent": intent,
+        "budget": str(budget_tokens),
+        "sections": assembly.sections,
+        "metrics": assembly.metrics,
+    }
+    return result
 
 
 def main() -> None:
