@@ -2,8 +2,8 @@
 intent_id: INT-001
 owner: docs-core
 status: draft
-last_reviewed_at: 2025-01-14
-next_review_due: 2025-02-14
+last_reviewed_at: 2025-10-28
+next_review_due: 2025-11-28
 ---
 
 # Merge 実装設計
