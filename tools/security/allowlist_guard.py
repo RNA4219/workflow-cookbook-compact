@@ -2,13 +2,78 @@ from __future__ import annotations
 
 import argparse
 import subprocess
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Iterable, Mapping, Sequence
 
 try:
     import yaml  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover - fallback for minimal env
     yaml = None  # type: ignore[assignment]
+
+
+@dataclass(frozen=True)
+class Purpose:
+    id: str
+    fields: tuple[tuple[str, Any], ...] = field(default_factory=tuple)
+
+    @classmethod
+    def from_mapping(cls, mapping: Mapping[str, Any]) -> "Purpose":
+        identifier = mapping.get("id")
+        if not isinstance(identifier, str):
+            raise ValueError("purpose id must be a string")
+        return cls(id=identifier, fields=_normalize_fields(mapping, {"id"}))
+
+    def field_differences(self, other: "Purpose") -> list[str]:
+        return _diff_fields(dict(self.fields), dict(other.fields))
+
+
+@dataclass(frozen=True)
+class AllowlistEntry:
+    domain: str
+    fields: tuple[tuple[str, Any], ...] = field(default_factory=tuple)
+    purposes: tuple[Purpose, ...] = field(default_factory=tuple)
+
+    @classmethod
+    def from_mapping(cls, mapping: Mapping[str, Any]) -> "AllowlistEntry":
+        domain = mapping.get("domain")
+        if not isinstance(domain, str):
+            raise ValueError("allowlist entry missing domain")
+        raw_purposes = mapping.get("purposes", [])
+        if raw_purposes in (None, ""):
+            raw_purposes = []
+        if not isinstance(raw_purposes, list):
+            raise ValueError("purposes must be a list")
+        purposes = tuple(Purpose.from_mapping(p) for p in raw_purposes if isinstance(p, Mapping))
+        if len(purposes) != len(raw_purposes):
+            raise ValueError("purposes entries must be mappings")
+        return cls(
+            domain=domain,
+            fields=_normalize_fields(mapping, {"domain", "purposes"}),
+            purposes=tuple(sorted(purposes, key=lambda item: item.id)),
+        )
+
+    def field_differences(self, other: "AllowlistEntry") -> list[str]:
+        return _diff_fields(dict(self.fields), dict(other.fields))
+
+    def purposes_by_id(self) -> dict[str, Purpose]:
+        return {purpose.id: purpose for purpose in self.purposes}
+
+    def compare_purposes(self, other: "AllowlistEntry") -> tuple[list[str], list[str]]:
+        base_ids = set(p.id for p in self.purposes)
+        current_ids = set(p.id for p in other.purposes)
+        added = sorted(current_ids - base_ids)
+        removed = sorted(base_ids - current_ids)
+        return added, removed
+
+
+@dataclass(frozen=True)
+class AllowlistDocument:
+    entries: tuple[AllowlistEntry, ...]
+    version: int | None = None
+
+    def entries_by_domain(self) -> dict[str, AllowlistEntry]:
+        return {entry.domain: entry for entry in self.entries}
 
 
 def _strip_quotes(value: str) -> str:
@@ -35,7 +100,28 @@ def _parse_inline_list(value: str) -> list[str]:
     return [_strip_quotes(stripped)]
 
 
-def _fallback_safe_load(content: str) -> dict[str, Any]:
+def _normalize_value(value: Any) -> Any:
+    if isinstance(value, (list, tuple)):
+        return tuple(_normalize_value(item) for item in value)
+    return value
+
+
+def _normalize_fields(mapping: Mapping[str, Any], exclude: Iterable[str]) -> tuple[tuple[str, Any], ...]:
+    excluded = set(exclude)
+    items = []
+    for key, value in mapping.items():
+        if key in excluded:
+            continue
+        items.append((key, _normalize_value(value)))
+    return tuple(sorted(items, key=lambda pair: pair[0]))
+
+
+def _diff_fields(base: Mapping[str, Any], current: Mapping[str, Any]) -> list[str]:
+    keys = set(base) | set(current)
+    return sorted(key for key in keys if base.get(key) != current.get(key))
+
+
+def _fallback_safe_load(content: str) -> AllowlistDocument:
     version: int | None = None
     allowlist: list[dict[str, Any]] = []
     current_entry: dict[str, Any] | None = None
@@ -95,91 +181,69 @@ def _fallback_safe_load(content: str) -> dict[str, Any]:
                 current_purpose[key] = _parse_inline_list(value)
             else:
                 current_purpose[key] = _strip_quotes(value)
-    result: dict[str, Any] = {"allowlist": allowlist}
+    raw: dict[str, Any] = {"allowlist": allowlist}
     if version is not None:
-        result["version"] = version
-    return result
+        raw["version"] = version
+    return _document_from_raw(raw)
 
 
-def _safe_load(content: str) -> dict[str, Any]:
+def _safe_load(content: str) -> AllowlistDocument:
     if yaml is not None:
         loaded = yaml.safe_load(content)  # type: ignore[attr-defined]
-        if isinstance(loaded, dict):
-            return loaded
-        return {}
+        return _document_from_raw(loaded if isinstance(loaded, Mapping) else {})
     return _fallback_safe_load(content)
 
 
-def _load_allowlist(content: str) -> list[dict[str, Any]]:
-    data = _safe_load(content) or {}
-    allowlist = data.get("allowlist", [])
+def _document_from_raw(raw: Mapping[str, Any] | None) -> AllowlistDocument:
+    if raw is None:
+        return AllowlistDocument(entries=())
+    allowlist = raw.get("allowlist", [])
     if not isinstance(allowlist, list):
         raise ValueError("allowlist must be a list")
-    normalized: list[dict[str, Any]] = []
+    entries = []
     for entry in allowlist:
-        if not isinstance(entry, dict):
+        if not isinstance(entry, Mapping):
             raise ValueError("allowlist entries must be mappings")
-        if "domain" not in entry:
-            raise ValueError("allowlist entry missing domain")
-        normalized.append(entry)
-    return normalized
+        entries.append(AllowlistEntry.from_mapping(entry))
+    version_value = raw.get("version")
+    version = int(version_value) if isinstance(version_value, int) else None
+    return AllowlistDocument(entries=tuple(sorted(entries, key=lambda item: item.domain)), version=version)
 
 
-def _index_purposes(entry: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    purposes = entry.get("purposes", [])
-    if not isinstance(purposes, list):
-        raise ValueError("purposes must be a list")
-    indexed: dict[str, dict[str, Any]] = {}
-    for item in purposes:
-        if not isinstance(item, dict):
-            raise ValueError("purposes entries must be mappings")
-        identifier = item.get("id")
-        if not isinstance(identifier, str):
-            raise ValueError("purpose id must be a string")
-        indexed[identifier] = item
-    return indexed
+def _load_document(content: str) -> AllowlistDocument:
+    return _safe_load(content)
 
 
-def _domain_field_differences(
-    base_entry: dict[str, Any], current_entry: dict[str, Any]
-) -> list[str]:
-    domain_fields = (set(base_entry) | set(current_entry)) - {"domain", "purposes"}
-    differences: list[str] = []
-    for field in sorted(domain_fields):
-        if base_entry.get(field) != current_entry.get(field):
-            differences.append(field)
-    return differences
+def _load_document_for_testing(content: str) -> AllowlistDocument:
+    return _load_document(content)
 
 
 def detect_violations(*, base_content: str, current_content: str) -> list[str]:
+    base_doc = _load_document(base_content)
+    current_doc = _load_document(current_content)
     violations: list[str] = []
-    base_entries = {entry["domain"]: entry for entry in _load_allowlist(base_content)}
-    current_entries = {entry["domain"]: entry for entry in _load_allowlist(current_content)}
+    base_entries = base_doc.entries_by_domain()
+    current_entries = current_doc.entries_by_domain()
 
     for domain, entry in current_entries.items():
-        if domain not in base_entries:
+        base_entry = base_entries.get(domain)
+        if base_entry is None:
             violations.append(f"domain '{domain}' added without approval")
             continue
-        base_entry = base_entries[domain]
-        differing_fields = _domain_field_differences(base_entry, entry)
-        for field in differing_fields:
-            violations.append(f"domain '{domain}' field '{field}' changed")
-        base_purposes = _index_purposes(base_entry)
-        current_purposes = _index_purposes(entry)
+        for diff_field in base_entry.field_differences(entry):
+            violations.append(f"domain '{domain}' field '{diff_field}' changed")
+        base_purposes = base_entry.purposes_by_id()
+        current_purposes = entry.purposes_by_id()
         for identifier, purpose in current_purposes.items():
-            if identifier not in base_purposes:
+            base_purpose = base_purposes.get(identifier)
+            if base_purpose is None:
                 violations.append(
                     f"domain '{domain}' purpose '{identifier}' added without approval"
                 )
                 continue
-            base_purpose = base_purposes[identifier]
-            if base_purpose != purpose:
-                fields = sorted(
-                    key
-                    for key in set(base_purpose) | set(purpose)
-                    if base_purpose.get(key) != purpose.get(key)
-                )
-                detail = ", ".join(fields)
+            changed_fields = base_purpose.field_differences(purpose)
+            if changed_fields:
+                detail = ", ".join(changed_fields)
                 violations.append(
                     f"domain '{domain}' purpose '{identifier}' changed fields: {detail}"
                 )
@@ -188,10 +252,10 @@ def detect_violations(*, base_content: str, current_content: str) -> list[str]:
         if domain not in current_entries:
             violations.append(f"domain '{domain}' removed without approval")
             continue
-        base_purposes = _index_purposes(base_entry)
-        current_purposes = _index_purposes(current_entries[domain])
-        for identifier in base_purposes:
-            if identifier not in current_purposes:
+        base_ids = base_entry.purposes_by_id()
+        current_ids = current_entries[domain].purposes_by_id()
+        for identifier in base_ids:
+            if identifier not in current_ids:
                 violations.append(
                     f"domain '{domain}' purpose '{identifier}' removed without approval"
                 )
