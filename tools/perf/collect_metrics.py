@@ -9,7 +9,7 @@ import sys
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Mapping, MutableMapping, Sequence
+from typing import Callable, Iterable, Mapping, MutableMapping, Protocol, Sequence
 
 METRIC_KEYS: tuple[str, ...] = (
     "checklist_compliance_rate",
@@ -37,33 +37,6 @@ _TRIM_SEMANTIC_PREFIXES: Sequence[tuple[str, float]] = (
     ("trim_semantic_retention", 1.0),
     ("context_semantic_retention", 1.0),
 )
-
-_METRIC_SOURCE_PREFERENCES: Mapping[str, tuple[str, ...]] = {
-    "compress_ratio": (
-        "trim_compress_ratio_avg",
-        "trim_compress_ratio",
-        "compress_ratio",
-    ),
-    "semantic_retention": (
-        "trim_semantic_retention_avg",
-        "trim_semantic_retention",
-        "semantic_retention",
-    ),
-    "reopen_rate": (
-        "workflow_reopen_rate_avg",
-        "workflow_reopen_rate",
-        "docops_reopen_rate",
-        "reopen_rate",
-    ),
-    "spec_completeness": (
-        "workflow_spec_completeness_ratio_avg",
-        "workflow_spec_completeness_avg",
-        "workflow_spec_completeness_ratio",
-        "workflow_spec_completeness",
-        "spec_completeness_ratio",
-        "spec_completeness",
-    ),
-}
 
 REVIEW_LATENCY_PREFIXES: Sequence[tuple[str, float]] = (
     ("trim_review_latency_seconds", 3600.0),
@@ -107,23 +80,45 @@ _RATIO_CAPTURE_ENTRIES: tuple[tuple[str, tuple[str, ...], tuple[str, ...]], ...]
     ),
 )
 
+_RATIO_CAPTURE_LOOKUP: Mapping[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
+    key: (numerator_keys, denominator_keys)
+    for key, numerator_keys, denominator_keys in _RATIO_CAPTURE_ENTRIES
+}
+
 _RATIO_PROMETHEUS_CONFIG: Mapping[str, tuple[tuple[str, ...], tuple[str, ...], tuple[tuple[str, float], ...]]] = {
     "reopen_rate": (
         ("_reopened", "_reopen"),
         ("_total", "_count", "_closed", "_all"),
-        (("workflow_reopen_rate", 1.0), ("docops_reopen_rate", 1.0), ("reopen_rate", 1.0)),
+        (
+            ("workflow_reopen_rate", 1.0),
+            ("workflow_reopen_rate_avg", 1.0),
+            ("docops_reopen_rate", 1.0),
+            ("reopen_rate", 1.0),
+        ),
     ),
     "spec_completeness": (
         ("_with_spec", "_with_specs", "_completed"),
         ("_total", "_count", "_all"),
         (
             ("workflow_spec_completeness_ratio", 1.0),
+            ("workflow_spec_completeness_ratio_avg", 1.0),
             ("workflow_spec_completeness", 1.0),
             ("spec_completeness_ratio", 1.0),
             ("spec_completeness", 1.0),
         ),
     ),
 }
+
+_OVERWRITE_KEYS: frozenset[str] = frozenset(
+    {
+        "checklist_compliance_rate",
+        "review_latency",
+        "compress_ratio",
+        "semantic_retention",
+        "reopen_rate",
+        "spec_completeness",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -142,6 +137,184 @@ class MetricsCollectionError(RuntimeError):
     """Raised when metrics could not be collected."""
 
 
+class StructuredRule(Protocol):
+    overwrite: bool
+
+    def extract(self, metric_key: str, source: Mapping[str, object]) -> float | None:
+        ...
+
+
+class NumericRule(Protocol):
+    def extract(self, metric_key: str, source: Mapping[str, float]) -> float | None:
+        ...
+
+
+@dataclass(frozen=True)
+class DirectValueRule:
+    keys: tuple[str, ...] | None = None
+    overwrite: bool = False
+
+    def extract(self, metric_key: str, source: Mapping[str, object]) -> float | None:
+        candidates = self.keys or (metric_key,)
+        for key in candidates:
+            value = _coerce_float(source.get(key))
+            if value is not None:
+                return value
+        return None
+
+
+@dataclass(frozen=True)
+class MappingRatioRule:
+    numerator_keys: tuple[str, ...]
+    denominator_keys: tuple[str, ...]
+    ratio_keys: tuple[str, ...] = ("ratio",)
+    overwrite: bool = True
+
+    def extract(self, metric_key: str, source: Mapping[str, object]) -> float | None:
+        raw = source.get(metric_key)
+        if not isinstance(raw, Mapping):
+            return None
+        numerator = None
+        denominator = None
+        for candidate in self.numerator_keys:
+            numerator = _coerce_float(raw.get(candidate))
+            if numerator is not None:
+                break
+        for candidate in self.denominator_keys:
+            denominator = _coerce_float(raw.get(candidate))
+            if denominator is not None and denominator != 0:
+                break
+        if numerator is not None and denominator is not None and denominator != 0:
+            return numerator / denominator
+        for candidate in self.ratio_keys:
+            ratio = _coerce_float(raw.get(candidate))
+            if ratio is not None:
+                return ratio
+        return None
+
+
+@dataclass(frozen=True)
+class StructuredAverageRule:
+    prefixes: tuple[tuple[str, float], ...]
+    overwrite: bool = False
+
+    def extract(self, metric_key: str, source: Mapping[str, object]) -> float | None:
+        numeric = _coerce_numeric_mapping(source)
+        if not numeric:
+            return None
+        return _derive_average(numeric, self.prefixes)
+
+
+@dataclass(frozen=True)
+class DirectNumericRule:
+    keys: tuple[str, ...] | None = None
+
+    def extract(self, metric_key: str, source: Mapping[str, float]) -> float | None:
+        candidates = self.keys or (metric_key,)
+        for key in candidates:
+            value = source.get(key)
+            if value is not None:
+                return value
+        return None
+
+
+@dataclass(frozen=True)
+class NumericAverageRule:
+    prefixes: tuple[tuple[str, float], ...]
+
+    def extract(self, metric_key: str, source: Mapping[str, float]) -> float | None:
+        return _derive_average(source, self.prefixes)
+
+
+@dataclass(frozen=True)
+class SuffixRatioNumericRule:
+    numerator_suffixes: tuple[str, ...]
+    denominator_suffixes: tuple[str, ...]
+
+    def extract(self, metric_key: str, source: Mapping[str, float]) -> float | None:
+        return _derive_ratio_by_suffixes(source, self.numerator_suffixes, self.denominator_suffixes)
+
+
+@dataclass(frozen=True)
+class NumericCallableRule:
+    function: Callable[[Mapping[str, float]], float | None]
+
+    def extract(self, metric_key: str, source: Mapping[str, float]) -> float | None:
+        return self.function(source)
+
+
+@dataclass(frozen=True)
+class MetricDefinition:
+    key: str
+    structured_rules: tuple[StructuredRule, ...]
+    numeric_rules: tuple[NumericRule, ...]
+
+
+class MetricExtractor:
+    def __init__(
+        self,
+        definitions: Sequence[MetricDefinition],
+        *,
+        percentage_keys: Sequence[str],
+    ) -> None:
+        self._definitions = {definition.key: definition for definition in definitions}
+        self._ordered_keys = tuple(definition.key for definition in definitions)
+        self._ordered_definitions = tuple(definitions)
+        self._percentage_keys = tuple(percentage_keys)
+
+    def capture_structured(
+        self,
+        source: Mapping[str, object],
+        target: MutableMapping[str, float],
+        *,
+        overwrite: bool = False,
+    ) -> None:
+        for definition in self._ordered_definitions:
+            existing = definition.key in target
+            for rule in definition.structured_rules:
+                if existing and not (overwrite or rule.overwrite):
+                    continue
+                value = rule.extract(definition.key, source)
+                if value is not None:
+                    target[definition.key] = value
+                    existing = True
+                    break
+
+    def capture_numeric(
+        self,
+        source: Mapping[str, float],
+        target: MutableMapping[str, float],
+    ) -> None:
+        for definition in self._ordered_definitions:
+            if definition.key in target:
+                continue
+            for rule in definition.numeric_rules:
+                value = rule.extract(definition.key, source)
+                if value is not None:
+                    target[definition.key] = value
+                    break
+
+    def merge(self, sources: Iterable[Mapping[str, float]]) -> dict[str, float]:
+        combined: dict[str, float] = {}
+        for mapping in sources:
+            for key in self._ordered_keys:
+                if key in mapping and key not in combined:
+                    combined[key] = mapping[key]
+            for key in _OVERWRITE_KEYS:
+                if key in mapping:
+                    combined[key] = mapping[key]
+        missing = [key for key in self._ordered_keys if key not in combined]
+        if missing:
+            raise MetricsCollectionError("Missing metrics: " + ", ".join(missing))
+        metrics = {key: combined[key] for key in self._ordered_keys}
+        for key in self._percentage_keys:
+            metrics[key] *= 100.0
+        return metrics
+
+    def percentage_keys(self) -> tuple[str, ...]:
+        return self._percentage_keys
+
+
 def _coerce_float(value: object) -> float | None:
     if isinstance(value, (int, float)):
         return float(value)
@@ -153,45 +326,6 @@ def _coerce_float(value: object) -> float | None:
     return None
 
 
-def _capture(
-    source: Mapping[str, object],
-    target: MutableMapping[str, float],
-    *,
-    overwrite: bool = False,
-) -> None:
-    for key in METRIC_KEYS:
-        if not overwrite and key in target:
-            continue
-        preferences = _METRIC_SOURCE_PREFERENCES.get(key, (key,))
-        for candidate in preferences:
-            value = source.get(candidate)
-            if value is None:
-                continue
-            coerced = _coerce_float(value)
-            if coerced is not None:
-                target[key] = coerced
-                break
-
-
-def _capture_trim_metrics(
-    source: Mapping[str, object],
-    target: MutableMapping[str, float],
-    *,
-    overwrite: bool = False,
-) -> None:
-    numeric = _coerce_numeric_mapping(source)
-    if not numeric:
-        return
-    if overwrite or "compress_ratio" not in target:
-        derived_compress = _derive_average(numeric, _TRIM_COMPRESS_PREFIXES)
-        if derived_compress is not None:
-            target["compress_ratio"] = derived_compress
-    if overwrite or "semantic_retention" not in target:
-        derived_semantic = _derive_average(numeric, _TRIM_SEMANTIC_PREFIXES)
-        if derived_semantic is not None:
-            target["semantic_retention"] = derived_semantic
-
-
 def _coerce_numeric_mapping(source: Mapping[str, object]) -> dict[str, float]:
     numeric: dict[str, float] = {}
     for key, value in source.items():
@@ -201,82 +335,6 @@ def _coerce_numeric_mapping(source: Mapping[str, object]) -> dict[str, float]:
         if coerced is not None:
             numeric[key] = coerced
     return numeric
-
-
-def _capture_review_latency(
-    source: Mapping[str, object],
-    target: MutableMapping[str, float],
-    *,
-    overwrite: bool = False,
-) -> None:
-    if not overwrite and "review_latency" in target:
-        return
-    numeric = _coerce_numeric_mapping(source)
-    if not numeric:
-        return
-    derived = _derive_review_latency(numeric)
-    if derived is not None:
-        target["review_latency"] = derived
-
-
-def _capture_compliance(
-    source: Mapping[str, object],
-    target: MutableMapping[str, float],
-    *,
-    overwrite: bool = False,
-) -> None:
-    if not overwrite and "checklist_compliance_rate" in target:
-        return
-    compliance_raw = source.get("checklist_compliance_rate")
-    if isinstance(compliance_raw, Mapping):
-        numerator = None
-        denominator = None
-        for candidate in ("compliant", "checked", "passing", "numerator"):
-            numerator = _coerce_float(compliance_raw.get(candidate))
-            if numerator is not None:
-                break
-        for candidate in ("total", "denominator", "all", "overall"):
-            denominator = _coerce_float(compliance_raw.get(candidate))
-            if denominator is not None and denominator != 0:
-                break
-        if numerator is not None and denominator is not None and denominator != 0:
-            target["checklist_compliance_rate"] = numerator / denominator
-            return
-        ratio = _coerce_float(compliance_raw.get("ratio"))
-        if ratio is not None:
-            target["checklist_compliance_rate"] = ratio
-
-
-def _capture_ratio_metric(
-    source: Mapping[str, object],
-    target: MutableMapping[str, float],
-    metric_key: str,
-    numerator_keys: Sequence[str],
-    denominator_keys: Sequence[str],
-    *,
-    overwrite: bool = False,
-) -> None:
-    if not overwrite and metric_key in target:
-        return
-    raw = source.get(metric_key)
-    if not isinstance(raw, Mapping):
-        return
-    numerator = None
-    denominator = None
-    for candidate in numerator_keys:
-        numerator = _coerce_float(raw.get(candidate))
-        if numerator is not None:
-            break
-    for candidate in denominator_keys:
-        denominator = _coerce_float(raw.get(candidate))
-        if denominator is not None and denominator != 0:
-            break
-    if numerator is not None and denominator is not None and denominator != 0:
-        target[metric_key] = numerator / denominator
-        return
-    ratio = _coerce_float(raw.get("ratio"))
-    if ratio is not None:
-        target[metric_key] = ratio
 
 
 def _derive_review_latency(raw: Mapping[str, float]) -> float | None:
@@ -305,25 +363,6 @@ def _derive_ratio_by_suffixes(
                 if denominator in (None, 0.0):
                     continue
                 return numerator / denominator
-    return None
-
-
-def _derive_ratio_metric(
-    raw: Mapping[str, float],
-    metric_key: str,
-    *,
-    numerator_suffixes: Sequence[str],
-    denominator_suffixes: Sequence[str],
-    prefixes: Sequence[tuple[str, float]] = (),
-) -> float | None:
-    direct = raw.get(metric_key)
-    if direct is not None:
-        return direct
-    ratio = _derive_ratio_by_suffixes(raw, numerator_suffixes, denominator_suffixes)
-    if ratio is not None:
-        return ratio
-    if prefixes:
-        return _derive_average(raw, prefixes)
     return None
 
 
@@ -396,6 +435,181 @@ def _derive_birdseye_refresh_delay_minutes(raw: Mapping[str, float]) -> float | 
     return _derive_average(raw, prefixes)
 
 
+METRIC_DEFINITIONS: tuple[MetricDefinition, ...] = (
+    MetricDefinition(
+        key="checklist_compliance_rate",
+        structured_rules=(
+            DirectValueRule(),
+            MappingRatioRule(
+                numerator_keys=("compliant", "checked", "passing", "numerator"),
+                denominator_keys=("total", "denominator", "all", "overall"),
+            ),
+        ),
+        numeric_rules=(
+            DirectNumericRule(),
+            NumericCallableRule(_derive_checklist_compliance),
+        ),
+    ),
+    MetricDefinition(
+        key="task_seed_cycle_time_minutes",
+        structured_rules=(
+            DirectValueRule(),
+        ),
+        numeric_rules=(
+            DirectNumericRule(),
+            NumericCallableRule(_derive_task_seed_cycle_time_minutes),
+        ),
+    ),
+    MetricDefinition(
+        key="birdseye_refresh_delay_minutes",
+        structured_rules=(
+            DirectValueRule(),
+        ),
+        numeric_rules=(
+            DirectNumericRule(),
+            NumericCallableRule(_derive_birdseye_refresh_delay_minutes),
+        ),
+    ),
+    MetricDefinition(
+        key="review_latency",
+        structured_rules=(
+            DirectValueRule(keys=("workflow_review_latency", "review_latency")),
+            StructuredAverageRule(
+                prefixes=tuple(_REVIEW_LATENCY_AGGREGATE_PREFIXES),
+                overwrite=True,
+            ),
+        ),
+        numeric_rules=(
+            DirectNumericRule(),
+            NumericCallableRule(_derive_review_latency),
+        ),
+    ),
+    MetricDefinition(
+        key="compress_ratio",
+        structured_rules=(
+            DirectValueRule(
+                keys=(
+                    "trim_compress_ratio_avg",
+                    "trim_compress_ratio",
+                    "compress_ratio",
+                    "compression_ratio",
+                )
+            ),
+            StructuredAverageRule(
+                prefixes=tuple(_TRIM_COMPRESS_PREFIXES),
+                overwrite=True,
+            ),
+        ),
+        numeric_rules=(
+            DirectNumericRule(
+                keys=("trim_compress_ratio_avg", "trim_compress_ratio", "compress_ratio"),
+            ),
+            NumericAverageRule(prefixes=tuple(_TRIM_COMPRESS_PREFIXES)),
+        ),
+    ),
+    MetricDefinition(
+        key="semantic_retention",
+        structured_rules=(
+            DirectValueRule(
+                keys=(
+                    "trim_semantic_retention_avg",
+                    "trim_semantic_retention",
+                    "semantic_retention",
+                )
+            ),
+            StructuredAverageRule(
+                prefixes=tuple(_TRIM_SEMANTIC_PREFIXES),
+                overwrite=True,
+            ),
+        ),
+        numeric_rules=(
+            DirectNumericRule(
+                keys=(
+                    "trim_semantic_retention_avg",
+                    "trim_semantic_retention",
+                    "semantic_retention",
+                ),
+            ),
+            NumericAverageRule(prefixes=tuple(_TRIM_SEMANTIC_PREFIXES)),
+        ),
+    ),
+    MetricDefinition(
+        key="reopen_rate",
+        structured_rules=(
+            DirectValueRule(
+                keys=(
+                    "workflow_reopen_rate_avg",
+                    "workflow_reopen_rate",
+                    "docops_reopen_rate",
+                    "reopen_rate",
+                )
+            ),
+            MappingRatioRule(
+                numerator_keys=_RATIO_CAPTURE_LOOKUP["reopen_rate"][0],
+                denominator_keys=_RATIO_CAPTURE_LOOKUP["reopen_rate"][1],
+            ),
+        ),
+        numeric_rules=(
+            DirectNumericRule(
+                keys=(
+                    "workflow_reopen_rate_avg",
+                    "workflow_reopen_rate",
+                    "docops_reopen_rate",
+                    "reopen_rate",
+                ),
+            ),
+            SuffixRatioNumericRule(
+                numerator_suffixes=_RATIO_PROMETHEUS_CONFIG["reopen_rate"][0],
+                denominator_suffixes=_RATIO_PROMETHEUS_CONFIG["reopen_rate"][1],
+            ),
+            NumericAverageRule(prefixes=_RATIO_PROMETHEUS_CONFIG["reopen_rate"][2]),
+        ),
+    ),
+    MetricDefinition(
+        key="spec_completeness",
+        structured_rules=(
+            DirectValueRule(
+                keys=(
+                    "workflow_spec_completeness_ratio_avg",
+                    "workflow_spec_completeness_avg",
+                    "workflow_spec_completeness_ratio",
+                    "workflow_spec_completeness",
+                    "spec_completeness_ratio",
+                    "spec_completeness",
+                )
+            ),
+            MappingRatioRule(
+                numerator_keys=_RATIO_CAPTURE_LOOKUP["spec_completeness"][0],
+                denominator_keys=_RATIO_CAPTURE_LOOKUP["spec_completeness"][1],
+            ),
+        ),
+        numeric_rules=(
+            DirectNumericRule(
+                keys=(
+                    "workflow_spec_completeness_ratio_avg",
+                    "workflow_spec_completeness_avg",
+                    "workflow_spec_completeness_ratio",
+                    "workflow_spec_completeness",
+                    "spec_completeness_ratio",
+                    "spec_completeness",
+                ),
+            ),
+            SuffixRatioNumericRule(
+                numerator_suffixes=_RATIO_PROMETHEUS_CONFIG["spec_completeness"][0],
+                denominator_suffixes=_RATIO_PROMETHEUS_CONFIG["spec_completeness"][1],
+            ),
+            NumericAverageRule(prefixes=_RATIO_PROMETHEUS_CONFIG["spec_completeness"][2]),
+        ),
+    ),
+)
+
+
+METRICS_EXTRACTOR = MetricExtractor(
+    METRIC_DEFINITIONS,
+    percentage_keys=PERCENTAGE_KEYS,
+)
+
+
 def _parse_prometheus(text: str) -> dict[str, float]:
     raw: dict[str, float] = {}
     for line in text.splitlines():
@@ -417,42 +631,7 @@ def _parse_prometheus(text: str) -> dict[str, float]:
             raw[metric_name] = value
 
     metrics: dict[str, float] = {}
-    _capture(raw, metrics)
-    _capture_trim_metrics(raw, metrics)
-
-    _capture_review_latency(raw, metrics)
-
-    compliance = _derive_checklist_compliance(raw)
-    if compliance is not None and "checklist_compliance_rate" not in metrics:
-        metrics["checklist_compliance_rate"] = compliance
-
-    task_seed_cycle_time = _derive_task_seed_cycle_time_minutes(raw)
-    if (
-        task_seed_cycle_time is not None
-        and "task_seed_cycle_time_minutes" not in metrics
-    ):
-        metrics["task_seed_cycle_time_minutes"] = task_seed_cycle_time
-
-    birdseye_delay = _derive_birdseye_refresh_delay_minutes(raw)
-    if (
-        birdseye_delay is not None
-        and "birdseye_refresh_delay_minutes" not in metrics
-    ):
-        metrics["birdseye_refresh_delay_minutes"] = birdseye_delay
-
-    for metric_key, (numerator_suffixes, denominator_suffixes, prefixes) in _RATIO_PROMETHEUS_CONFIG.items():
-        if metric_key in metrics:
-            continue
-        derived = _derive_ratio_metric(
-            raw,
-            metric_key,
-            numerator_suffixes=numerator_suffixes,
-            denominator_suffixes=denominator_suffixes,
-            prefixes=prefixes,
-        )
-        if derived is not None:
-            metrics[metric_key] = derived
-
+    METRICS_EXTRACTOR.capture_numeric(raw, metrics)
     return metrics
 
 
@@ -477,78 +656,21 @@ def _load_structured_log(path: Path) -> Mapping[str, float]:
         except json.JSONDecodeError:
             continue
         if isinstance(parsed, Mapping):
-            _capture(parsed, metrics)
-            _capture_trim_metrics(parsed, metrics)
-            _capture_review_latency(parsed, metrics, overwrite=True)
-            _capture_compliance(parsed, metrics, overwrite=True)
+            METRICS_EXTRACTOR.capture_structured(parsed, metrics)
             statistics = parsed.get("statistics")
             if isinstance(statistics, Mapping):
-                _capture(statistics, metrics)
-                if "compress_ratio" not in metrics:
-                    legacy_ratio = _coerce_float(statistics.get("compression_ratio"))
-                    if legacy_ratio is not None:
-                        metrics["compress_ratio"] = legacy_ratio
-                _capture_trim_metrics(statistics, metrics, overwrite=True)
-                _capture_review_latency(statistics, metrics, overwrite=True)
-            for metric_key, numerator_keys, denominator_keys in _RATIO_CAPTURE_ENTRIES:
-                _capture_ratio_metric(
-                    parsed,
-                    metrics,
-                    metric_key,
-                    numerator_keys,
-                    denominator_keys,
-                    overwrite=True,
-                )
+                METRICS_EXTRACTOR.capture_structured(statistics, metrics)
             nested = parsed.get("metrics")
             if isinstance(nested, Mapping):
-                _capture(nested, metrics)
-                _capture_trim_metrics(nested, metrics, overwrite=True)
-                _capture_review_latency(nested, metrics, overwrite=True)
-                _capture_compliance(nested, metrics, overwrite=True)
+                METRICS_EXTRACTOR.capture_structured(nested, metrics, overwrite=True)
                 statistics = nested.get("statistics")
                 if isinstance(statistics, Mapping):
-                    _capture(statistics, metrics)
-                    if "compress_ratio" not in metrics:
-                        legacy_ratio = _coerce_float(statistics.get("compression_ratio"))
-                        if legacy_ratio is not None:
-                            metrics["compress_ratio"] = legacy_ratio
-                    _capture_trim_metrics(statistics, metrics, overwrite=True)
-                    _capture_review_latency(statistics, metrics, overwrite=True)
-                for metric_key, numerator_keys, denominator_keys in _RATIO_CAPTURE_ENTRIES:
-                    _capture_ratio_metric(
-                        nested,
-                        metrics,
-                        metric_key,
-                        numerator_keys,
-                        denominator_keys,
-                        overwrite=True,
-                    )
+                    METRICS_EXTRACTOR.capture_structured(statistics, metrics, overwrite=True)
     return metrics
 
 
 def _merge(sources: Iterable[Mapping[str, float]]) -> dict[str, float]:
-    combined: dict[str, float] = {}
-    for mapping in sources:
-        _capture(mapping, combined)
-        if "checklist_compliance_rate" in mapping:
-            combined["checklist_compliance_rate"] = mapping["checklist_compliance_rate"]
-        if "review_latency" in mapping:
-            combined["review_latency"] = mapping["review_latency"]
-        if "compress_ratio" in mapping:
-            combined["compress_ratio"] = mapping["compress_ratio"]
-        if "semantic_retention" in mapping:
-            combined["semantic_retention"] = mapping["semantic_retention"]
-        if "reopen_rate" in mapping:
-            combined["reopen_rate"] = mapping["reopen_rate"]
-        if "spec_completeness" in mapping:
-            combined["spec_completeness"] = mapping["spec_completeness"]
-    missing = [key for key in METRIC_KEYS if key not in combined]
-    if missing:
-        raise MetricsCollectionError("Missing metrics: " + ", ".join(missing))
-    metrics = {key: combined[key] for key in METRIC_KEYS}
-    for key in PERCENTAGE_KEYS:
-        metrics[key] *= 100.0
-    return metrics
+    return METRICS_EXTRACTOR.merge(sources)
 
 
 def _format_pushgateway_payload(metrics: Mapping[str, float]) -> bytes:

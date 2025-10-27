@@ -205,6 +205,54 @@ def test_collects_review_latency_from_minute_aggregates(tmp_path: Path) -> None:
     }
 
 
+def test_structured_log_overrides_prometheus_with_latest_scale(tmp_path: Path) -> None:
+    prometheus = tmp_path / "metrics.prom"
+    prometheus.write_text(
+        "checklist_compliance_rate 0.40\n"
+        "compress_ratio 0.62\n"
+        "semantic_retention 0.73\n"
+        "task_seed_cycle_time_minutes 15.0\n"
+        "birdseye_refresh_delay_minutes 3.0\n"
+        "review_latency 1.0\n"
+        "workflow_reopen_rate 0.10\n"
+        "workflow_spec_completeness_ratio 0.55\n",
+        encoding="utf-8",
+    )
+
+    structured = tmp_path / "docops.log"
+    structured.write_text(
+        "\n".join(
+            (
+                '{"metrics": {"checklist_compliance_rate": {"compliant": 18, "total": 20}}}',
+                '{"metrics": {"compress_ratio": 0.88}}',
+                '{"metrics": {"semantic_retention": 0.96}}',
+                '{"metrics": {"task_seed_cycle_time_minutes": 6.0}}',
+                '{"metrics": {"birdseye_refresh_delay_minutes": 1.5}}',
+                '{"metrics": {"review_latency": 0.25}}',
+                '{"metrics": {"reopen_rate": {"reopened": 3, "total": 12}}}',
+                '{"metrics": {"spec_completeness": {"with_spec": 91, "total": 100}}}',
+            )
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = _run_cli("--metrics-url", prometheus.as_uri(), "--log-path", str(structured))
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload == {
+        "checklist_compliance_rate": 90.0,
+        "compress_ratio": pytest.approx(0.88),
+        "semantic_retention": pytest.approx(0.96),
+        "task_seed_cycle_time_minutes": 15.0,
+        "birdseye_refresh_delay_minutes": 3.0,
+        "review_latency": 0.25,
+        "reopen_rate": 25.0,
+        "spec_completeness": 91.0,
+    }
+
+
 def test_pushgateway_receives_metrics_payload(tmp_path: Path) -> None:
     prometheus = tmp_path / "metrics.prom"
     prometheus.write_text(
