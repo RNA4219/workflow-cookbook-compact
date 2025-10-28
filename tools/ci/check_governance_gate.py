@@ -11,7 +11,7 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable, Iterator, List, Sequence, TextIO, Tuple
+from typing import Callable, Iterable, Iterator, List, Sequence, TextIO, Tuple
 
 
 def get_changed_paths(refspec: str) -> List[str]:
@@ -167,7 +167,12 @@ class ValidationOutcome:
             print(message, file=stream)
 
 
-def collect_validation_outcome(body: str | None) -> ValidationOutcome:
+def collect_validation_outcome(
+    body: str | None,
+    *,
+    category_hints: Sequence[str] | None = None,
+    hint_resolver: Callable[[], Sequence[str] | None] | None = None,
+) -> ValidationOutcome:
     normalized_body = body or ""
     outcome = ValidationOutcome()
 
@@ -186,7 +191,12 @@ def collect_validation_outcome(body: str | None) -> ValidationOutcome:
         else:
             base_ids = {match.upper() for match in INTENT_ID_PATTERN.findall(normalized_body)}
             intent_reference = ", ".join(sorted(base_ids)) or "INT-???"
-            hints = collect_recent_category_hints()
+            if category_hints is not None:
+                hints = [hint for hint in category_hints if hint]
+            else:
+                resolver = hint_resolver or collect_recent_category_hints
+                resolved_hints = resolver() or []
+                hints = [hint for hint in resolved_hints if hint]
             if hints:
                 suggestion = ", ".join(hints)
                 outcome.add_warning(
@@ -212,8 +222,17 @@ def collect_validation_outcome(body: str | None) -> ValidationOutcome:
     return outcome
 
 
-def validate_pr_body(body: str | None) -> bool:
-    outcome = collect_validation_outcome(body)
+def validate_pr_body(
+    body: str | None,
+    *,
+    category_hints: Sequence[str] | None = None,
+    hint_resolver: Callable[[], Sequence[str] | None] | None = None,
+) -> bool:
+    outcome = collect_validation_outcome(
+        body,
+        category_hints=category_hints,
+        hint_resolver=hint_resolver,
+    )
     outcome.emit(stream=sys.stderr)
     return outcome.is_success
 
@@ -229,7 +248,12 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     return parser.parse_args(list(argv))
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def main(
+    argv: Sequence[str] | None = None,
+    *,
+    category_hints: Sequence[str] | None = None,
+    hint_resolver: Callable[[], Sequence[str] | None] | None = None,
+) -> int:
     args = parse_arguments(argv or ())
     body = resolve_pr_body(
         cli_body=args.pr_body,
@@ -238,7 +262,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     if body is None:
         return 1
 
-    outcome = collect_validation_outcome(body)
+    outcome = collect_validation_outcome(
+        body,
+        category_hints=category_hints,
+        hint_resolver=hint_resolver,
+    )
     outcome.emit(stream=sys.stderr)
     if not outcome.is_success:
         return 1
