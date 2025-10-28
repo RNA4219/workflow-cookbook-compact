@@ -12,8 +12,10 @@ next_review_due: 2025-11-28
 
 ## 精度モード
 
-- `baseline`: 既存マージアルゴリズムを維持し、AutoSave のロックをオプション扱いにする。失敗時はリトライ後に警告ログを残す。
-- `strict`: AutoSave のロック取得を必須とし、CRDT 差分の矛盾を検知した場合に即時ロールバックする。`merge.precision_mode` フラグで切替。
+- `baseline`: 既存マージアルゴリズムを維持し、AutoSave のロックをオプション扱いにする。失敗時はリトライ後に警告ログを
+  残す。
+- `strict`: AutoSave のロック取得を必須とし、CRDT 差分の矛盾を検知した場合に即時ロールバックする。`merge.precision_mode`
+  フラグで切替。
 - 精度モードは `docs/IMPLEMENTATION-PLAN.md` の段階導入チェックリストと同期し、テレメトリ完了までは `baseline` がデフォルト。
 
 ## ロック協調
