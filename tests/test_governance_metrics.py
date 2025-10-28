@@ -1,5 +1,4 @@
 """governance.metrics.yaml の内容を検証するテスト。"""
-
 import importlib
 import sys
 from pathlib import Path
@@ -35,7 +34,7 @@ def test_governance_metrics_contains_required_keys() -> None:
 
     assert isinstance(metrics_data, dict)
 
-    expected_keys = set(collect_metrics.METRIC_KEYS)
+    expected_keys = set(collect_metrics.metric_keys())
     actual_keys = set(metrics_data)
 
     missing_keys = expected_keys - actual_keys
@@ -55,7 +54,7 @@ def test_governance_scale_annotations_match_percentage_keys() -> None:
         key for key, description in metrics_data.items() if "(0-1)" in str(description)
     }
 
-    percentage_keys = set(collect_metrics.PERCENTAGE_KEYS)
+    percentage_keys = set(collect_metrics.percentage_keys())
 
     assert annotated_percent <= percentage_keys
     assert annotated_zero_to_one.isdisjoint(annotated_percent)
@@ -87,7 +86,7 @@ def test_metric_loader_reflects_yaml_changes(
     monkeypatch.setenv("GOVERNANCE_METRICS_PATH", str(metrics_yaml))
     module = importlib.reload(collect_metrics)
     try:
-        assert list(module.METRIC_KEYS) == [
+        assert list(module.metric_keys()) == [
             "checklist_compliance_rate",
             "task_seed_cycle_time_minutes",
             "birdseye_refresh_delay_minutes",
@@ -97,9 +96,10 @@ def test_metric_loader_reflects_yaml_changes(
             "reopen_rate",
             "spec_completeness",
         ]
-        assert "checklist_compliance_rate" not in module.PERCENTAGE_KEYS
-        assert "reopen_rate" not in module.PERCENTAGE_KEYS
-        assert "spec_completeness" in module.PERCENTAGE_KEYS
+        percentage = set(module.percentage_keys())
+        assert "checklist_compliance_rate" not in percentage
+        assert "reopen_rate" not in percentage
+        assert "spec_completeness" in percentage
     finally:
         monkeypatch.delenv("GOVERNANCE_METRICS_PATH", raising=False)
         importlib.reload(collect_metrics)
