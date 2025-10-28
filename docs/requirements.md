@@ -1,3 +1,11 @@
+---
+intent_id: DOC-LEGACY
+owner: docs-core
+status: active
+last_reviewed_at: 2025-10-28
+next_review_due: 2025-11-28
+---
+
 # REQUIREMENTS
 
 - 目的/背景: ワークフローオーケストレーションの実例集を整備し、チームが再利用可能なレシピを即時参照できるようにする。

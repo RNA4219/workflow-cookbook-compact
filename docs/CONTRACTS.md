@@ -1,3 +1,11 @@
+---
+intent_id: DOC-LEGACY
+owner: docs-core
+status: active
+last_reviewed_at: 2025-10-28
+next_review_due: 2025-11-28
+---
+
 # Contracts (Cookbook ↔ External)
 
 Cookbook は独立して動作します。外部拡張（例: 子リポジトリ）は、以下の契約を任意に満たすことで、機能を拡張できます。

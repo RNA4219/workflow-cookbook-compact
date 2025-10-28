@@ -1,3 +1,11 @@
+---
+intent_id: DOC-LEGACY
+owner: docs-core
+status: active
+last_reviewed_at: 2025-10-28
+next_review_due: 2025-11-28
+---
+
 # SPEC
 
 - 概要: ワークフローのベストプラクティスをレシピ形式で提供し、組織横断で統一された自動化を推進する。
