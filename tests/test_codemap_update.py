@@ -42,6 +42,24 @@ def test_since_command_resolves_capsules_for_non_birdseye_diff(monkeypatch):
     assert Path("docs/birdseye/caps/README.md.json") in resolved
 
 
+def test_derive_targets_from_since_accepts_absolute_paths():
+    repo_root = Path(__file__).resolve().parents[1]
+    absolute_readme = (repo_root / "README.md").resolve()
+
+    derived = update._derive_targets_from_since((absolute_readme,), repo_root=repo_root)
+
+    assert derived == (Path("docs/birdseye/caps/README.md.json"),)
+
+
+def test_derive_targets_from_since_handles_rename_notation():
+    derived = update._derive_targets_from_since(("README.md -> RUNBOOK.md",))
+
+    assert derived == (
+        Path("docs/birdseye/caps/README.md.json"),
+        Path("docs/birdseye/caps/RUNBOOK.md.json"),
+    )
+
+
 def _write_json(path, payload):
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 

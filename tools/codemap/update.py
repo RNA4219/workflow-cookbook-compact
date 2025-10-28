@@ -75,17 +75,17 @@ class GitDiffResolver:
             text=True,
             check=True,
         )
-        diff_paths = []
+        diff_entries: list[str] = []
         for line in result.stdout.splitlines():
             candidate = line.strip()
             if not candidate:
                 continue
-            diff_paths.append(Path(candidate))
-        return _derive_targets_from_since(diff_paths)
+            diff_entries.append(candidate)
+        return _derive_targets_from_since(diff_entries)
 
 
 def _derive_targets_from_since(
-    diff_paths: Iterable[Path], *, repo_root: Path | None = None
+    diff_paths: Iterable[str | Path], *, repo_root: Path | None = None
 ) -> tuple[Path, ...]:
     base_root = repo_root or _REPO_ROOT
     derived: list[Path] = []
@@ -97,22 +97,44 @@ def _derive_targets_from_since(
             derived.append(path)
 
     for path in diff_paths:
-        raw = path.as_posix().replace("\\", "/").strip()
-        if not raw:
+        if isinstance(path, Path):
+            raw_entry = path.as_posix()
+        else:
+            raw_entry = path
+        raw_entry = raw_entry.replace("\\", "/").strip()
+        if not raw_entry:
             continue
-        while raw.startswith("./"):
-            raw = raw[2:]
-        raw = raw.rstrip("/")
-        if not raw:
-            continue
-        normalised = Path(raw)
-        if normalised.parts[:2] == ("docs", "birdseye"):
-            _add(normalised)
-            continue
-        capsule_slug = raw.replace("/", ".")
-        capsule_path = Path("docs/birdseye/caps") / f"{capsule_slug}.json"
-        if (base_root / capsule_path).is_file():
-            _add(capsule_path)
+        segments: list[str] = []
+        for marker in (" -> ", " => "):
+            if marker in raw_entry:
+                left, right = raw_entry.split(marker, 1)
+                segments.extend([left.strip(), right.strip()])
+                break
+        if not segments:
+            segments.append(raw_entry)
+        for segment in segments:
+            candidate = segment
+            if not candidate:
+                continue
+            while candidate.startswith("./"):
+                candidate = candidate[2:]
+            candidate = candidate.rstrip("/")
+            if not candidate:
+                continue
+            normalised = Path(candidate)
+            if normalised.is_absolute():
+                try:
+                    normalised = normalised.relative_to(base_root)
+                except ValueError:
+                    continue
+            if normalised.parts[:2] == ("docs", "birdseye"):
+                _add(normalised)
+                continue
+            candidate_slug = normalised.as_posix() if normalised.parts else candidate
+            capsule_slug = candidate_slug.replace("/", ".")
+            capsule_path = Path("docs/birdseye/caps") / f"{capsule_slug}.json"
+            if (base_root / capsule_path).is_file():
+                _add(capsule_path)
     return tuple(derived)
 
 
