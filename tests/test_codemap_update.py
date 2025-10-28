@@ -27,6 +27,21 @@ def test_ensure_python_version_exits(monkeypatch, capsys):
     assert "Python 3.11 or newer is required" in captured.out
 
 
+def test_since_command_resolves_capsules_for_non_birdseye_diff(monkeypatch):
+    options = update.parse_args(["--since", "--emit", "index+caps"])
+
+    def fake_run(args, capture_output, text, check):
+        assert args[:3] == ["git", "diff", "--name-only"]
+        return SimpleNamespace(stdout="README.md\n")
+
+    monkeypatch.setattr(update.subprocess, "run", fake_run)
+    options = replace(options, diff_resolver=update.GitDiffResolver())
+
+    resolved = options.resolve_targets()
+
+    assert Path("docs/birdseye/caps/README.md.json") in resolved
+
+
 def _write_json(path, payload):
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
@@ -253,6 +268,56 @@ def _prepare_birdseye(
         },
     )
     return root, index_path, hot_path, cap_paths
+
+
+def test_run_update_with_since_updates_capsules_within_two_hops(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(update, "_REPO_ROOT", tmp_path)
+
+    caps_payloads = {
+        "alpha.md": _caps_payload("alpha.md", deps_out=["stale"], deps_in=["stale"]),
+        "beta.md": _caps_payload("beta.md", deps_out=["stale"], deps_in=["stale"]),
+        "gamma.md": _caps_payload("gamma.md", deps_out=["stale"], deps_in=["stale"]),
+        "delta.md": _caps_payload("delta.md", deps_out=["stale"], deps_in=["stale"]),
+    }
+    _, _, _, cap_paths = _prepare_birdseye(
+        tmp_path,
+        edges=[
+            ["alpha.md", "beta.md"],
+            ["beta.md", "alpha.md"],
+            ["beta.md", "gamma.md"],
+            ["gamma.md", "beta.md"],
+            ["gamma.md", "delta.md"],
+            ["delta.md", "gamma.md"],
+        ],
+        caps_payloads=caps_payloads,
+        hot_entries=_HOT_NODE_IDS,
+        root=tmp_path / "docs" / "birdseye",
+    )
+
+    options = update.UpdateOptions(
+        targets=(),
+        emit="caps",
+        dry_run=False,
+        since="main",
+        diff_resolver=SimpleNamespace(
+            resolve=lambda _: (Path("docs/birdseye/caps/alpha.md.json"),)
+        ),
+    )
+
+    report = update.run_update(options)
+
+    expected_caps = {
+        cap_paths[name].relative_to(tmp_path)
+        for name in ("alpha.md", "beta.md", "gamma.md")
+    }
+
+    assert set(report.planned_writes) == expected_caps
+    assert set(report.performed_writes) == expected_caps
+
+    delta_payload = json.loads(cap_paths["delta.md"].read_text(encoding="utf-8"))
+    assert delta_payload["deps_out"] == ["stale"]
+    assert delta_payload["deps_in"] == ["stale"]
 
 
 @pytest.mark.parametrize("dry_run", [False, True])
@@ -679,6 +744,7 @@ def test_git_diff_resolver_filters_paths(monkeypatch):
     assert captured["args"] == ["git", "diff", "--name-only", "develop...HEAD"]
     assert result == (
         Path("docs/birdseye/caps/delta.md.json"),
+        Path("docs/birdseye/caps/README.md.json"),
         Path("docs/birdseye/index.json"),
     )
 

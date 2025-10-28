@@ -17,6 +17,9 @@ from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping, Protocol, Sequence
 
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
 CapsuleEntry = tuple[Path, dict[str, Any], str]
 CapsuleState = dict[str, CapsuleEntry]
 Graph = dict[str, list[str]]
@@ -72,16 +75,45 @@ class GitDiffResolver:
             text=True,
             check=True,
         )
-        targets: list[Path] = []
+        diff_paths = []
         for line in result.stdout.splitlines():
             candidate = line.strip()
             if not candidate:
                 continue
-            path = Path(candidate)
-            if path.parts[:2] != ("docs", "birdseye"):
-                continue
-            targets.append(path)
-        return tuple(dict.fromkeys(targets))
+            diff_paths.append(Path(candidate))
+        return _derive_targets_from_since(diff_paths)
+
+
+def _derive_targets_from_since(
+    diff_paths: Iterable[Path], *, repo_root: Path | None = None
+) -> tuple[Path, ...]:
+    base_root = repo_root or _REPO_ROOT
+    derived: list[Path] = []
+    seen: set[Path] = set()
+
+    def _add(path: Path) -> None:
+        if path not in seen:
+            seen.add(path)
+            derived.append(path)
+
+    for path in diff_paths:
+        raw = path.as_posix().replace("\\", "/").strip()
+        if not raw:
+            continue
+        while raw.startswith("./"):
+            raw = raw[2:]
+        raw = raw.rstrip("/")
+        if not raw:
+            continue
+        normalised = Path(raw)
+        if normalised.parts[:2] == ("docs", "birdseye"):
+            _add(normalised)
+            continue
+        capsule_slug = raw.replace("/", ".")
+        capsule_path = Path("docs/birdseye/caps") / f"{capsule_slug}.json"
+        if (base_root / capsule_path).is_file():
+            _add(capsule_path)
+    return tuple(derived)
 
 
 def parse_args(argv: Iterable[str] | None = None) -> UpdateOptions:
