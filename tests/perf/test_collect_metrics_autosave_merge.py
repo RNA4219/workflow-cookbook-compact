@@ -19,6 +19,9 @@ def test_collects_merge_precision_mode_metrics(monkeypatch: pytest.MonkeyPatch, 
     metrics_yaml.write_text(
         textwrap.dedent(
             """
+            merge_success_rate: Merge成功率(%)
+            merge_conflict_rate: Merge競合率(%)
+            merge_autosave_lag_ms: AutoSave連携遅延(ms)
             merge_success_rate_baseline: Merge成功率 baseline(%)
             merge_success_rate_strict: Merge成功率 strict(%)
             merge_conflict_rate_baseline: Merge競合率 baseline(%)
@@ -35,6 +38,7 @@ def test_collects_merge_precision_mode_metrics(monkeypatch: pytest.MonkeyPatch, 
     structured_path = tmp_path / "autosave.log"
     structured_payload = {
         "metrics": {
+            "merge.precision_mode": "baseline",
             "merge.success.rate": {"baseline": 0.995},
             "merge.conflict.rate": {"baseline": 0.005},
             "merge.autosave.lag_ms": {"baseline": 150.0},
@@ -43,6 +47,8 @@ def test_collects_merge_precision_mode_metrics(monkeypatch: pytest.MonkeyPatch, 
     structured_path.write_text(json.dumps(structured_payload) + "\n", encoding="utf-8")
     prometheus_text = textwrap.dedent(
         """
+        merge.precision_mode{precision_mode="baseline"} 0
+        merge.precision_mode{precision_mode="strict"} 1
         merge.success.rate{precision_mode="strict"} 0.982
         merge.conflict.rate{precision_mode="strict"} 0.018
         merge.autosave.lag_ms{precision_mode="strict"} 210
@@ -52,11 +58,14 @@ def test_collects_merge_precision_mode_metrics(monkeypatch: pytest.MonkeyPatch, 
     try:
         prometheus_metrics = collect_metrics._parse_prometheus(prometheus_text)
         structured_metrics = collect_metrics._load_structured_log(structured_path)
-        merged = collect_metrics._merge([structured_metrics, prometheus_metrics])
+        merged = collect_metrics._merge([prometheus_metrics, structured_metrics])
     finally:
         collect_metrics._load_metric_config.cache_clear()  # type: ignore[attr-defined]
 
     assert set(merged) == {
+        "merge_success_rate",
+        "merge_conflict_rate",
+        "merge_autosave_lag_ms",
         "merge_success_rate_baseline",
         "merge_success_rate_strict",
         "merge_conflict_rate_baseline",
@@ -64,6 +73,9 @@ def test_collects_merge_precision_mode_metrics(monkeypatch: pytest.MonkeyPatch, 
         "merge_autosave_lag_ms_baseline",
         "merge_autosave_lag_ms_strict",
     }
+    assert merged["merge_success_rate"] == pytest.approx(98.2)
+    assert merged["merge_conflict_rate"] == pytest.approx(1.8)
+    assert merged["merge_autosave_lag_ms"] == pytest.approx(210.0)
     assert merged["merge_success_rate_baseline"] == pytest.approx(99.5)
     assert merged["merge_success_rate_strict"] == pytest.approx(98.2)
     assert merged["merge_conflict_rate_baseline"] == pytest.approx(0.5)
