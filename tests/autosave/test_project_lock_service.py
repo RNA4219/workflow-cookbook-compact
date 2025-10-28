@@ -6,6 +6,7 @@ validate the AutoSave I/O contract and Merge lock coordination requirements.
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any, Dict, List
@@ -65,9 +66,15 @@ class StubCoordinator(ProjectLockCoordinator):
 
 
 class MutableFlagState(StaticFlagState):
-    def __init__(self, autosave_project_lock: bool = True, precision_mode: str = "strict") -> None:
+    def __init__(
+        self,
+        autosave_project_lock: bool = True,
+        precision_mode: str = "strict",
+        checklist_completed: bool = True,
+    ) -> None:
         self._autosave = autosave_project_lock
         self._precision_mode = precision_mode
+        self._checklist_completed = checklist_completed
 
     def autosave_project_lock_enabled(self) -> bool:
         return self._autosave
@@ -80,6 +87,12 @@ class MutableFlagState(StaticFlagState):
 
     def set_precision_mode(self, value: str) -> None:
         self._precision_mode = value
+
+    def autosave_rollout_checklist_completed(self) -> bool:
+        return self._checklist_completed
+
+    def set_checklist(self, value: bool) -> None:
+        self._checklist_completed = value
 
 
 @pytest.fixture
@@ -129,4 +142,48 @@ def test_merge_orchestrator_retries_and_releases_on_strict_precision_mode(servic
     assert result.status == "ok"
     assert coordinator.release_events == [("project-1", "lock-1")]
     assert any(event == "autosave.snapshot.commit" for event, _ in telemetry.events)
+
+
+def test_flag_rollout_guard_enforces_checklist_before_enable(
+    service_components: tuple[
+        ProjectLockService, StubCoordinator, StubTelemetry, MutableFlagState
+    ],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    service, coordinator, telemetry, flags = service_components
+    coordinator.set_token("project-1", "lock-1")
+
+    flags.set_autosave(False)
+    caplog.clear()
+    with caplog.at_level(logging.INFO):
+        result = service.apply_snapshot(_request())
+    assert result.status == "skipped"
+    assert any("action=flag_disabled" in record.message for record in caplog.records)
+
+    flags.set_autosave(True)
+    flags.set_checklist(False)
+    telemetry.events.clear()
+    caplog.clear()
+    with caplog.at_level(logging.INFO):
+        result = service.apply_snapshot(_request(snapshot_id=1))
+    assert result.status == "skipped"
+    assert telemetry.events == []
+    assert any(
+        "action=rollout_checklist_incomplete" in record.message for record in caplog.records
+    )
+
+    flags.set_checklist(True)
+    telemetry.events.clear()
+    result = service.apply_snapshot(_request(snapshot_id=1))
+    assert result.status == "ok"
+    assert telemetry.events[-1][0] == "autosave.snapshot.commit"
+
+    flags.set_autosave(False)
+    telemetry.events.clear()
+    caplog.clear()
+    with caplog.at_level(logging.INFO):
+        result = service.apply_snapshot(_request(snapshot_id=2))
+    assert result.status == "skipped"
+    assert telemetry.events == []
+    assert any("action=flag_disabled" in record.message for record in caplog.records)
 

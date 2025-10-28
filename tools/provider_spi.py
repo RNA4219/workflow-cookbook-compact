@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Any, AsyncIterator, Protocol, runtime_checkable
 
-__all__ = ["LLMProvider"]
+__all__ = ["LLMProvider", "ensure_autosave_rollout_enabled"]
 
 
 @runtime_checkable
@@ -24,3 +24,15 @@ class LLMProvider(Protocol):
 
     async def complete(self, prompt: str, /, **kwargs: Any) -> str:
         """Return the fully concatenated response for *prompt*."""
+
+
+def ensure_autosave_rollout_enabled(*, flag_enabled: bool, checklist_completed: bool) -> bool:
+    """Guard staged rollout flags per docs/IMPLEMENTATION-PLAN.md flag policy."""
+
+    if not flag_enabled:
+        return False
+    if not checklist_completed:
+        raise RuntimeError(
+            "autosave.project_lock requires checklist completion before enabling"
+        )
+    return True
