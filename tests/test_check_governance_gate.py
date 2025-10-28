@@ -1,6 +1,8 @@
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from tools.ci import check_governance_gate
@@ -167,6 +169,35 @@ def test_collect_validation_outcome_matches_cli(monkeypatch, capsys):
     assert check_governance_gate.validate_pr_body(body) is False
     captured = capsys.readouterr()
     assert captured.err.splitlines() == [message for _, message in expected_messages]
+
+
+def test_collect_validation_outcome_prefers_injected_hints(monkeypatch):
+    def _fail():  # pragma: no cover - guard against fallback path
+        pytest.fail("collect_recent_category_hints should not be called")
+
+    monkeypatch.setattr(check_governance_gate, "collect_recent_category_hints", _fail)
+
+    body = """
+Intent: INT-1234
+## EVALUATION
+- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
+Priority Score: 4
+"""
+
+    outcome = check_governance_gate.collect_validation_outcome(
+        body,
+        category_hints=["SEC", "QA"],
+    )
+
+    expected_warning = (
+        "warning",
+        "No intent category pattern (INT-###-CAT-) detected for INT-1234. Consider categories: SEC, QA.",
+    )
+
+    assert list(outcome.iter_messages()) == [expected_warning]
+    assert outcome.errors == []
+    assert outcome.warnings == [expected_warning[1]]
+    assert outcome.is_success is True
 
 
 def test_pr_template_contains_required_sections():
