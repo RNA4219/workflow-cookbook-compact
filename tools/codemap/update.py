@@ -11,10 +11,10 @@ import re
 import subprocess
 import sys
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Iterable, Mapping, Sequence
+from typing import Any, Callable, Iterable, Mapping, Protocol, Sequence
 
 
 CapsuleEntry = tuple[Path, dict[str, Any], str]
@@ -22,11 +22,39 @@ CapsuleState = dict[str, CapsuleEntry]
 Graph = dict[str, list[str]]
 
 
+class TargetResolutionError(RuntimeError):
+    """Raised when Birdseye targets cannot be resolved."""
+
+
+class DiffResolver(Protocol):
+    def resolve(self, reference: str) -> tuple[Path, ...]:
+        ...
+
+
 @dataclass(frozen=True)
 class UpdateOptions:
     targets: tuple[Path, ...]
     emit: str
     dry_run: bool = False
+    since: str | None = None
+    diff_resolver: DiffResolver | None = None
+
+    def resolve_targets(self) -> tuple[Path, ...]:
+        resolved = list(self.targets)
+        if self.since:
+            if self.diff_resolver is None:
+                raise TargetResolutionError("Diff resolver is required when --since is used")
+            try:
+                derived = self.diff_resolver.resolve(self.since)
+            except subprocess.CalledProcessError as exc:
+                raise TargetResolutionError(
+                    f"Failed to resolve git diff for --since: {exc}"
+                ) from exc
+            resolved.extend(derived)
+        unique_targets = tuple(dict.fromkeys(resolved))
+        if not unique_targets:
+            raise TargetResolutionError("Specify --targets, --since, or both")
+        return unique_targets
 
 
 @dataclass(frozen=True)
@@ -36,23 +64,24 @@ class UpdateReport:
     performed_writes: tuple[Path, ...]
 
 
-def _derive_targets_from_since(reference: str) -> tuple[Path, ...]:
-    result = subprocess.run(
-        ["git", "diff", "--name-only", f"{reference}...HEAD"],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    targets: list[Path] = []
-    for line in result.stdout.splitlines():
-        candidate = line.strip()
-        if not candidate:
-            continue
-        path = Path(candidate)
-        if path.parts[:2] != ("docs", "birdseye"):
-            continue
-        targets.append(path)
-    return tuple(dict.fromkeys(targets))
+class GitDiffResolver:
+    def resolve(self, reference: str) -> tuple[Path, ...]:
+        result = subprocess.run(
+            ["git", "diff", "--name-only", f"{reference}...HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        targets: list[Path] = []
+        for line in result.stdout.splitlines():
+            candidate = line.strip()
+            if not candidate:
+                continue
+            path = Path(candidate)
+            if path.parts[:2] != ("docs", "birdseye"):
+                continue
+            targets.append(path)
+        return tuple(dict.fromkeys(targets))
 
 
 def parse_args(argv: Iterable[str] | None = None) -> UpdateOptions:
@@ -89,17 +118,15 @@ def parse_args(argv: Iterable[str] | None = None) -> UpdateOptions:
         target_paths.extend(
             Path(value.strip()) for value in args.targets.split(",") if value.strip()
         )
-    if args.since:
-        try:
-            derived = _derive_targets_from_since(args.since)
-        except subprocess.CalledProcessError as exc:
-            parser.error(f"Failed to resolve git diff for --since: {exc}")
-        else:
-            target_paths.extend(derived)
-    unique_targets = tuple(dict.fromkeys(target_paths))
-    if not unique_targets:
+    if not target_paths and not args.since:
         parser.error("Specify --targets, --since, or both")
-    return UpdateOptions(targets=unique_targets, emit=args.emit, dry_run=args.dry_run)
+    unique_targets = tuple(dict.fromkeys(target_paths))
+    return UpdateOptions(
+        targets=unique_targets,
+        emit=args.emit,
+        dry_run=args.dry_run,
+        since=args.since,
+    )
 
 
 def ensure_python_version() -> None:
@@ -348,7 +375,8 @@ def run_update(options: UpdateOptions) -> UpdateReport:
         if applied_generated_at is None:
             applied_generated_at = value
 
-    grouped = _group_targets(options.targets)
+    resolved_targets = options.resolve_targets()
+    grouped = _group_targets(resolved_targets)
 
     for root, root_targets in grouped.items():
         index_path = root / "index.json"
@@ -431,7 +459,12 @@ def run_update(options: UpdateOptions) -> UpdateReport:
 def main(argv: Iterable[str] | None = None) -> int:
     ensure_python_version()
     options = parse_args(argv)
-    run_update(options)
+    options = replace(options, diff_resolver=GitDiffResolver())
+    try:
+        run_update(options)
+    except TargetResolutionError as exc:
+        print(f"[ERROR] {exc}", file=sys.stderr)
+        return 1
     return 0
 
 

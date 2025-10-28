@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 import sys
@@ -579,6 +580,19 @@ def test_run_update_accepts_caps_directory_target(tmp_path, monkeypatch):
         assert refreshed["deps_in"] == deps_in
 
 
+def test_parse_args_returns_since_without_resolving(monkeypatch):
+    monkeypatch.setattr(
+        update.subprocess,
+        "run",
+        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("should not be called")),
+    )
+
+    options = update.parse_args(["--since", "feature"])
+
+    assert options.targets == ()
+    assert options.since == "feature"
+
+
 def test_parse_args_supports_since_and_limits_scope(tmp_path, monkeypatch):
     caps_payloads = {
         cap_id: _caps_payload(cap_id, deps_out=["stale"], deps_in=["old"])
@@ -611,20 +625,26 @@ def test_parse_args_supports_since_and_limits_scope(tmp_path, monkeypatch):
 
     monkeypatch.chdir(tmp_path)
 
-    recorded = {}
+    class FakeResolver:
+        def __init__(self) -> None:
+            self.calls: list[str] = []
 
-    def fake_run(args, *, capture_output, text, check):
-        recorded["args"] = args
-        return SimpleNamespace(stdout="docs/birdseye/caps/delta.md.json\nREADME.md\n")
-
-    monkeypatch.setattr(update.subprocess, "run", fake_run)
+        def resolve(self, reference: str) -> tuple[Path, ...]:
+            self.calls.append(reference)
+            return (
+                Path("docs/birdseye/caps/delta.md.json"),
+            )
 
     options = update.parse_args(["--emit", "caps", "--since"])
 
-    assert recorded["args"] == ["git", "diff", "--name-only", "main...HEAD"]
-    assert options.targets == (Path("docs/birdseye/caps/delta.md.json"),)
+    resolver = FakeResolver()
+    options = replace(options, diff_resolver=resolver)
+
+    assert resolver.calls == []
 
     report = update.run_update(options)
+
+    assert resolver.calls == ["main"]
 
     expected_caps = {
         Path("docs/birdseye/caps/beta.md.json"),
@@ -639,6 +659,28 @@ def test_parse_args_supports_since_and_limits_scope(tmp_path, monkeypatch):
     untouched = json.loads(cap_paths["alpha.md"].read_text(encoding="utf-8"))
     assert untouched["deps_out"] == ["stale"]
     assert untouched["deps_in"] == ["old"]
+
+
+def test_git_diff_resolver_filters_paths(monkeypatch):
+    captured = {}
+
+    def fake_run(args, *, capture_output, text, check):
+        captured["args"] = args
+        return SimpleNamespace(
+            stdout="docs/birdseye/caps/delta.md.json\nREADME.md\ndocs/birdseye/index.json\n"
+        )
+
+    monkeypatch.setattr(update.subprocess, "run", fake_run)
+
+    resolver = update.GitDiffResolver()
+
+    result = resolver.resolve("develop")
+
+    assert captured["args"] == ["git", "diff", "--name-only", "develop...HEAD"]
+    assert result == (
+        Path("docs/birdseye/caps/delta.md.json"),
+        Path("docs/birdseye/index.json"),
+    )
 
 
 def test_group_targets_resolves_caps_paths(tmp_path):
