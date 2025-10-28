@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Mapping, MutableMapping, Optional, Protocol
 
+from tools.provider_spi import ensure_autosave_rollout_enabled
+
 logger = logging.getLogger("autosave.project_lock")
 
 
@@ -40,6 +42,9 @@ class FlagState(Protocol):
 
     def merge_precision_mode(self) -> str:
         """Return the configured ``merge.precision_mode``."""
+
+    def autosave_rollout_checklist_completed(self) -> bool:
+        """Return True when rollout checklist requirements are satisfied."""
 
 
 @dataclass(frozen=True)
@@ -86,12 +91,16 @@ class StaticFlagState(FlagState):
 
     autosave_project_lock: bool = True
     precision_mode: str = "strict"
+    checklist_completed: bool = True
 
     def autosave_project_lock_enabled(self) -> bool:
         return self.autosave_project_lock
 
     def merge_precision_mode(self) -> str:
         return self.precision_mode
+
+    def autosave_rollout_checklist_completed(self) -> bool:
+        return self.checklist_completed
 
 
 class ProjectLockService:
@@ -112,7 +121,23 @@ class ProjectLockService:
     def apply_snapshot(self, request: AutoSaveRequest) -> AutoSaveResult:
         """Apply *request* according to the AutoSave contract."""
 
-        if not self._flag_state.autosave_project_lock_enabled():
+        flag_enabled = self._flag_state.autosave_project_lock_enabled()
+        checklist_completed = self._flag_state.autosave_rollout_checklist_completed()
+        try:
+            rollout_active = ensure_autosave_rollout_enabled(
+                flag_enabled=flag_enabled, checklist_completed=checklist_completed
+            )
+        except RuntimeError as error:
+            self._audit("rollout_checklist_incomplete", request)
+            logger.warning(
+                "autosave.project_lock guard skipped project %s: %s",
+                request.project_id,
+                error,
+            )
+            return AutoSaveResult(status="skipped", applied_snapshot_id=None, next_retry_at=None)
+
+        if not rollout_active:
+            self._audit("flag_disabled", request)
             logger.info(
                 "autosave.project_lock disabled; skipping validation for project %s",
                 request.project_id,
