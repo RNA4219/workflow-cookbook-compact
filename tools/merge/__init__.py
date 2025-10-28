@@ -1,8 +1,7 @@
-"""Backward-compatible merge module exports."""
+"""Merge tooling package."""
 
-from tools.merge.orchestrator import MergeAutosaveOrchestrator
-
-from tools.merge.precision_mode_pipeline import (  # noqa: F401
+from .orchestrator import MergeAutosaveOrchestrator  # noqa: F401
+from .precision_mode_pipeline import (  # noqa: F401
     MergeExecutionResult,
     MergeOperation,
     MergePipeline,
@@ -18,4 +17,3 @@ __all__ = [
     "MergePipelineRequest",
     "MergePipelineResult",
 ]
-
