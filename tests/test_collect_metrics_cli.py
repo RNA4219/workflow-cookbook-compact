@@ -6,6 +6,7 @@ import socket
 import subprocess
 import sys
 import threading
+import textwrap
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -203,6 +204,99 @@ def test_collects_review_latency_from_minute_aggregates(tmp_path: Path) -> None:
         "reopen_rate": 20.0,
         "spec_completeness": 95.0,
     }
+
+
+def test_cli_uses_metrics_yaml_override(
+    monkeypatch: "pytest.MonkeyPatch", tmp_path: Path
+) -> None:
+    metrics_yaml = tmp_path / "metrics.yaml"
+    metrics_yaml.write_text(
+        textwrap.dedent(
+            """
+            # reordered metrics for override
+            review_latency: レビュー待機時間(時間)
+            birdseye_refresh_delay_minutes: Birdseye 更新遅延(分)
+            compress_ratio: トリミング後のコンテキスト圧縮率(0-1)
+            semantic_retention: トリミング後に保持された意味情報の割合(0-1)
+            task_seed_cycle_time_minutes: Task Seed 処理時間(分)
+            checklist_compliance_rate: チェックリスト準拠率(%)
+            reopen_rate: 再オープン率(%)
+            spec_completeness: スペック充足率(%)
+            """
+        ).strip()
+        + "\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setenv("GOVERNANCE_METRICS_PATH", str(metrics_yaml))
+
+    structured = tmp_path / "docops.log"
+    records = [
+        {"metrics": {"checklist_compliance_rate": {"compliant": 48, "total": 50}}},
+        {"metrics": {"task_seed_cycle_time_minutes": 7.0}},
+        {"metrics": {"birdseye_refresh_delay_minutes": 3.0}},
+        {"metrics": {"review_latency": 1.25}},
+        {"metrics": {"compress_ratio": 0.8}},
+        {"metrics": {"semantic_retention": 0.9}},
+        {"metrics": {"reopen_rate": {"reopened": 2, "total": 10}}},
+        {"metrics": {"spec_completeness": {"with_spec": 93, "total": 100}}},
+    ]
+    structured.write_text(
+        "\n".join(json.dumps(record) for record in records) + "\n",
+        encoding="utf-8",
+    )
+
+    result = _run_cli("--log-path", str(structured))
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload == {
+        "checklist_compliance_rate": 96.0,
+        "task_seed_cycle_time_minutes": 7.0,
+        "birdseye_refresh_delay_minutes": 3.0,
+        "review_latency": pytest.approx(1.25),
+        "compress_ratio": pytest.approx(0.8),
+        "semantic_retention": pytest.approx(0.9),
+        "reopen_rate": 20.0,
+        "spec_completeness": 93.0,
+    }
+
+
+def test_prometheus_values_retain_priority_for_non_overwrite_metrics(tmp_path: Path) -> None:
+    prometheus = tmp_path / "metrics.prom"
+    prometheus.write_text(
+        textwrap.dedent(
+            """
+            checklist_compliance_rate 0.95
+            task_seed_cycle_time_minutes 7.0
+            birdseye_refresh_delay_minutes 2.0
+            review_latency 0.6
+            compress_ratio 0.8
+            semantic_retention 0.9
+            workflow_reopen_rate 0.1
+            workflow_spec_completeness_ratio 0.9
+            """
+        ).strip()
+        + "\n",
+        encoding="utf-8",
+    )
+
+    structured = tmp_path / "docops.log"
+    records = [
+        {"metrics": {"task_seed_cycle_time_minutes": 5.0}},
+        {"metrics": {"reopen_rate": {"reopened": 1, "total": 5}}},
+    ]
+    structured.write_text(
+        "\n".join(json.dumps(record) for record in records) + "\n",
+        encoding="utf-8",
+    )
+
+    result = _run_cli("--metrics-url", prometheus.as_uri(), "--log-path", str(structured))
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["task_seed_cycle_time_minutes"] == pytest.approx(7.0)
+    assert payload["reopen_rate"] == pytest.approx(20.0)
 
 
 def test_structured_log_overrides_prometheus_with_latest_scale(tmp_path: Path) -> None:

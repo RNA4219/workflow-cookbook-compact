@@ -74,48 +74,6 @@ _REVIEW_LATENCY_AGGREGATE_PREFIXES: tuple[tuple[str, float], ...] = (
     *_LEGACY_REVIEW_LATENCY_PREFIXES,
 )
 
-_RATIO_CAPTURE_ENTRIES: tuple[tuple[str, tuple[str, ...], tuple[str, ...]], ...] = (
-    (
-        "reopen_rate",
-        ("reopened", "reopens", "numerator"),
-        ("total", "resolved", "all", "denominator"),
-    ),
-    (
-        "spec_completeness",
-        ("with_spec", "with_specs", "completed", "numerator"),
-        ("total", "all", "denominator"),
-    ),
-)
-
-_RATIO_CAPTURE_LOOKUP: Mapping[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
-    key: (numerator_keys, denominator_keys)
-    for key, numerator_keys, denominator_keys in _RATIO_CAPTURE_ENTRIES
-}
-
-_RATIO_PROMETHEUS_CONFIG: Mapping[str, tuple[tuple[str, ...], tuple[str, ...], tuple[tuple[str, float], ...]]] = {
-    "reopen_rate": (
-        ("_reopened", "_reopen"),
-        ("_total", "_count", "_closed", "_all"),
-        (
-            ("workflow_reopen_rate", 1.0),
-            ("workflow_reopen_rate_avg", 1.0),
-            ("docops_reopen_rate", 1.0),
-            ("reopen_rate", 1.0),
-        ),
-    ),
-    "spec_completeness": (
-        ("_with_spec", "_with_specs", "_completed"),
-        ("_total", "_count", "_all"),
-        (
-            ("workflow_spec_completeness_ratio", 1.0),
-            ("workflow_spec_completeness_ratio_avg", 1.0),
-            ("workflow_spec_completeness", 1.0),
-            ("spec_completeness_ratio", 1.0),
-            ("spec_completeness", 1.0),
-        ),
-    ),
-}
-
 _OVERWRITE_KEYS: frozenset[str] = frozenset(
     {
         "checklist_compliance_rate",
@@ -563,8 +521,8 @@ _BASE_METRIC_DEFINITIONS: tuple[MetricDefinition, ...] = (
                 )
             ),
             MappingRatioRule(
-                numerator_keys=_RATIO_CAPTURE_LOOKUP["reopen_rate"][0],
-                denominator_keys=_RATIO_CAPTURE_LOOKUP["reopen_rate"][1],
+                numerator_keys=("reopened", "reopens", "numerator"),
+                denominator_keys=("total", "resolved", "all", "denominator"),
             ),
         ),
         numeric_rules=(
@@ -577,10 +535,17 @@ _BASE_METRIC_DEFINITIONS: tuple[MetricDefinition, ...] = (
                 ),
             ),
             SuffixRatioNumericRule(
-                numerator_suffixes=_RATIO_PROMETHEUS_CONFIG["reopen_rate"][0],
-                denominator_suffixes=_RATIO_PROMETHEUS_CONFIG["reopen_rate"][1],
+                numerator_suffixes=("_reopened", "_reopen"),
+                denominator_suffixes=("_total", "_count", "_closed", "_all"),
             ),
-            NumericAverageRule(prefixes=_RATIO_PROMETHEUS_CONFIG["reopen_rate"][2]),
+            NumericAverageRule(
+                prefixes=(
+                    ("workflow_reopen_rate", 1.0),
+                    ("workflow_reopen_rate_avg", 1.0),
+                    ("docops_reopen_rate", 1.0),
+                    ("reopen_rate", 1.0),
+                )
+            ),
         ),
     ),
     MetricDefinition(
@@ -597,8 +562,8 @@ _BASE_METRIC_DEFINITIONS: tuple[MetricDefinition, ...] = (
                 )
             ),
             MappingRatioRule(
-                numerator_keys=_RATIO_CAPTURE_LOOKUP["spec_completeness"][0],
-                denominator_keys=_RATIO_CAPTURE_LOOKUP["spec_completeness"][1],
+                numerator_keys=("with_spec", "with_specs", "completed", "numerator"),
+                denominator_keys=("total", "all", "denominator"),
             ),
         ),
         numeric_rules=(
@@ -613,10 +578,18 @@ _BASE_METRIC_DEFINITIONS: tuple[MetricDefinition, ...] = (
                 ),
             ),
             SuffixRatioNumericRule(
-                numerator_suffixes=_RATIO_PROMETHEUS_CONFIG["spec_completeness"][0],
-                denominator_suffixes=_RATIO_PROMETHEUS_CONFIG["spec_completeness"][1],
+                numerator_suffixes=("_with_spec", "_with_specs", "_completed"),
+                denominator_suffixes=("_total", "_count", "_all"),
             ),
-            NumericAverageRule(prefixes=_RATIO_PROMETHEUS_CONFIG["spec_completeness"][2]),
+            NumericAverageRule(
+                prefixes=(
+                    ("workflow_spec_completeness_ratio", 1.0),
+                    ("workflow_spec_completeness_ratio_avg", 1.0),
+                    ("workflow_spec_completeness", 1.0),
+                    ("spec_completeness_ratio", 1.0),
+                    ("spec_completeness", 1.0),
+                )
+            ),
         ),
     ),
 )
@@ -627,14 +600,13 @@ _KNOWN_METRIC_DEFINITIONS: Mapping[str, MetricDefinition] = {
 
 
 @dataclass(frozen=True)
-class _MetricConfig:
+class _LoadedMetrics:
+    extractor: MetricExtractor
     keys: tuple[str, ...]
-    percentage_keys: tuple[str, ...]
-    definitions: tuple[MetricDefinition, ...]
 
 
 @functools.lru_cache(maxsize=1)
-def _load_metric_config() -> _MetricConfig:
+def _load_metric_config() -> _LoadedMetrics:
     override = os.environ.get(_METRICS_PATH_ENV)
     if override:
         candidate = Path(override)
@@ -672,22 +644,20 @@ def _load_metric_config() -> _MetricConfig:
         raise MetricsCollectionError(
             "Missing metric extractor definitions for: " + ", ".join(sorted(missing))
         )
-    return _MetricConfig(
-        keys=tuple(keys),
-        percentage_keys=tuple(percentage_keys),
-        definitions=tuple(definitions),
-    )
+    extractor = MetricExtractor(tuple(definitions), percentage_keys=tuple(percentage_keys))
+    return _LoadedMetrics(extractor=extractor, keys=tuple(keys))
 
 
-_METRIC_CONFIG = _load_metric_config()
-METRIC_KEYS: tuple[str, ...] = _METRIC_CONFIG.keys
-PERCENTAGE_KEYS: tuple[str, ...] = _METRIC_CONFIG.percentage_keys
-METRIC_DEFINITIONS: tuple[MetricDefinition, ...] = _METRIC_CONFIG.definitions
+def _metrics() -> _LoadedMetrics:
+    return _load_metric_config()
 
-METRICS_EXTRACTOR = MetricExtractor(
-    METRIC_DEFINITIONS,
-    percentage_keys=PERCENTAGE_KEYS,
-)
+
+def metric_keys() -> tuple[str, ...]:
+    return _metrics().keys
+
+
+def percentage_keys() -> tuple[str, ...]:
+    return _metrics().extractor.percentage_keys()
 
 
 def _parse_prometheus(text: str) -> dict[str, float]:
@@ -711,7 +681,7 @@ def _parse_prometheus(text: str) -> dict[str, float]:
             raw[metric_name] = value
 
     metrics: dict[str, float] = {}
-    METRICS_EXTRACTOR.capture_numeric(raw, metrics)
+    _metrics().extractor.capture_numeric(raw, metrics)
     return metrics
 
 
@@ -736,25 +706,26 @@ def _load_structured_log(path: Path) -> Mapping[str, float]:
         except json.JSONDecodeError:
             continue
         if isinstance(parsed, Mapping):
-            METRICS_EXTRACTOR.capture_structured(parsed, metrics)
+            _metrics().extractor.capture_structured(parsed, metrics)
             statistics = parsed.get("statistics")
             if isinstance(statistics, Mapping):
-                METRICS_EXTRACTOR.capture_structured(statistics, metrics)
+                _metrics().extractor.capture_structured(statistics, metrics)
             nested = parsed.get("metrics")
             if isinstance(nested, Mapping):
-                METRICS_EXTRACTOR.capture_structured(nested, metrics, overwrite=True)
+                _metrics().extractor.capture_structured(nested, metrics, overwrite=True)
                 statistics = nested.get("statistics")
                 if isinstance(statistics, Mapping):
-                    METRICS_EXTRACTOR.capture_structured(statistics, metrics, overwrite=True)
+                    _metrics().extractor.capture_structured(statistics, metrics, overwrite=True)
     return metrics
 
 
 def _merge(sources: Iterable[Mapping[str, float]]) -> dict[str, float]:
-    return METRICS_EXTRACTOR.merge(sources)
+    return _metrics().extractor.merge(sources)
 
 
 def _format_pushgateway_payload(metrics: Mapping[str, float]) -> bytes:
-    lines = [f"{key} {format(metrics[key], 'g')}" for key in METRIC_KEYS]
+    keys = _metrics().keys
+    lines = [f"{key} {format(metrics[key], 'g')}" for key in keys]
     return ("\n".join(lines) + "\n").encode("utf-8")
 
 
