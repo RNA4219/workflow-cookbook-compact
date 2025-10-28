@@ -18,7 +18,8 @@ next_review_due: 2025-11-28
 - `baseline`: 既存マージアルゴリズムを維持し、AutoSave のロックをオプション扱いにする。失敗時はリトライ後に警告ログを残す。
 - `strict`: AutoSave のロック取得を必須とし、CRDT 差分の矛盾を検知した場合に即時ロールバックする。
   `merge.precision_mode` フラグで切替。
-- 精度モードは [docs/IMPLEMENTATION-PLAN.md#フラグ方針][plan-flag-policy] と同期し、テレメトリ完了までは `baseline` がデフォルト。
+- 精度モードは [docs/IMPLEMENTATION-PLAN.md#フラグ方針][plan-flag-policy] と同期し、
+  テレメトリ完了までは `baseline` がデフォルト。
 
 ## I/O 契約
 
@@ -36,7 +37,8 @@ next_review_due: 2025-11-28
 
 ## テレメトリ要件
 
-- `merge.precision_mode` ごとに `merge.success.rate` と `merge.conflict.rate` を計測し、閾値超過時にカナリア結果を
+- `merge.precision_mode` ごとに `merge.success.rate` と `merge.conflict.rate` を計測し、
+  閾値超過時にカナリア結果を
   [docs/tasks/task-autosave-project-locks.md#tdd](tasks/task-autosave-project-locks.md#tdd) へ記録する。
 - AutoSave 連携遅延を `merge.autosave.lag_ms` として追跡し、目標値 200ms を超過した場合にフラグを `baseline` へ戻す。
 - すべてのテレメトリは [docs/IMPLEMENTATION-PLAN.md#依存関係][plan-dependencies] で定義したストレージに集約する。

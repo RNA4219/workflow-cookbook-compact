@@ -10,14 +10,18 @@ next_review_due: 2025-11-28
 
 ## 背景
 
-- AutoSave のロック整合性と Merge 精度モードの切替を同期させる必要がある。
-- [docs/IMPLEMENTATION-PLAN.md](../IMPLEMENTATION-PLAN.md) で定義した段階導入フローにより、ユーザー影響を最小化する。
-- 詳細設計は [docs/AUTOSAVE-DESIGN-IMPL.md#不変条件](../AUTOSAVE-DESIGN-IMPL.md#%E4%B8%8D%E5%A4%89%E6%9D%A1%E4%BB%B6) と
+- AutoSave のロック整合性と Merge 精度モードの切替を同期させる必要が
+  ある。
+- [docs/IMPLEMENTATION-PLAN.md](../IMPLEMENTATION-PLAN.md) で定義した段階導入フローにより、
+  ユーザー影響を最小化する。
+- 詳細設計は
+  [docs/AUTOSAVE-DESIGN-IMPL.md#不変条件](../AUTOSAVE-DESIGN-IMPL.md#%E4%B8%8D%E5%A4%89%E6%9D%A1%E4%BB%B6) と
   [docs/MERGE-DESIGN-IMPL.md#精度モード](../MERGE-DESIGN-IMPL.md#%E7%B2%BE%E5%BA%A6%E3%83%A2%E3%83%BC%E3%83%89) に委譲する。
 
 ## ゴール
 
-- `autosave.project_lock` と `merge.precision_mode` のフラグを段階導入し、主要ユースケースのデータ損失ゼロを保証する。
+- `autosave.project_lock` と `merge.precision_mode` のフラグを段階導入し、
+  主要ユースケースのデータ損失ゼロを保証する。
 - AutoSave と Merge のログを統合し、
   [docs/AUTOSAVE-DESIGN-IMPL.md#テレメトリ要件](
     ../AUTOSAVE-DESIGN-IMPL.md#%E3%83%86%E3%83%AC%E3%83%A1%E3%83%88%E3%83%AA%E8%A6%81%E4%BB%B6) と
