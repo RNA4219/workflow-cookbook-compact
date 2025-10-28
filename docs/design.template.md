@@ -1,3 +1,11 @@
+---
+intent_id: DOC-LEGACY
+owner: docs-core
+status: active
+last_reviewed_at: 2025-10-28
+next_review_due: 2025-11-28
+---
+
 # DESIGN (Tiny)
 
 - 構成：主要コンポーネントと責務（各1行）

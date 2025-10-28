@@ -1,3 +1,11 @@
+---
+intent_id: DOC-LEGACY
+owner: docs-core
+status: active
+last_reviewed_at: 2025-10-28
+next_review_due: 2025-11-28
+---
+
 # CI 段階的導入 要件定義
 
 ## 1. 目的

@@ -1,3 +1,11 @@
+---
+intent_id: DOC-LEGACY
+owner: docs-core
+status: active
+last_reviewed_at: 2025-10-28
+next_review_due: 2025-11-28
+---
+
 # Fork Notes テンプレート
 
 フォークリポジトリの差分と逆輸入方針を即時把握できるよう、以下のテンプレートに沿って記録してください。初回フォーク時にすべての項目を埋め、以後の差分もこのファイルで単一ソースとして更新します。

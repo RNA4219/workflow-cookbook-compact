@@ -1,3 +1,11 @@
+---
+intent_id: DOC-LEGACY
+owner: docs-core
+status: active
+last_reviewed_at: 2025-10-28
+next_review_due: 2025-11-28
+---
+
 # リリースチェックリスト
 
 詳細なバージョニングとリリース手順は [`docs/addenda/M_Versioning_Release.md`](addenda/M_Versioning_Release.md) を参照する。

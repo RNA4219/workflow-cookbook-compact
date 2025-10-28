@@ -1,3 +1,11 @@
+---
+intent_id: DOC-LEGACY
+owner: docs-core
+status: active
+last_reviewed_at: 2025-10-28
+next_review_due: 2025-11-28
+---
+
 # 外部派生リポからの知見取り込み手順
 
 Workflow Cookbook 系派生リポジトリ（例: `workflow-cookbook-documents`）から得られた改善点を、本リポジトリ固有の構成へ調整したうえで反映するためのガイドライン。

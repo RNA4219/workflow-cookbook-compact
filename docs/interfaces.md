@@ -1,3 +1,11 @@
+---
+intent_id: DOC-LEGACY
+owner: docs-core
+status: active
+last_reviewed_at: 2025-10-28
+next_review_due: 2025-11-28
+---
+
 # Boundary Map
 
 各機能の責務境界を共有するための一覧です。1機能につき1テーブルを追加し、
