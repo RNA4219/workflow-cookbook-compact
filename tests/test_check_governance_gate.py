@@ -200,6 +200,25 @@ Priority Score: 4
     assert outcome.is_success is True
 
 
+def test_collect_recent_category_hints_uses_base_ref(monkeypatch):
+    paths_by_refspec = {
+        "origin/main...HEAD": ["docs/guide.md", "ops/runbook.md"],
+        "HEAD^..HEAD": ["ops/runbook.md"],
+    }
+
+    def _fake(refspec: str):
+        if refspec not in paths_by_refspec:
+            pytest.fail(f"Unexpected refspec requested: {refspec}")
+        return paths_by_refspec[refspec]
+
+    monkeypatch.setattr(check_governance_gate, "get_changed_paths", _fake)
+    monkeypatch.setenv("GITHUB_BASE_REF", "main")
+
+    hints = check_governance_gate.collect_recent_category_hints()
+
+    assert hints == ["DOCS", "OPS"]
+
+
 def test_pr_template_contains_required_sections():
     template = Path(".github/pull_request_template.md").read_text(encoding="utf-8")
 

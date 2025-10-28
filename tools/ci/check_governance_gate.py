@@ -133,12 +133,33 @@ def infer_categories_from_paths(paths: Iterable[str]) -> List[str]:
     return suggestions
 
 
-def collect_recent_category_hints() -> List[str]:
-    try:
-        changed_paths = get_changed_paths("HEAD^..HEAD")
-    except subprocess.CalledProcessError:
-        return []
-    return infer_categories_from_paths(changed_paths)
+def collect_recent_category_hints(
+    *,
+    base_ref: str | None = None,
+    head_ref: str = "HEAD",
+    fallback_refspec: str = "HEAD^..HEAD",
+) -> List[str]:
+    resolved_base = (base_ref or os.environ.get("GITHUB_BASE_REF") or "").strip()
+
+    refspec_candidates: list[str] = []
+    if resolved_base:
+        base_spec = resolved_base
+        if not base_spec.startswith("origin/"):
+            base_spec = f"origin/{base_spec}"
+        refspec_candidates.append(f"{base_spec}...{head_ref}")
+    refspec_candidates.append(fallback_refspec)
+
+    last_index = len(refspec_candidates) - 1
+    for index, refspec in enumerate(refspec_candidates):
+        try:
+            changed_paths = get_changed_paths(refspec)
+        except subprocess.CalledProcessError:
+            continue
+        hints = infer_categories_from_paths(changed_paths)
+        if hints or index == last_index:
+            return hints
+
+    return []
 
 
 @dataclass
