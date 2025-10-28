@@ -86,6 +86,7 @@ _OVERWRITE_KEYS: frozenset[str] = frozenset(
 )
 
 
+
 @dataclass(frozen=True)
 class SuiteConfig:
     metrics_url: str | None = None
@@ -209,10 +210,46 @@ class NumericCallableRule:
 
 
 @dataclass(frozen=True)
+class PrecisionModeStructuredRule:
+    source_key: str
+    mode: str
+    nested_keys: tuple[str, ...] = ("rate", "modes")
+    overwrite: bool = False
+
+    def extract(self, metric_key: str, source: Mapping[str, object]) -> float | None:
+        raw = source.get(self.source_key)
+        if not isinstance(raw, Mapping):
+            return None
+        value = _extract_precision_mode_mapping(raw, self.mode, self.nested_keys)
+        if value is not None:
+            return value
+        return None
+
+
+@dataclass(frozen=True)
+class PrecisionModeNumericRule:
+    metric_name: str
+    mode: str
+    fallback_keys: tuple[str, ...] = ()
+
+    def extract(self, metric_key: str, source: Mapping[str, float]) -> float | None:
+        label_key = _precision_mode_label_key(self.metric_name, self.mode)
+        value = source.get(label_key)
+        if value is not None:
+            return value
+        for key in self.fallback_keys:
+            fallback = source.get(key)
+            if fallback is not None:
+                return fallback
+        return None
+
+
+@dataclass(frozen=True)
 class MetricDefinition:
     key: str
     structured_rules: tuple[StructuredRule, ...]
     numeric_rules: tuple[NumericRule, ...]
+    required: bool = True
 
 
 class MetricExtractor:
@@ -273,18 +310,28 @@ class MetricExtractor:
                     "Ignoring metrics not defined in governance/metrics.yaml: %s",
                     ", ".join(sorted(unexpected)),
                 )
-            for key in self._ordered_keys:
+            for definition in self._ordered_definitions:
+                key = definition.key
                 if key in mapping and key not in combined:
                     combined[key] = mapping[key]
             for key in _OVERWRITE_KEYS:
                 if key in mapping:
                     combined[key] = mapping[key]
-        missing = [key for key in self._ordered_keys if key not in combined]
-        if missing:
-            raise MetricsCollectionError("Missing metrics: " + ", ".join(missing))
-        metrics = {key: combined[key] for key in self._ordered_keys}
+        missing_required = [
+            definition.key
+            for definition in self._ordered_definitions
+            if definition.required and definition.key not in combined
+        ]
+        if missing_required:
+            raise MetricsCollectionError("Missing metrics: " + ", ".join(missing_required))
+        metrics = {
+            definition.key: combined[definition.key]
+            for definition in self._ordered_definitions
+            if definition.key in combined
+        }
         for key in self._percentage_keys:
-            metrics[key] *= 100.0
+            if key in metrics:
+                metrics[key] *= 100.0
         return metrics
 
     def percentage_keys(self) -> tuple[str, ...]:
@@ -397,6 +444,42 @@ def _derive_task_seed_cycle_time_minutes(raw: Mapping[str, float]) -> float | No
         ("task_seed_cycle_time_minutes", 1.0),
     )
     return _derive_average(raw, prefixes)
+
+
+def _extract_precision_mode_mapping(
+    raw: Mapping[str, object], mode: str, nested_keys: Sequence[str]
+) -> float | None:
+    direct = _coerce_float(raw.get(mode))
+    if direct is not None:
+        return direct
+    for nested_key in nested_keys:
+        nested = raw.get(nested_key)
+        if isinstance(nested, Mapping):
+            nested_value = _coerce_float(nested.get(mode))
+            if nested_value is not None:
+                return nested_value
+    return None
+
+
+def _precision_mode_label_key(metric_name: str, mode: str) -> str:
+    return f"{metric_name}|precision_mode={mode}"
+
+
+def _parse_metric_name_and_labels(name_token: str) -> tuple[str, dict[str, str]]:
+    if "{" not in name_token:
+        return name_token, {}
+    base, _, remainder = name_token.partition("{")
+    labels: dict[str, str] = {}
+    for chunk in remainder.rstrip("}").split(","):
+        stripped = chunk.strip()
+        if not stripped:
+            continue
+        key, _, raw_value = stripped.partition("=")
+        if not raw_value:
+            continue
+        value = raw_value.strip().strip('"')
+        labels[key.strip()] = value
+    return base, labels
 
 
 def _derive_birdseye_refresh_delay_minutes(raw: Mapping[str, float]) -> float | None:
@@ -592,6 +675,126 @@ _BASE_METRIC_DEFINITIONS: tuple[MetricDefinition, ...] = (
             ),
         ),
     ),
+    MetricDefinition(
+        key="merge_success_rate_baseline",
+        structured_rules=(
+            DirectValueRule(
+                keys=("merge_success_rate_baseline", "merge.success.rate.baseline"),
+            ),
+            PrecisionModeStructuredRule(source_key="merge.success.rate", mode="baseline"),
+        ),
+        numeric_rules=(
+            DirectNumericRule(
+                keys=("merge_success_rate_baseline", "merge.success.rate.baseline"),
+            ),
+            PrecisionModeNumericRule(
+                metric_name="merge.success.rate",
+                mode="baseline",
+                fallback_keys=("merge.success.rate.baseline",),
+            ),
+        ),
+        required=False,
+    ),
+    MetricDefinition(
+        key="merge_success_rate_strict",
+        structured_rules=(
+            DirectValueRule(
+                keys=("merge_success_rate_strict", "merge.success.rate.strict"),
+            ),
+            PrecisionModeStructuredRule(source_key="merge.success.rate", mode="strict"),
+        ),
+        numeric_rules=(
+            DirectNumericRule(
+                keys=("merge_success_rate_strict", "merge.success.rate.strict"),
+            ),
+            PrecisionModeNumericRule(
+                metric_name="merge.success.rate",
+                mode="strict",
+                fallback_keys=("merge.success.rate.strict",),
+            ),
+        ),
+        required=False,
+    ),
+    MetricDefinition(
+        key="merge_conflict_rate_baseline",
+        structured_rules=(
+            DirectValueRule(
+                keys=("merge_conflict_rate_baseline", "merge.conflict.rate.baseline"),
+            ),
+            PrecisionModeStructuredRule(source_key="merge.conflict.rate", mode="baseline"),
+        ),
+        numeric_rules=(
+            DirectNumericRule(
+                keys=("merge_conflict_rate_baseline", "merge.conflict.rate.baseline"),
+            ),
+            PrecisionModeNumericRule(
+                metric_name="merge.conflict.rate",
+                mode="baseline",
+                fallback_keys=("merge.conflict.rate.baseline",),
+            ),
+        ),
+        required=False,
+    ),
+    MetricDefinition(
+        key="merge_conflict_rate_strict",
+        structured_rules=(
+            DirectValueRule(
+                keys=("merge_conflict_rate_strict", "merge.conflict.rate.strict"),
+            ),
+            PrecisionModeStructuredRule(source_key="merge.conflict.rate", mode="strict"),
+        ),
+        numeric_rules=(
+            DirectNumericRule(
+                keys=("merge_conflict_rate_strict", "merge.conflict.rate.strict"),
+            ),
+            PrecisionModeNumericRule(
+                metric_name="merge.conflict.rate",
+                mode="strict",
+                fallback_keys=("merge.conflict.rate.strict",),
+            ),
+        ),
+        required=False,
+    ),
+    MetricDefinition(
+        key="merge_autosave_lag_ms_baseline",
+        structured_rules=(
+            DirectValueRule(
+                keys=("merge_autosave_lag_ms_baseline", "merge.autosave.lag_ms.baseline"),
+            ),
+            PrecisionModeStructuredRule(source_key="merge.autosave.lag_ms", mode="baseline"),
+        ),
+        numeric_rules=(
+            DirectNumericRule(
+                keys=("merge_autosave_lag_ms_baseline", "merge.autosave.lag_ms.baseline"),
+            ),
+            PrecisionModeNumericRule(
+                metric_name="merge.autosave.lag_ms",
+                mode="baseline",
+                fallback_keys=("merge.autosave.lag_ms.baseline",),
+            ),
+        ),
+        required=False,
+    ),
+    MetricDefinition(
+        key="merge_autosave_lag_ms_strict",
+        structured_rules=(
+            DirectValueRule(
+                keys=("merge_autosave_lag_ms_strict", "merge.autosave.lag_ms.strict"),
+            ),
+            PrecisionModeStructuredRule(source_key="merge.autosave.lag_ms", mode="strict"),
+        ),
+        numeric_rules=(
+            DirectNumericRule(
+                keys=("merge_autosave_lag_ms_strict", "merge.autosave.lag_ms.strict"),
+            ),
+            PrecisionModeNumericRule(
+                metric_name="merge.autosave.lag_ms",
+                mode="strict",
+                fallback_keys=("merge.autosave.lag_ms.strict",),
+            ),
+        ),
+        required=False,
+    ),
 )
 
 _KNOWN_METRIC_DEFINITIONS: Mapping[str, MetricDefinition] = {
@@ -671,14 +874,15 @@ def _parse_prometheus(text: str) -> dict[str, float]:
             continue
         name_token = parts[0]
         raw_value = parts[-1]
-        metric_name = name_token.split("{", 1)[0]
+        metric_name, labels = _parse_metric_name_and_labels(name_token)
         value = _coerce_float(raw_value)
         if value is None:
             continue
-        if metric_name in raw:
-            raw[metric_name] += value
-        else:
-            raw[metric_name] = value
+        raw[metric_name] = raw.get(metric_name, 0.0) + value
+        precision_mode = labels.get("precision_mode") if labels else None
+        if precision_mode:
+            label_key = _precision_mode_label_key(metric_name, precision_mode)
+            raw[label_key] = raw.get(label_key, 0.0) + value
 
     metrics: dict[str, float] = {}
     _metrics().extractor.capture_numeric(raw, metrics)
@@ -725,7 +929,7 @@ def _merge(sources: Iterable[Mapping[str, float]]) -> dict[str, float]:
 
 def _format_pushgateway_payload(metrics: Mapping[str, float]) -> bytes:
     keys = _metrics().keys
-    lines = [f"{key} {format(metrics[key], 'g')}" for key in keys]
+    lines = [f"{key} {format(metrics[key], 'g')}" for key in keys if key in metrics]
     return ("\n".join(lines) + "\n").encode("utf-8")
 
 
