@@ -245,6 +245,43 @@ class PrecisionModeNumericRule:
 
 
 @dataclass(frozen=True)
+class PrecisionModeActiveStructuredRule:
+    source_key: str
+    mode_keys: tuple[str, ...] = ("merge.precision_mode", "merge_precision_mode", "precision_mode")
+    nested_keys: tuple[str, ...] = ("rate", "modes")
+    overwrite: bool = False
+
+    def extract(self, metric_key: str, source: Mapping[str, object]) -> float | None:
+        mode = _extract_structured_precision_mode(source, self.mode_keys)
+        if mode is None:
+            return None
+        raw = source.get(self.source_key)
+        if not isinstance(raw, Mapping):
+            return None
+        return _extract_precision_mode_mapping(raw, mode, self.nested_keys)
+
+
+@dataclass(frozen=True)
+class PrecisionModeActiveNumericRule:
+    metric_name: str
+    mode_metric_names: tuple[str, ...] = ("merge.precision_mode", "merge_precision_mode")
+    fallback_keys: tuple[str, ...] = ()
+
+    def extract(self, metric_key: str, source: Mapping[str, float]) -> float | None:
+        mode = _extract_numeric_precision_mode(source, self.mode_metric_names)
+        if mode is not None:
+            label_key = _precision_mode_label_key(self.metric_name, mode)
+            value = source.get(label_key)
+            if value is not None:
+                return value
+        for key in self.fallback_keys:
+            fallback = source.get(key)
+            if fallback is not None:
+                return fallback
+        return None
+
+
+@dataclass(frozen=True)
 class MetricDefinition:
     key: str
     structured_rules: tuple[StructuredRule, ...]
@@ -461,6 +498,54 @@ def _extract_precision_mode_mapping(
     return None
 
 
+def _extract_structured_precision_mode(
+    source: Mapping[str, object], mode_keys: Sequence[str]
+) -> str | None:
+    for key in mode_keys:
+        direct = source.get(key)
+        if isinstance(direct, str) and direct:
+            return direct
+        if "." in key:
+            parts = key.split(".")
+            nested = _lookup_nested_value(source, parts)
+            if isinstance(nested, str) and nested:
+                return nested
+    return None
+
+
+def _lookup_nested_value(source: Mapping[str, object], path: Sequence[str]) -> object | None:
+    current: object = source
+    for segment in path:
+        if not isinstance(current, Mapping):
+            return None
+        current = current.get(segment)
+    return current
+
+
+def _extract_numeric_precision_mode(
+    source: Mapping[str, float], mode_metric_names: Sequence[str]
+) -> str | None:
+    best_mode: str | None = None
+    best_value = float("-inf")
+    for metric_name in mode_metric_names:
+        prefix = f"{metric_name}|"
+        for key, value in source.items():
+            if not key.startswith(prefix):
+                continue
+            label = key[len(prefix) :]
+            label_key, _, label_value = label.partition("=")
+            if not label_value:
+                continue
+            if label_key not in ("precision_mode", "mode"):
+                continue
+            if value > best_value:
+                best_mode = label_value
+                best_value = value
+        if best_mode is not None:
+            return best_mode
+    return None
+
+
 def _precision_mode_label_key(metric_name: str, mode: str) -> str:
     return f"{metric_name}|precision_mode={mode}"
 
@@ -528,6 +613,51 @@ _BASE_METRIC_DEFINITIONS: tuple[MetricDefinition, ...] = (
             DirectNumericRule(),
             NumericCallableRule(_derive_birdseye_refresh_delay_minutes),
         ),
+    ),
+    MetricDefinition(
+        key="merge_success_rate",
+        structured_rules=(
+            DirectValueRule(keys=("merge_success_rate", "merge.success.rate")),
+            PrecisionModeActiveStructuredRule(source_key="merge.success.rate"),
+        ),
+        numeric_rules=(
+            DirectNumericRule(keys=("merge_success_rate", "merge.success.rate")),
+            PrecisionModeActiveNumericRule(
+                metric_name="merge.success.rate",
+                fallback_keys=("merge.success.rate", "merge_success_rate"),
+            ),
+        ),
+        required=False,
+    ),
+    MetricDefinition(
+        key="merge_conflict_rate",
+        structured_rules=(
+            DirectValueRule(keys=("merge_conflict_rate", "merge.conflict.rate")),
+            PrecisionModeActiveStructuredRule(source_key="merge.conflict.rate"),
+        ),
+        numeric_rules=(
+            DirectNumericRule(keys=("merge_conflict_rate", "merge.conflict.rate")),
+            PrecisionModeActiveNumericRule(
+                metric_name="merge.conflict.rate",
+                fallback_keys=("merge.conflict.rate", "merge_conflict_rate"),
+            ),
+        ),
+        required=False,
+    ),
+    MetricDefinition(
+        key="merge_autosave_lag_ms",
+        structured_rules=(
+            DirectValueRule(keys=("merge_autosave_lag_ms", "merge.autosave.lag_ms")),
+            PrecisionModeActiveStructuredRule(source_key="merge.autosave.lag_ms"),
+        ),
+        numeric_rules=(
+            DirectNumericRule(keys=("merge_autosave_lag_ms", "merge.autosave.lag_ms")),
+            PrecisionModeActiveNumericRule(
+                metric_name="merge.autosave.lag_ms",
+                fallback_keys=("merge.autosave.lag_ms", "merge_autosave_lag_ms"),
+            ),
+        ),
+        required=False,
     ),
     MetricDefinition(
         key="review_latency",
