@@ -70,18 +70,47 @@ class UpdateReport:
 class GitDiffResolver:
     def resolve(self, reference: str) -> tuple[Path, ...]:
         result = subprocess.run(
-            ["git", "diff", "--name-only", f"{reference}...HEAD"],
+            [
+                "git",
+                "diff",
+                "--name-status",
+                "--find-renames",
+                f"{reference}...HEAD",
+            ],
             capture_output=True,
             text=True,
             check=True,
         )
         diff_entries: list[str] = []
-        for line in result.stdout.splitlines():
-            candidate = line.strip()
-            if not candidate:
+        for raw_line in result.stdout.splitlines():
+            stripped = raw_line.strip()
+            if not stripped:
                 continue
-            diff_entries.append(candidate)
-        return _derive_targets_from_since(diff_entries)
+            columns = [segment.strip() for segment in stripped.split("\t")]
+            if not columns:
+                continue
+            status = columns[0]
+            if not status:
+                continue
+            kind = status[0].upper()
+            payloads: list[str]
+            if kind == "R" and len(columns) >= 3:
+                payloads = columns[1:3]
+            elif kind in {"A", "M", "D"} and len(columns) >= 2:
+                payloads = [columns[1]]
+            else:
+                continue
+            for value in payloads:
+                candidate = value.replace("\\", "/").strip()
+                if not candidate:
+                    continue
+                diff_entries.append(candidate)
+        derived = _derive_targets_from_since(diff_entries)
+        return tuple(
+            path
+            for path in derived
+            if len(path.parts) >= 2 and path.parts[0] == "docs" and path.parts[1] == "birdseye"
+        )
 
 
 def _derive_targets_from_since(
