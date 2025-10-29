@@ -80,6 +80,21 @@ def test_git_diff_resolver_parses_rename_status(monkeypatch):
     )
 
 
+def test_git_diff_resolver_parses_copy_status(monkeypatch):
+    def fake_run(args, capture_output, text, check, cwd):
+        return SimpleNamespace(stdout="C100\tREADME.md\tRUNBOOK.md\n")
+
+    monkeypatch.setattr(update.subprocess, "run", fake_run)
+
+    resolver = update.GitDiffResolver()
+    resolved = resolver.resolve("main")
+
+    assert resolved == (
+        Path("docs/birdseye/caps/README.md.json"),
+        Path("docs/birdseye/caps/RUNBOOK.md.json"),
+    )
+
+
 def test_git_diff_resolver_uses_repo_root(monkeypatch):
     captured = {}
 
@@ -129,6 +144,12 @@ def test_derive_targets_from_since_handles_rename_notation():
         Path("docs/birdseye/caps/README.md.json"),
         Path("docs/birdseye/caps/RUNBOOK.md.json"),
     )
+
+
+def test_derive_targets_from_since_deduplicates_old_and_new_paths():
+    derived = update._derive_targets_from_since(("README.md -> README.md",))
+
+    assert derived == (Path("docs/birdseye/caps/README.md.json"),)
 
 
 def _write_json(path, payload):
