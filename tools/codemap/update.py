@@ -17,6 +17,9 @@ from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping, Protocol, Sequence
 
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
 CapsuleEntry = tuple[Path, dict[str, Any], str]
 CapsuleState = dict[str, CapsuleEntry]
 Graph = dict[str, list[str]]
@@ -72,16 +75,67 @@ class GitDiffResolver:
             text=True,
             check=True,
         )
-        targets: list[Path] = []
+        diff_entries: list[str] = []
         for line in result.stdout.splitlines():
             candidate = line.strip()
             if not candidate:
                 continue
-            path = Path(candidate)
-            if path.parts[:2] != ("docs", "birdseye"):
+            diff_entries.append(candidate)
+        return _derive_targets_from_since(diff_entries)
+
+
+def _derive_targets_from_since(
+    diff_paths: Iterable[str | Path], *, repo_root: Path | None = None
+) -> tuple[Path, ...]:
+    base_root = repo_root or _REPO_ROOT
+    derived: list[Path] = []
+    seen: set[Path] = set()
+
+    def _add(path: Path) -> None:
+        if path not in seen:
+            seen.add(path)
+            derived.append(path)
+
+    for path in diff_paths:
+        if isinstance(path, Path):
+            raw_entry = path.as_posix()
+        else:
+            raw_entry = path
+        raw_entry = raw_entry.replace("\\", "/").strip()
+        if not raw_entry:
+            continue
+        segments: list[str] = []
+        for marker in (" -> ", " => "):
+            if marker in raw_entry:
+                left, right = raw_entry.split(marker, 1)
+                segments.extend([left.strip(), right.strip()])
+                break
+        if not segments:
+            segments.append(raw_entry)
+        for segment in segments:
+            candidate = segment
+            if not candidate:
                 continue
-            targets.append(path)
-        return tuple(dict.fromkeys(targets))
+            while candidate.startswith("./"):
+                candidate = candidate[2:]
+            candidate = candidate.rstrip("/")
+            if not candidate:
+                continue
+            normalised = Path(candidate)
+            if normalised.is_absolute():
+                try:
+                    normalised = normalised.relative_to(base_root)
+                except ValueError:
+                    continue
+            if normalised.parts[:2] == ("docs", "birdseye"):
+                _add(normalised)
+                continue
+            candidate_slug = normalised.as_posix() if normalised.parts else candidate
+            capsule_slug = candidate_slug.replace("/", ".")
+            capsule_path = Path("docs/birdseye/caps") / f"{capsule_slug}.json"
+            if (base_root / capsule_path).is_file():
+                _add(capsule_path)
+    return tuple(derived)
 
 
 def parse_args(argv: Iterable[str] | None = None) -> UpdateOptions:
