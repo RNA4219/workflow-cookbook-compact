@@ -165,6 +165,23 @@ def test_trim_messages_semantic_retention_matches_cosine_similarity() -> None:
     assert retention == pytest.approx(expected)
 
 
+def test_trim_messages_semantic_retention_zero_vector() -> None:
+    module = _reload_context_trimmer(fake_tiktoken=None)
+
+    def embedder(_: str) -> List[float]:
+        return [0.0, 0.0]
+
+    result = module.trim_messages(
+        _messages(),
+        max_context_tokens=12,
+        model="test-model",
+        semantic_options={"embedder": embedder},
+    )
+
+    retention = result["statistics"].get("semantic_retention")
+    assert retention == 0.0
+
+
 def test_measure_tokens_reports_totals() -> None:
     module = _reload_context_trimmer(fake_tiktoken=None)
 

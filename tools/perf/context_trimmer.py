@@ -124,7 +124,7 @@ def _cosine_similarity(a: Sequence[float], b: Sequence[float]) -> float:
     norm_a = sqrt(sum(x * x for x in vec_a))
     norm_b = sqrt(sum(y * y for y in vec_b))
     if norm_a == 0.0 and norm_b == 0.0:
-        return 1.0
+        return 0.0
     if norm_a == 0.0 or norm_b == 0.0:
         return 0.0
     similarity = dot_product / (norm_a * norm_b)
