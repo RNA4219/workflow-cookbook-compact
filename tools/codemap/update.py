@@ -43,7 +43,7 @@ class UpdateOptions:
     diff_resolver: DiffResolver | None = None
 
     def resolve_targets(self) -> tuple[Path, ...]:
-        resolved = list(self.targets)
+        resolved = [_normalise_target(path) for path in self.targets]
         if self.since:
             if self.diff_resolver is None:
                 raise TargetResolutionError("Diff resolver is required when --since is used")
@@ -53,7 +53,7 @@ class UpdateOptions:
                 raise TargetResolutionError(
                     f"Failed to resolve git diff for --since: {exc}"
                 ) from exc
-            resolved.extend(derived)
+            resolved.extend(_normalise_target(path) for path in derived)
         unique_targets = tuple(dict.fromkeys(resolved))
         if not unique_targets:
             raise TargetResolutionError("Specify --targets, --since, or both")
@@ -168,6 +168,12 @@ def _derive_targets_from_since(
     return tuple(derived)
 
 
+def _normalise_target(target: Path) -> Path:
+    if target.is_absolute():
+        return target.resolve()
+    return (_REPO_ROOT / target).resolve()
+
+
 def parse_args(argv: Iterable[str] | None = None) -> UpdateOptions:
     parser = argparse.ArgumentParser(
         description="Regenerate Birdseye index and capsules.",
@@ -204,9 +210,11 @@ def parse_args(argv: Iterable[str] | None = None) -> UpdateOptions:
         )
     if not target_paths and not args.since:
         parser.error("Specify --targets, --since, or both")
-    unique_targets = tuple(dict.fromkeys(target_paths))
+    normalised_targets = tuple(
+        dict.fromkeys(_normalise_target(path) for path in target_paths)
+    )
     return UpdateOptions(
-        targets=unique_targets,
+        targets=normalised_targets,
         emit=args.emit,
         dry_run=args.dry_run,
         since=args.since,
@@ -228,13 +236,15 @@ def _format_timestamp(moment: datetime) -> str:
 
 
 def _resolve_root(target: Path) -> Path:
-    if target.is_dir():
-        if target.name == "caps":
-            return target.parent
-        return target
-    if target.parent.name == "caps":
-        return target.parent.parent
-    return target.parent
+    resolved = target.resolve()
+    if resolved.is_dir():
+        if resolved.name == "caps":
+            return resolved.parent.resolve()
+        return resolved
+    parent = resolved.parent
+    if parent.name == "caps":
+        return parent.parent.resolve()
+    return parent.resolve()
 
 
 def _load_json(path: Path) -> tuple[Any, str]:
@@ -285,8 +295,9 @@ def _finalise(paths: set[Path]) -> tuple[Path, ...]:
 def _group_targets(targets: Iterable[Path]) -> dict[Path, list[Path]]:
     grouped: dict[Path, list[Path]] = {}
     for target in targets:
-        root = _resolve_root(target)
-        grouped.setdefault(root, []).append(target)
+        normalised = _normalise_target(target)
+        root = _resolve_root(normalised)
+        grouped.setdefault(root, []).append(normalised)
     return grouped
 
 

@@ -46,7 +46,8 @@ def test_since_command_resolves_capsules_for_non_birdseye_diff(monkeypatch):
 
     resolved = options.resolve_targets()
 
-    assert Path("docs/birdseye/caps/README.md.json") in resolved
+    expected = update._REPO_ROOT / "docs" / "birdseye" / "caps" / "README.md.json"
+    assert expected in resolved
 
 
 def test_git_diff_resolver_parses_rename_status(monkeypatch):
@@ -395,10 +396,7 @@ def test_run_update_with_since_updates_capsules_within_two_hops(tmp_path, monkey
 
     report = update.run_update(options)
 
-    expected_caps = {
-        cap_paths[name].relative_to(tmp_path)
-        for name in ("alpha.md", "beta.md", "gamma.md")
-    }
+    expected_caps = {cap_paths[name] for name in ("alpha.md", "beta.md", "gamma.md")}
 
     assert set(report.planned_writes) == expected_caps
     assert set(report.performed_writes) == expected_caps
@@ -447,13 +445,46 @@ def test_run_update_with_since_handles_git_rename(tmp_path, monkeypatch):
 
     report = update.run_update(options)
 
-    expected_caps = {
-        cap_paths[name].relative_to(tmp_path)
-        for name in ("README.md", "RUNBOOK.md")
-    }
+    expected_caps = {cap_paths[name] for name in ("README.md", "RUNBOOK.md")}
 
     assert set(report.planned_writes) == expected_caps
     assert set(report.performed_writes) == expected_caps
+
+
+def test_run_update_resolves_targets_from_repo_root_outside_cwd(tmp_path, monkeypatch):
+    repo_root = tmp_path / "repo"
+    outside_dir = tmp_path / "outside"
+    outside_dir.mkdir()
+
+    caps_payloads = {"README.md": _caps_payload("README.md")}
+    _root, index_path, hot_path, _ = _prepare_birdseye(
+        repo_root,
+        edges=[],
+        caps_payloads=caps_payloads,
+        hot_entries=("README.md",),
+        root=repo_root / "docs" / "birdseye",
+    )
+
+    monkeypatch.setattr(update, "_REPO_ROOT", repo_root)
+    monkeypatch.chdir(outside_dir)
+
+    options = update.parse_args(["--targets", "docs/birdseye/index.json", "--emit", "index"])
+
+    assert options.targets == (index_path,)
+    resolved = options.resolve_targets()
+    assert resolved == (index_path,)
+
+    report = update.run_update(options)
+
+    expected_writes = {index_path, hot_path}
+    assert set(report.planned_writes) == expected_writes
+    assert set(report.performed_writes) == expected_writes
+
+    refreshed_index = json.loads(index_path.read_text(encoding="utf-8"))
+    refreshed_hot = json.loads(hot_path.read_text(encoding="utf-8"))
+
+    assert refreshed_index["generated_at"] == "00002"
+    assert refreshed_hot["generated_at"] == "00002"
 
 
 @pytest.mark.parametrize("dry_run", [False, True])
@@ -734,6 +765,7 @@ def test_run_update_accepts_caps_directory_target(tmp_path, monkeypatch):
         root=root_base,
     )
 
+    monkeypatch.setattr(update, "_REPO_ROOT", tmp_path)
     baseline_index = json.loads(index_path.read_text(encoding="utf-8"))
     base_serial = baseline_index["generated_at"]
     expected_serial = _next_serial(base_serial)
@@ -747,14 +779,8 @@ def test_run_update_accepts_caps_directory_target(tmp_path, monkeypatch):
         update.UpdateOptions(targets=(Path("docs/birdseye/caps"),), emit="index+caps", dry_run=False)
     )
 
-    expected_caps = {
-        Path("docs/birdseye/caps") / f"{cap_id}.json"
-        for cap_id in ("alpha.md", "beta.md", "gamma.md", "delta.md", "epsilon.md")
-    }
-    expected_writes = expected_caps | {
-        Path("docs/birdseye/index.json"),
-        Path("docs/birdseye/hot.json"),
-    }
+    expected_caps = {cap_paths[cap_id] for cap_id in cap_paths}
+    expected_writes = expected_caps | {index_path, hot_path}
 
     assert re.fullmatch(r"\d{5}", report.generated_at)
     assert report.generated_at == expected_serial
@@ -825,6 +851,7 @@ def test_parse_args_supports_since_and_limits_scope(tmp_path, monkeypatch):
     monkeypatch.setattr(update, "utc_now", lambda: frozen_now)
 
     monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(update, "_REPO_ROOT", tmp_path)
 
     class FakeResolver:
         def __init__(self) -> None:
@@ -848,11 +875,8 @@ def test_parse_args_supports_since_and_limits_scope(tmp_path, monkeypatch):
     assert resolver.calls == ["main"]
 
     expected_caps = {
-        Path("docs/birdseye/caps/beta.md.json"),
-        Path("docs/birdseye/caps/gamma.md.json"),
-        Path("docs/birdseye/caps/delta.md.json"),
-        Path("docs/birdseye/caps/epsilon.md.json"),
-        Path("docs/birdseye/caps/zeta.md.json"),
+        cap_paths[cap_id]
+        for cap_id in ("beta.md", "gamma.md", "delta.md", "epsilon.md", "zeta.md")
     }
     assert set(report.planned_writes) == expected_caps
     assert set(report.performed_writes) == expected_caps
