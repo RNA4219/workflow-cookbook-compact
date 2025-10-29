@@ -31,8 +31,14 @@ def test_since_command_resolves_capsules_for_non_birdseye_diff(monkeypatch):
     options = update.parse_args(["--since", "--emit", "index+caps"])
 
     def fake_run(args, capture_output, text, check):
-        assert args[:3] == ["git", "diff", "--name-only"]
-        return SimpleNamespace(stdout="README.md\n")
+        assert args == [
+            "git",
+            "diff",
+            "--name-status",
+            "--find-renames",
+            "main...HEAD",
+        ]
+        return SimpleNamespace(stdout="M\tREADME.md\n")
 
     monkeypatch.setattr(update.subprocess, "run", fake_run)
     options = replace(options, diff_resolver=update.GitDiffResolver())
@@ -40,6 +46,34 @@ def test_since_command_resolves_capsules_for_non_birdseye_diff(monkeypatch):
     resolved = options.resolve_targets()
 
     assert Path("docs/birdseye/caps/README.md.json") in resolved
+
+
+def test_git_diff_resolver_parses_rename_status(monkeypatch):
+    captured = {}
+
+    def fake_run(args, capture_output, text, check):
+        captured["args"] = args
+        assert capture_output is True
+        assert text is True
+        assert check is True
+        return SimpleNamespace(stdout="R100\tREADME.md\tRUNBOOK.md\n")
+
+    monkeypatch.setattr(update.subprocess, "run", fake_run)
+
+    resolver = update.GitDiffResolver()
+    resolved = resolver.resolve("main")
+
+    assert captured["args"] == [
+        "git",
+        "diff",
+        "--name-status",
+        "--find-renames",
+        "main...HEAD",
+    ]
+    assert resolved == (
+        Path("docs/birdseye/caps/README.md.json"),
+        Path("docs/birdseye/caps/RUNBOOK.md.json"),
+    )
 
 
 def test_derive_targets_from_since_accepts_absolute_paths():
@@ -336,6 +370,53 @@ def test_run_update_with_since_updates_capsules_within_two_hops(tmp_path, monkey
     delta_payload = json.loads(cap_paths["delta.md"].read_text(encoding="utf-8"))
     assert delta_payload["deps_out"] == ["stale"]
     assert delta_payload["deps_in"] == ["stale"]
+
+
+def test_run_update_with_since_handles_git_rename(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(update, "_REPO_ROOT", tmp_path)
+
+    caps_payloads = {
+        "README.md": _caps_payload("README.md"),
+        "RUNBOOK.md": _caps_payload("RUNBOOK.md"),
+    }
+    _, _, _, cap_paths = _prepare_birdseye(
+        tmp_path,
+        edges=[["README.md", "RUNBOOK.md"], ["RUNBOOK.md", "README.md"]],
+        caps_payloads=caps_payloads,
+        hot_entries=("README.md", "RUNBOOK.md"),
+        root=tmp_path / "docs" / "birdseye",
+    )
+
+    def fake_run(args, capture_output, text, check):
+        assert args == [
+            "git",
+            "diff",
+            "--name-status",
+            "--find-renames",
+            "main...HEAD",
+        ]
+        return SimpleNamespace(stdout="R100\tREADME.md\tRUNBOOK.md\n")
+
+    monkeypatch.setattr(update.subprocess, "run", fake_run)
+
+    options = update.UpdateOptions(
+        targets=(),
+        emit="caps",
+        dry_run=False,
+        since="main",
+        diff_resolver=update.GitDiffResolver(),
+    )
+
+    report = update.run_update(options)
+
+    expected_caps = {
+        cap_paths[name].relative_to(tmp_path)
+        for name in ("README.md", "RUNBOOK.md")
+    }
+
+    assert set(report.planned_writes) == expected_caps
+    assert set(report.performed_writes) == expected_caps
 
 
 @pytest.mark.parametrize("dry_run", [False, True])
@@ -750,7 +831,11 @@ def test_git_diff_resolver_filters_paths(monkeypatch):
     def fake_run(args, *, capture_output, text, check):
         captured["args"] = args
         return SimpleNamespace(
-            stdout="docs/birdseye/caps/delta.md.json\nREADME.md\ndocs/birdseye/index.json\n"
+            stdout=(
+                "M\tdocs/birdseye/caps/delta.md.json\n"
+                "M\tREADME.md\n"
+                "M\tdocs/birdseye/index.json\n"
+            )
         )
 
     monkeypatch.setattr(update.subprocess, "run", fake_run)
@@ -759,7 +844,13 @@ def test_git_diff_resolver_filters_paths(monkeypatch):
 
     result = resolver.resolve("develop")
 
-    assert captured["args"] == ["git", "diff", "--name-only", "develop...HEAD"]
+    assert captured["args"] == [
+        "git",
+        "diff",
+        "--name-status",
+        "--find-renames",
+        "develop...HEAD",
+    ]
     assert result == (
         Path("docs/birdseye/caps/delta.md.json"),
         Path("docs/birdseye/caps/README.md.json"),
