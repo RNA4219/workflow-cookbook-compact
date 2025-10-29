@@ -42,6 +42,41 @@ def test_since_command_resolves_capsules_for_non_birdseye_diff(monkeypatch):
     assert Path("docs/birdseye/caps/README.md.json") in resolved
 
 
+def test_since_command_combines_git_diff_scopes(monkeypatch):
+    options = update.parse_args(["--since"])
+
+    diff_outputs = {
+        ("git", "diff", "--name-only", "main...HEAD"): "\n",
+        ("git", "diff", "--name-only", "--cached"): "docs/birdseye/hot.json\n",
+        ("git", "diff", "--name-only"): (
+            "docs/birdseye/caps/README.md.json\n"
+            "README.md\n"
+        ),
+    }
+    calls: list[tuple[str, ...]] = []
+
+    def fake_run(args, capture_output, text, check):
+        key = tuple(args)
+        calls.append(key)
+        payload = diff_outputs.get(key, "")
+        return SimpleNamespace(stdout=payload)
+
+    monkeypatch.setattr(update.subprocess, "run", fake_run)
+    options = replace(options, diff_resolver=update.GitDiffResolver())
+
+    resolved = options.resolve_targets()
+
+    assert calls == [
+        ("git", "diff", "--name-only", "main...HEAD"),
+        ("git", "diff", "--name-only", "--cached"),
+        ("git", "diff", "--name-only"),
+    ]
+    assert resolved == (
+        Path("docs/birdseye/hot.json"),
+        Path("docs/birdseye/caps/README.md.json"),
+    )
+
+
 def test_derive_targets_from_since_accepts_absolute_paths():
     repo_root = Path(__file__).resolve().parents[1]
     absolute_readme = (repo_root / "README.md").resolve()
@@ -745,10 +780,10 @@ def test_parse_args_supports_since_and_limits_scope(tmp_path, monkeypatch):
 
 
 def test_git_diff_resolver_filters_paths(monkeypatch):
-    captured = {}
+    captured: list[tuple[str, ...]] = []
 
     def fake_run(args, *, capture_output, text, check):
-        captured["args"] = args
+        captured.append(tuple(args))
         return SimpleNamespace(
             stdout="docs/birdseye/caps/delta.md.json\nREADME.md\ndocs/birdseye/index.json\n"
         )
@@ -759,7 +794,11 @@ def test_git_diff_resolver_filters_paths(monkeypatch):
 
     result = resolver.resolve("develop")
 
-    assert captured["args"] == ["git", "diff", "--name-only", "develop...HEAD"]
+    assert captured == [
+        ("git", "diff", "--name-only", "develop...HEAD"),
+        ("git", "diff", "--name-only", "--cached"),
+        ("git", "diff", "--name-only"),
+    ]
     assert result == (
         Path("docs/birdseye/caps/delta.md.json"),
         Path("docs/birdseye/caps/README.md.json"),

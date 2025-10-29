@@ -69,18 +69,26 @@ class UpdateReport:
 
 class GitDiffResolver:
     def resolve(self, reference: str) -> tuple[Path, ...]:
-        result = subprocess.run(
-            ["git", "diff", "--name-only", f"{reference}...HEAD"],
-            capture_output=True,
-            text=True,
-            check=True,
+        commands: tuple[tuple[str, ...], ...] = (
+            ("git", "diff", "--name-only", f"{reference}...HEAD"),
+            ("git", "diff", "--name-only", "--cached"),
+            ("git", "diff", "--name-only"),
         )
         diff_entries: list[str] = []
-        for line in result.stdout.splitlines():
-            candidate = line.strip()
-            if not candidate:
-                continue
-            diff_entries.append(candidate)
+        seen: set[str] = set()
+        for command in commands:
+            result = subprocess.run(
+                list(command),
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            for line in result.stdout.splitlines():
+                candidate = line.strip()
+                if not candidate or candidate in seen:
+                    continue
+                seen.add(candidate)
+                diff_entries.append(candidate)
         return _derive_targets_from_since(diff_entries)
 
 
