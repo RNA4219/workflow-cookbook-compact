@@ -263,10 +263,39 @@ def _sorted_unique(items: Sequence[str]) -> list[str]:
 _SERIAL_PATTERN = re.compile(r"\d{5}")
 
 
-def _next_generated_at(existing: Any, fallback: str) -> str:
-    if isinstance(existing, str) and _SERIAL_PATTERN.fullmatch(existing):
-        return f"{int(existing) + 1:05d}"
-    return fallback
+def _coerce_serial(candidate: Any) -> int | None:
+    if isinstance(candidate, str) and _SERIAL_PATTERN.fullmatch(candidate):
+        return int(candidate)
+    return None
+
+
+class _SerialAllocator:
+    __slots__ = ("max_serial", "_next_serial")
+
+    def __init__(self) -> None:
+        self.max_serial = 0
+        self._next_serial: int | None = None
+
+    def observe(self, candidate: Any) -> None:
+        value = _coerce_serial(candidate)
+        if value is not None and value > self.max_serial:
+            self.max_serial = value
+
+    def allocate(self, existing: Any) -> str:
+        candidate = _coerce_serial(existing)
+        if candidate is not None and candidate > self.max_serial:
+            self.max_serial = candidate
+        if self._next_serial is None:
+            self._next_serial = self.max_serial + 1 if self.max_serial else 1
+        target = self._next_serial
+        if target > self.max_serial:
+            self.max_serial = target
+        return f"{target:05d}"
+
+
+def _next_generated_at(existing: Any, fallback: str, *, allocator: _SerialAllocator) -> str:
+    del fallback
+    return allocator.allocate(existing)
 
 
 def _maybe_write(
@@ -377,8 +406,13 @@ def _refresh_index(
     planned: set[Path],
     performed: set[Path],
     remember_generated: Callable[[str], None],
+    allocator: _SerialAllocator,
 ) -> None:
-    new_generated = _next_generated_at(index_data.get("generated_at"), timestamp)
+    new_generated = _next_generated_at(
+        index_data.get("generated_at"),
+        timestamp,
+        allocator=allocator,
+    )
     if index_data.get("generated_at") != new_generated:
         index_data["generated_at"] = new_generated
         remember_generated(new_generated)
@@ -394,19 +428,23 @@ def _refresh_index(
 
 def _refresh_hot(
     hot_path: Path,
-    timestamp: str,
+    hot_data: dict[str, Any] | None,
+    hot_original: str | None,
     *,
+    timestamp: str,
     dry_run: bool,
     planned: set[Path],
     performed: set[Path],
     remember_generated: Callable[[str], None],
+    allocator: _SerialAllocator,
 ) -> None:
-    if not hot_path.exists():
+    if hot_data is None or hot_original is None:
         return
-    hot_data, hot_original = _load_json(hot_path)
-    if not isinstance(hot_data, dict):
-        return
-    new_generated = _next_generated_at(hot_data.get("generated_at"), timestamp)
+    new_generated = _next_generated_at(
+        hot_data.get("generated_at"),
+        timestamp,
+        allocator=allocator,
+    )
     if hot_data.get("generated_at") != new_generated:
         hot_data["generated_at"] = new_generated
         remember_generated(new_generated)
@@ -431,6 +469,7 @@ def _refresh_capsule(
     planned: set[Path],
     performed: set[Path],
     remember_generated: Callable[[str], None],
+    allocator: _SerialAllocator,
 ) -> None:
     cap_path, cap_data, cap_original = capsule
     expected_out = _sorted_unique(graph_out.get(cap_id, []))
@@ -442,7 +481,11 @@ def _refresh_capsule(
     if cap_data.get("deps_in") != expected_in:
         cap_data["deps_in"] = expected_in
         updated = True
-    new_generated = _next_generated_at(cap_data.get("generated_at"), timestamp)
+    new_generated = _next_generated_at(
+        cap_data.get("generated_at"),
+        timestamp,
+        allocator=allocator,
+    )
     if cap_data.get("generated_at") != new_generated:
         cap_data["generated_at"] = new_generated
         updated = True
@@ -464,6 +507,7 @@ def run_update(options: UpdateOptions) -> UpdateReport:
     performed: set[Path] = set()
     timestamp = _format_timestamp(utc_now())
     applied_generated_at: str | None = None
+    serial_allocator = _SerialAllocator()
 
     def remember_generated(value: str) -> None:
         nonlocal applied_generated_at
@@ -485,7 +529,17 @@ def run_update(options: UpdateOptions) -> UpdateReport:
 
         loaded_index, index_original = _load_json(index_path)
         index_data = loaded_index if isinstance(loaded_index, dict) else {}
+        serial_allocator.observe(index_data.get("generated_at"))
         graph_out, graph_in = _build_graph(index_data)
+
+        hot_data: dict[str, Any] | None = None
+        hot_original: str | None = None
+        if hot_path.exists():
+            loaded_hot, loaded_hot_original = _load_json(hot_path)
+            if isinstance(loaded_hot, dict):
+                hot_data = loaded_hot
+                hot_original = loaded_hot_original
+                serial_allocator.observe(hot_data.get("generated_at"))
 
         caps_state: CapsuleState = {}
         cap_path_lookup: dict[Path, str] = {}
@@ -501,6 +555,7 @@ def run_update(options: UpdateOptions) -> UpdateReport:
                     continue
                 caps_state[cap_id] = (cap_path, cap_data, cap_original)
                 cap_path_lookup[cap_path.resolve()] = cap_id
+                serial_allocator.observe(cap_data.get("generated_at"))
 
         if emit_index:
             _refresh_index(
@@ -512,14 +567,18 @@ def run_update(options: UpdateOptions) -> UpdateReport:
                 planned=planned,
                 performed=performed,
                 remember_generated=remember_generated,
+                allocator=serial_allocator,
             )
             _refresh_hot(
                 hot_path,
-                timestamp,
+                hot_data,
+                hot_original,
+                timestamp=timestamp,
                 dry_run=options.dry_run,
                 planned=planned,
                 performed=performed,
                 remember_generated=remember_generated,
+                allocator=serial_allocator,
             )
 
         if emit_caps and caps_state:
@@ -542,6 +601,7 @@ def run_update(options: UpdateOptions) -> UpdateReport:
                     planned=planned,
                     performed=performed,
                     remember_generated=remember_generated,
+                    allocator=serial_allocator,
                 )
 
     return UpdateReport(

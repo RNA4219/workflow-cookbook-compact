@@ -154,6 +154,30 @@ def _next_serial(serial: str) -> str:
     return f"{int(serial) + 1:05d}"
 
 
+def test_next_generated_at_handles_non_serial_inputs():
+    allocator = update._SerialAllocator()
+
+    generated = update._next_generated_at(None, "2025-01-01T00:00:00Z", allocator=allocator)
+    assert generated == "00001"
+
+    follow_up = update._next_generated_at(
+        "2024-12-31T23:59:59Z",
+        "2025-01-01T00:00:00Z",
+        allocator=allocator,
+    )
+    assert follow_up == "00001"
+
+    seeded_allocator = update._SerialAllocator()
+    seeded_allocator.observe("00041")
+
+    advanced = update._next_generated_at(
+        "unexpected-value",
+        "2025-01-01T00:00:00Z",
+        allocator=seeded_allocator,
+    )
+    assert advanced == "00042"
+
+
 _HOT_INDEX_SNAPSHOT = "docs/birdseye/index.json"
 _HOT_REFRESH_COMMAND = (
     "python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps"
@@ -746,6 +770,52 @@ def test_run_update_refreshes_caps_generated_at(tmp_path, monkeypatch):
     assert untouched["deps_in"] == expected_in
 
 
+def test_run_update_recovers_non_serial_generated_at(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(update, "_REPO_ROOT", tmp_path)
+
+    caps_payloads = {
+        "alpha.md": {**_caps_payload("alpha.md"), "generated_at": "00007"},
+        "beta.md": {**_caps_payload("beta.md"), "generated_at": "2024-01-01T00:00:00Z"},
+    }
+
+    _root, index_path, hot_path, cap_paths = _prepare_birdseye(
+        tmp_path,
+        edges=[["alpha.md", "beta.md"], ["beta.md", "alpha.md"]],
+        caps_payloads=caps_payloads,
+        hot_entries=("alpha.md", "beta.md"),
+        root=tmp_path / "docs" / "birdseye",
+    )
+
+    index_payload = json.loads(index_path.read_text(encoding="utf-8"))
+    index_payload["generated_at"] = None
+    _write_json(index_path, index_payload)
+
+    hot_payload = json.loads(hot_path.read_text(encoding="utf-8"))
+    hot_payload["generated_at"] = "2023-12-31T23:59:59Z"
+    _write_json(hot_path, hot_payload)
+
+    report = update.run_update(
+        update.UpdateOptions(targets=(cap_paths["beta.md"],), emit="index+caps", dry_run=False)
+    )
+
+    expected_serial = "00008"
+
+    assert report.generated_at == expected_serial
+
+    refreshed_index = json.loads(index_path.read_text(encoding="utf-8"))
+    assert refreshed_index["generated_at"] == expected_serial
+
+    refreshed_hot = json.loads(hot_path.read_text(encoding="utf-8"))
+    assert refreshed_hot["generated_at"] == expected_serial
+
+    refreshed_beta = json.loads(cap_paths["beta.md"].read_text(encoding="utf-8"))
+    assert refreshed_beta["generated_at"] == expected_serial
+
+    updated_alpha = json.loads(cap_paths["alpha.md"].read_text(encoding="utf-8"))
+    assert updated_alpha["generated_at"] == expected_serial
+
+
 def test_run_update_accepts_caps_directory_target(tmp_path, monkeypatch):
     caps_payloads = {
         cap_id: _caps_payload(cap_id)
@@ -993,13 +1063,20 @@ def test_refresh_hot_updates_serial_and_preserves_metadata(tmp_path):
     planned: set[Path] = set()
     performed: set[Path] = set()
     timestamp = "2025-01-02T00:00:00Z"
+    hot_original = hot_path.read_text(encoding="utf-8")
+    hot_payload = json.loads(hot_original)
+    allocator = update._SerialAllocator()
+    allocator.observe("00042")
     update._refresh_hot(
         hot_path,
-        timestamp,
+        hot_payload,
+        hot_original,
+        timestamp=timestamp,
         dry_run=False,
         planned=planned,
         performed=performed,
         remember_generated=lambda _: None,
+        allocator=allocator,
     )
 
     assert planned == {hot_path}
@@ -1031,6 +1108,8 @@ def test_refresh_capsule_updates_dependencies_and_serial(tmp_path):
     caps_state = {"alpha": (cap_path, json.loads(cap_original), cap_original)}
     planned: set[Path] = set()
     performed: set[Path] = set()
+    allocator = update._SerialAllocator()
+    allocator.observe("00010")
 
     update._refresh_capsule(
         "alpha",
@@ -1042,6 +1121,7 @@ def test_refresh_capsule_updates_dependencies_and_serial(tmp_path):
         planned=planned,
         performed=performed,
         remember_generated=lambda _: None,
+        allocator=allocator,
     )
 
     assert planned == {cap_path}
