@@ -50,6 +50,20 @@ def test_since_command_resolves_capsules_for_non_birdseye_diff(monkeypatch):
     assert expected in resolved
 
 
+def test_since_command_falls_back_to_default_targets(monkeypatch):
+    options = update.parse_args(["--since"])
+
+    options = replace(options, diff_resolver=SimpleNamespace(resolve=lambda _: ()))
+
+    resolved = options.resolve_targets()
+
+    expected_index = (update._REPO_ROOT / "docs" / "birdseye" / "index.json").resolve()
+    expected_hot = (update._REPO_ROOT / "docs" / "birdseye" / "hot.json").resolve()
+    expected_caps = (update._REPO_ROOT / "docs" / "birdseye" / "caps").resolve()
+
+    assert resolved == (expected_index, expected_hot, expected_caps)
+
+
 def test_git_diff_resolver_parses_rename_status(monkeypatch):
     captured = {}
 
