@@ -30,7 +30,7 @@ def test_ensure_python_version_exits(monkeypatch, capsys):
 def test_since_command_resolves_capsules_for_non_birdseye_diff(monkeypatch):
     options = update.parse_args(["--since", "--emit", "index+caps"])
 
-    def fake_run(args, capture_output, text, check):
+    def fake_run(args, capture_output, text, check, cwd):
         assert args == [
             "git",
             "diff",
@@ -38,6 +38,7 @@ def test_since_command_resolves_capsules_for_non_birdseye_diff(monkeypatch):
             "--find-renames",
             "main...HEAD",
         ]
+        assert cwd == update._REPO_ROOT
         return SimpleNamespace(stdout="M\tREADME.md\n")
 
     monkeypatch.setattr(update.subprocess, "run", fake_run)
@@ -51,11 +52,12 @@ def test_since_command_resolves_capsules_for_non_birdseye_diff(monkeypatch):
 def test_git_diff_resolver_parses_rename_status(monkeypatch):
     captured = {}
 
-    def fake_run(args, capture_output, text, check):
+    def fake_run(args, capture_output, text, check, cwd):
         captured["args"] = args
         assert capture_output is True
         assert text is True
         assert check is True
+        captured["cwd"] = cwd
         return SimpleNamespace(stdout="R100\tREADME.md\tRUNBOOK.md\n")
 
     monkeypatch.setattr(update.subprocess, "run", fake_run)
@@ -70,10 +72,44 @@ def test_git_diff_resolver_parses_rename_status(monkeypatch):
         "--find-renames",
         "main...HEAD",
     ]
+    assert captured["cwd"] == update._REPO_ROOT
     assert resolved == (
         Path("docs/birdseye/caps/README.md.json"),
         Path("docs/birdseye/caps/RUNBOOK.md.json"),
     )
+
+
+def test_git_diff_resolver_uses_repo_root(monkeypatch):
+    captured = {}
+
+    def fake_run(args, capture_output, text, check, cwd):
+        captured.update(
+            {
+                "args": args,
+                "capture_output": capture_output,
+                "text": text,
+                "check": check,
+                "cwd": cwd,
+            }
+        )
+        return SimpleNamespace(stdout="")
+
+    monkeypatch.setattr(update.subprocess, "run", fake_run)
+
+    resolver = update.GitDiffResolver()
+    resolver.resolve("feature")
+
+    assert captured["args"] == [
+        "git",
+        "diff",
+        "--name-status",
+        "--find-renames",
+        "feature...HEAD",
+    ]
+    assert captured["capture_output"] is True
+    assert captured["text"] is True
+    assert captured["check"] is True
+    assert captured["cwd"] == update._REPO_ROOT
 
 
 def test_derive_targets_from_since_accepts_absolute_paths():
@@ -388,7 +424,7 @@ def test_run_update_with_since_handles_git_rename(tmp_path, monkeypatch):
         root=tmp_path / "docs" / "birdseye",
     )
 
-    def fake_run(args, capture_output, text, check):
+    def fake_run(args, capture_output, text, check, cwd):
         assert args == [
             "git",
             "diff",
@@ -396,6 +432,7 @@ def test_run_update_with_since_handles_git_rename(tmp_path, monkeypatch):
             "--find-renames",
             "main...HEAD",
         ]
+        assert cwd == tmp_path
         return SimpleNamespace(stdout="R100\tREADME.md\tRUNBOOK.md\n")
 
     monkeypatch.setattr(update.subprocess, "run", fake_run)
@@ -828,8 +865,13 @@ def test_parse_args_supports_since_and_limits_scope(tmp_path, monkeypatch):
 def test_git_diff_resolver_filters_paths(monkeypatch):
     captured = {}
 
-    def fake_run(args, *, capture_output, text, check):
-        captured["args"] = args
+    def fake_run(args, *, capture_output, text, check, cwd):
+        captured.update(
+            {
+                "args": args,
+                "cwd": cwd,
+            }
+        )
         return SimpleNamespace(
             stdout=(
                 "M\tdocs/birdseye/caps/delta.md.json\n"
@@ -851,6 +893,7 @@ def test_git_diff_resolver_filters_paths(monkeypatch):
         "--find-renames",
         "develop...HEAD",
     ]
+    assert captured["cwd"] == update._REPO_ROOT
     assert result == (
         Path("docs/birdseye/caps/delta.md.json"),
         Path("docs/birdseye/caps/README.md.json"),

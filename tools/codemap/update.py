@@ -80,6 +80,7 @@ class GitDiffResolver:
             capture_output=True,
             text=True,
             check=True,
+            cwd=_REPO_ROOT,
         )
         diff_entries: list[str] = []
         for raw_line in result.stdout.splitlines():
