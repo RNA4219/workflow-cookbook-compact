@@ -14,6 +14,9 @@ from pathlib import Path
 from typing import Callable, Iterable, Iterator, List, Sequence, TextIO, Tuple
 
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
 def get_changed_paths(refspec: str) -> List[str]:
     result = subprocess.run(
         ["git", "diff", "--name-only", refspec],
@@ -21,6 +24,7 @@ def get_changed_paths(refspec: str) -> List[str]:
         capture_output=True,
         text=True,
         encoding="utf-8",
+        cwd=_REPO_ROOT,
     )
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 

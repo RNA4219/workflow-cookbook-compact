@@ -9,6 +9,26 @@ from tools.ci import check_governance_gate
 from tools.ci.check_governance_gate import validate_pr_body
 
 
+def test_get_changed_paths_uses_repo_root(monkeypatch):
+    captured = {}
+
+    def _fake_run(*args, **kwargs):
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+
+        class _Result:
+            stdout = "foo.txt\n"
+
+        return _Result()
+
+    monkeypatch.setattr(check_governance_gate.subprocess, "run", _fake_run)
+
+    result = check_governance_gate.get_changed_paths("main..HEAD")
+
+    assert result == ["foo.txt"]
+    assert captured["kwargs"]["cwd"] == check_governance_gate._REPO_ROOT
+
+
 def test_validate_pr_body_success(capsys):
     body = """
 Intent: INT-123-OPS-Migrate
