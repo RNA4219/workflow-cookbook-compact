@@ -59,6 +59,16 @@ class ResolutionResult:
     def is_success(self) -> bool:
         return self.body is not None
 
+    @property
+    def combined_error_message(self) -> str:
+        return "\n".join(self.errors)
+
+    def emit_errors(self, *, stream: TextIO | None = None) -> None:
+        if not self.errors:
+            return
+        target = sys.stderr if stream is None else stream
+        print(self.combined_error_message, file=target)
+
 
 class PRBodyResolver:
     def __init__(
@@ -117,8 +127,7 @@ def resolve_pr_body(
     resolver = PRBodyResolver()
     result = resolver.resolve(cli_body=cli_body, cli_body_path=cli_body_path)
     if not result.is_success:
-        for message in result.errors:
-            print(message, file=sys.stderr)
+        result.emit_errors()
         return None
     return result.body
 
@@ -327,8 +336,7 @@ def main(
         cli_body_path=args.pr_body_path,
     )
     if not resolution.is_success:
-        for message in resolution.errors:
-            print(message, file=sys.stderr)
+        resolution.emit_errors(stream=sys.stderr)
         return 1
     body = resolution.body
     assert body is not None
