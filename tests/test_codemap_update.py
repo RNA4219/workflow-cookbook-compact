@@ -192,6 +192,39 @@ def test_git_diff_resolver_uses_repo_root(monkeypatch):
     assert captured["cwd"] == update._REPO_ROOT
 
 
+def test_git_diff_resolver_uses_user_provided_range(monkeypatch):
+    captured: list[list[str]] = []
+
+    def fake_run(args, capture_output, text, check, cwd):
+        captured.append(args)
+        return SimpleNamespace(stdout="")
+
+    monkeypatch.setattr(update.subprocess, "run", fake_run)
+
+    resolver = update.GitDiffResolver()
+    resolver.resolve("origin/main..HEAD")
+    resolver.resolve("feature...staging")
+
+    assert captured == [
+        [
+            "git",
+            "diff",
+            "--name-status",
+            "--find-renames",
+            "--find-copies",
+            "origin/main..HEAD",
+        ],
+        [
+            "git",
+            "diff",
+            "--name-status",
+            "--find-renames",
+            "--find-copies",
+            "feature...staging",
+        ],
+    ]
+
+
 def test_derive_targets_from_since_accepts_absolute_paths():
     repo_root = Path(__file__).resolve().parents[1]
     absolute_readme = (repo_root / "README.md").resolve()

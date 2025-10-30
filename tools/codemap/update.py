@@ -75,8 +75,16 @@ class UpdateReport:
     performed_writes: tuple[Path, ...]
 
 
+def _format_diff_reference(reference: str) -> str:
+    stripped = reference.strip()
+    if ".." in stripped:
+        return stripped
+    return f"{stripped}...HEAD"
+
+
 class GitDiffResolver:
     def resolve(self, reference: str) -> tuple[Path, ...]:
+        diff_reference = _format_diff_reference(reference)
         result = subprocess.run(
             [
                 "git",
@@ -84,7 +92,7 @@ class GitDiffResolver:
                 "--name-status",
                 "--find-renames",
                 "--find-copies",
-                f"{reference}...HEAD",
+                diff_reference,
             ],
             capture_output=True,
             text=True,
