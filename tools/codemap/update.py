@@ -54,6 +54,8 @@ class UpdateOptions:
                     f"Failed to resolve git diff for --since: {exc}"
                 ) from exc
             resolved.extend(_normalise_target(path) for path in derived)
+        if not resolved:
+            resolved.extend(_default_birdseye_targets())
         unique_targets = tuple(dict.fromkeys(resolved))
         if not unique_targets:
             raise TargetResolutionError("Specify --targets, --since, or both")
@@ -166,6 +168,20 @@ def _derive_targets_from_since(
             if (base_root / capsule_path).is_file():
                 _add(capsule_path)
     return tuple(derived)
+
+
+def _default_birdseye_targets() -> tuple[Path, ...]:
+    birdseye_root = _REPO_ROOT / "docs" / "birdseye"
+    candidates = (
+        birdseye_root / "index.json",
+        birdseye_root / "hot.json",
+        birdseye_root / "caps",
+    )
+    fallback: list[Path] = []
+    for candidate in candidates:
+        if candidate.is_file() or candidate.is_dir():
+            fallback.append(candidate.resolve())
+    return tuple(fallback)
 
 
 def _normalise_target(target: Path) -> Path:
