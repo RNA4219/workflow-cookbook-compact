@@ -20,6 +20,12 @@ from typing import Any, Callable, Iterable, Mapping, Protocol, Sequence
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+_BIRDSEYE_REGENERATE_COMMAND = (
+    "python tools/codemap/update.py --targets "
+    "docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps"
+)
+
+
 CapsuleEntry = tuple[Path, dict[str, Any], str]
 CapsuleState = dict[str, CapsuleEntry]
 Graph = dict[str, list[str]]
@@ -540,6 +546,10 @@ def run_update(options: UpdateOptions) -> UpdateReport:
 
         if not index_path.is_file():
             raise FileNotFoundError(index_path)
+        if emit_index and not hot_path.exists():
+            raise FileNotFoundError(
+                f"{hot_path} is missing. Regenerate via: {_BIRDSEYE_REGENERATE_COMMAND}"
+            )
         if emit_caps and not caps_dir.is_dir():
             raise FileNotFoundError(caps_dir)
 
