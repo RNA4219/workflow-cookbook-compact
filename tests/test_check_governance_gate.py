@@ -1,3 +1,4 @@
+import io
 import sys
 from pathlib import Path
 
@@ -7,10 +8,99 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from tools.ci import check_governance_gate
 from tools.ci.check_governance_gate import (
+    EvaluationReferenceRule,
+    IntentCategoryRule,
+    IntentPresenceRule,
     PRBodyResolver,
+    PRBodyValidator,
+    PriorityScoreRule,
     ResolutionResult,
+    ValidationContext,
     validate_pr_body,
 )
+
+
+def _run_rules(
+    body: str,
+    rules: list[check_governance_gate.ValidationRule],
+    *,
+    category_hints: list[str] | None = None,
+) -> check_governance_gate.ValidationOutcome:
+    context = ValidationContext(
+        body=body,
+        category_hints=category_hints,
+    )
+    validator = PRBodyValidator(rules)
+    return validator.validate(context)
+
+
+def test_intent_presence_rule_requires_intent():
+    outcome = _run_rules("", [IntentPresenceRule()])
+
+    expected = "PR body must include 'Intent: INT-xxx'"
+    assert outcome.errors == [expected]
+    assert list(outcome.iter_messages()) == [("error", expected)]
+
+
+def test_intent_category_rule_prefers_hints():
+    body = "Intent: INT-4242"
+    rules = [IntentPresenceRule(), IntentCategoryRule()]
+
+    outcome = _run_rules(body, rules, category_hints=["OPS", "QA"])
+
+    expected = (
+        "warning",
+        "No intent category pattern (INT-###-CAT-) detected for INT-4242. Consider categories: OPS, QA.",
+    )
+    assert outcome.errors == []
+    assert outcome.warnings == [expected[1]]
+    assert list(outcome.iter_messages()) == [expected]
+
+
+def test_intent_category_rule_blocks_unknown_category():
+    body = "Intent: INT-4242-UNKNOWN-Test"
+    rules = [IntentPresenceRule(), IntentCategoryRule()]
+
+    outcome = _run_rules(body, rules)
+
+    expected = (
+        "error",
+        "Intent category 'UNKNOWN' is not allowed. Allowed categories: APP, DOCS, OPS, PLAT, QA, SEC.",
+    )
+    assert outcome.errors == [expected[1]]
+    assert outcome.warnings == []
+    assert list(outcome.iter_messages()) == [expected]
+
+
+def test_evaluation_reference_rule_requires_anchor():
+    body = "Intent: INT-999-OPS-Test"
+    rules = [IntentPresenceRule(), EvaluationReferenceRule()]
+
+    outcome = _run_rules(body, rules)
+
+    expected = (
+        "error",
+        "PR must reference EVALUATION (acceptance) anchor",
+    )
+    assert outcome.errors == [expected[1]]
+    assert list(outcome.iter_messages()) == [expected]
+
+
+def test_priority_score_rule_warns_when_missing():
+    body = """Intent: INT-999-OPS-Test
+## EVALUATION
+- [Acceptance Criteria](../EVALUATION.md#acceptance-criteria)
+"""
+    rules = [IntentPresenceRule(), PriorityScoreRule()]
+
+    outcome = _run_rules(body, rules)
+
+    expected = (
+        "warning",
+        "Consider adding 'Priority Score: <number>' based on prioritization.yaml",
+    )
+    assert outcome.warnings == [expected[1]]
+    assert list(outcome.iter_messages()) == [expected]
 
 
 def test_get_changed_paths_uses_repo_root(monkeypatch):
@@ -404,3 +494,20 @@ def test_pr_body_resolver_collects_failure_reasons(tmp_path):
         "PR body data is unavailable. Set PR_BODY or GITHUB_EVENT_PATH.",
     ]
     assert recorded_paths == [missing_path]
+    assert (
+        result.combined_error_message
+        == "\n".join(
+            [
+                f"PR body file not found: {missing_path}",
+                "PR body data is unavailable. Set PR_BODY or GITHUB_EVENT_PATH.",
+            ]
+        )
+    )
+
+    buffer = io.StringIO()
+    result.emit_errors(stream=buffer)
+    assert buffer.getvalue() == (
+        "PR body file not found: {0}\nPR body data is unavailable. Set PR_BODY or GITHUB_EVENT_PATH.\n".format(
+            missing_path
+        )
+    )
