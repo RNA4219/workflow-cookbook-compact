@@ -146,6 +146,18 @@ def test_git_diff_resolver_parses_type_change(monkeypatch):
     assert resolved == (Path("docs/birdseye/caps/README.md.json"),)
 
 
+def test_git_diff_resolver_parses_unmerged_status(monkeypatch):
+    def fake_run(args, capture_output, text, check, cwd):
+        return SimpleNamespace(stdout="U\tREADME.md\n")
+
+    monkeypatch.setattr(update.subprocess, "run", fake_run)
+
+    resolver = update.GitDiffResolver()
+    resolved = resolver.resolve("main")
+
+    assert resolved == (Path("docs/birdseye/caps/README.md.json"),)
+
+
 def test_git_diff_resolver_uses_repo_root(monkeypatch):
     captured = {}
 
