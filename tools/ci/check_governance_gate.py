@@ -9,6 +9,7 @@ import os
 import re
 import subprocess
 import sys
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Iterable, Iterator, List, Sequence, TextIO, Tuple
@@ -233,59 +234,131 @@ class ValidationOutcome:
             print(message, file=stream)
 
 
+class ValidationRule(ABC):
+    @abstractmethod
+    def evaluate(self, context: ValidationContext, outcome: ValidationOutcome) -> None:
+        ...
+
+
+@dataclass
+class ValidationContext:
+    body: str
+    category_hints: Sequence[str] | None = None
+    hint_resolver: Callable[[], Sequence[str] | None] | None = None
+    intent_present: bool = field(init=False, default=False)
+
+    def __post_init__(self) -> None:
+        self.body = self.body or ""
+        self._resolved_hints: list[str] | None = None
+
+    @property
+    def normalized_body(self) -> str:
+        return self.body
+
+    def resolve_category_hints(self) -> list[str]:
+        if self._resolved_hints is None:
+            if self.category_hints is not None:
+                hints: Sequence[str] | None = self.category_hints
+            else:
+                resolver = self.hint_resolver or collect_recent_category_hints
+                hints = resolver() or []
+            self._resolved_hints = [hint for hint in hints if hint]
+        return list(self._resolved_hints)
+
+
+class IntentPresenceRule(ValidationRule):
+    def evaluate(self, context: ValidationContext, outcome: ValidationOutcome) -> None:
+        has_intent = bool(INTENT_PATTERN.search(context.normalized_body))
+        context.intent_present = has_intent
+        if not has_intent:
+            outcome.add_error("PR body must include 'Intent: INT-xxx'")
+
+
+class IntentCategoryRule(ValidationRule):
+    def evaluate(self, context: ValidationContext, outcome: ValidationOutcome) -> None:
+        if not context.intent_present:
+            return
+
+        normalized_body = context.normalized_body
+        category_matches = list(INTENT_CATEGORY_PATTERN.findall(normalized_body))
+        if category_matches:
+            for _, raw_category in category_matches:
+                category = raw_category.upper()
+                if category not in ALLOWED_INTENT_CATEGORIES:
+                    allowed = ", ".join(sorted(ALLOWED_INTENT_CATEGORIES))
+                    outcome.add_error(
+                        f"Intent category '{category}' is not allowed. Allowed categories: {allowed}."
+                    )
+            return
+
+        base_ids = {match.upper() for match in INTENT_ID_PATTERN.findall(normalized_body)}
+        intent_reference = ", ".join(sorted(base_ids)) or "INT-???"
+        hints = context.resolve_category_hints()
+        if hints:
+            suggestion = ", ".join(hints)
+            message = (
+                "No intent category pattern (INT-###-CAT-) detected for"
+                f" {intent_reference}. Consider categories: {suggestion}."
+            )
+        else:
+            message = (
+                "No intent category pattern (INT-###-CAT-) detected and unable"
+                " to infer category from recent changes."
+            )
+        outcome.add_warning(message)
+
+
+class EvaluationReferenceRule(ValidationRule):
+    def evaluate(self, context: ValidationContext, outcome: ValidationOutcome) -> None:
+        normalized_body = context.normalized_body
+        has_evaluation_heading = bool(EVALUATION_HEADING_PATTERN.search(normalized_body))
+        has_evaluation_anchor = bool(EVALUATION_ANCHOR_PATTERN.search(normalized_body))
+        if not (has_evaluation_heading or has_evaluation_anchor):
+            outcome.add_error("PR must reference EVALUATION (acceptance) anchor")
+
+
+class PriorityScoreRule(ValidationRule):
+    def evaluate(self, context: ValidationContext, outcome: ValidationOutcome) -> None:
+        if not PRIORITY_PATTERN.search(context.normalized_body):
+            outcome.add_warning(
+                "Consider adding 'Priority Score: <number>' based on prioritization.yaml"
+            )
+
+
+DEFAULT_VALIDATION_RULES: tuple[ValidationRule, ...] = (
+    IntentPresenceRule(),
+    IntentCategoryRule(),
+    EvaluationReferenceRule(),
+    PriorityScoreRule(),
+)
+
+
+class PRBodyValidator:
+    def __init__(self, rules: Sequence[ValidationRule] | None = None) -> None:
+        if rules is None:
+            rules = DEFAULT_VALIDATION_RULES
+        self._rules = list(rules)
+
+    def validate(self, context: ValidationContext) -> ValidationOutcome:
+        outcome = ValidationOutcome()
+        for rule in self._rules:
+            rule.evaluate(context, outcome)
+        return outcome
+
+
 def collect_validation_outcome(
     body: str | None,
     *,
     category_hints: Sequence[str] | None = None,
     hint_resolver: Callable[[], Sequence[str] | None] | None = None,
 ) -> ValidationOutcome:
-    normalized_body = body or ""
-    outcome = ValidationOutcome()
-
-    if not INTENT_PATTERN.search(normalized_body):
-        outcome.add_error("PR body must include 'Intent: INT-xxx'")
-    else:
-        category_matches = list(INTENT_CATEGORY_PATTERN.findall(normalized_body))
-        if category_matches:
-            for _, raw_category in category_matches:
-                category = raw_category.upper()
-                if category not in ALLOWED_INTENT_CATEGORIES:
-                    outcome.add_error(
-                        f"Intent category '{category}' is not allowed."
-                        f" Allowed categories: {', '.join(sorted(ALLOWED_INTENT_CATEGORIES))}."
-                    )
-        else:
-            base_ids = {match.upper() for match in INTENT_ID_PATTERN.findall(normalized_body)}
-            intent_reference = ", ".join(sorted(base_ids)) or "INT-???"
-            if category_hints is not None:
-                hints = [hint for hint in category_hints if hint]
-            else:
-                resolver = hint_resolver or collect_recent_category_hints
-                resolved_hints = resolver() or []
-                hints = [hint for hint in resolved_hints if hint]
-            if hints:
-                suggestion = ", ".join(hints)
-                outcome.add_warning(
-                    "No intent category pattern (INT-###-CAT-) detected for"
-                    f" {intent_reference}. Consider categories: {suggestion}."
-                )
-            else:
-                outcome.add_warning(
-                    "No intent category pattern (INT-###-CAT-) detected and unable"
-                    " to infer category from recent changes."
-                )
-
-    has_evaluation_heading = bool(EVALUATION_HEADING_PATTERN.search(normalized_body))
-    has_evaluation_anchor = bool(EVALUATION_ANCHOR_PATTERN.search(normalized_body))
-    has_evaluation_reference = has_evaluation_heading or has_evaluation_anchor
-    if not has_evaluation_reference:
-        outcome.add_error("PR must reference EVALUATION (acceptance) anchor")
-    if not PRIORITY_PATTERN.search(normalized_body):
-        outcome.add_warning(
-            "Consider adding 'Priority Score: <number>' based on prioritization.yaml"
-        )
-
-    return outcome
+    validator = PRBodyValidator()
+    context = ValidationContext(
+        body=body or "",
+        category_hints=category_hints,
+        hint_resolver=hint_resolver,
+    )
+    return validator.validate(context)
 
 
 def validate_pr_body(
