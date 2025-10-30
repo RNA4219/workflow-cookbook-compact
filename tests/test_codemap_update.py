@@ -501,6 +501,53 @@ def _prepare_birdseye(
     return root, index_path, hot_path, cap_paths
 
 
+def test_birdseye_session_plan_targets_root_and_capsule(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(update, "_REPO_ROOT", tmp_path)
+
+    caps_payloads = {
+        "alpha.md": _caps_payload("alpha.md", deps_out=["beta.md"], deps_in=[]),
+        "beta.md": _caps_payload("beta.md", deps_out=["gamma.md"], deps_in=["alpha.md"]),
+        "gamma.md": _caps_payload("gamma.md", deps_out=["delta.md"], deps_in=["beta.md"]),
+        "delta.md": _caps_payload("delta.md", deps_out=[], deps_in=["gamma.md"]),
+    }
+    _root, index_path, hot_path, cap_paths = _prepare_birdseye(
+        tmp_path,
+        root=tmp_path / "docs" / "birdseye",
+        edges=[
+            ["alpha.md", "beta.md"],
+            ["beta.md", "alpha.md"],
+            ["beta.md", "gamma.md"],
+            ["gamma.md", "beta.md"],
+            ["gamma.md", "delta.md"],
+            ["delta.md", "gamma.md"],
+        ],
+        caps_payloads=caps_payloads,
+        hot_entries=("alpha.md", "beta.md", "gamma.md", "delta.md"),
+    )
+
+    options = update.UpdateOptions(
+        targets=(index_path, cap_paths["beta.md"]),
+        emit="index+caps",
+        dry_run=True,
+    )
+
+    session = update.BirdseyeUpdateSession(options=options, timestamp="2025-01-01T00:00:00Z")
+    plan = session.plan()
+
+    planned_paths = {write.path for write in plan.writes}
+
+    assert plan.generated_at == "00002"
+    assert planned_paths == {
+        index_path,
+        hot_path,
+        cap_paths["alpha.md"],
+        cap_paths["beta.md"],
+        cap_paths["gamma.md"],
+        cap_paths["delta.md"],
+    }
+
+
 def test_birdseye_session_plan_computes_expected_writes(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(update, "_REPO_ROOT", tmp_path)
