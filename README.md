@@ -72,6 +72,9 @@ canary rules.
       python tools/codemap/update.py --targets docs/birdseye/index.json,docs/birdseye/hot.json --emit index+caps
       ```
 
+      `docs/birdseye/hot.json` が欠落している場合は上記コマンドの実行時に
+      `FileNotFoundError` が発生し、再生成コマンドがメッセージで提示されます。
+
     - [`HUB.codex.md`](HUB.codex.md) …… 仕様集約とタスク分割ハブを整備し、Birdseye カプセルの依存関係を維持
     - [`docs/IN-20250115-001.md`](docs/IN-20250115-001.md) …… インシデントログを参照し
       Birdseye カプセル要約で指示される `deps_out` を照合

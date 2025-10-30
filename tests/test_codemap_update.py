@@ -627,6 +627,30 @@ def test_run_update_refreshes_metadata_and_dependencies(tmp_path, monkeypatch, d
     )
 
 
+def test_run_update_requires_hot_json_when_emitting_index(tmp_path, monkeypatch):
+    caps_payloads = {
+        "alpha.md": _caps_payload("alpha.md"),
+        "beta.md": _caps_payload("beta.md"),
+    }
+    root, _, hot_path, _ = _prepare_birdseye(
+        tmp_path,
+        edges=[["alpha.md", "beta.md"]],
+        caps_payloads=caps_payloads,
+        hot_entries=_HOT_NODE_IDS,
+    )
+
+    hot_path.unlink()
+
+    monkeypatch.setattr(update, "_REPO_ROOT", tmp_path)
+
+    with pytest.raises(FileNotFoundError) as excinfo:
+        update.run_update(update.UpdateOptions(targets=(root,), emit="index+caps"))
+
+    message = str(excinfo.value)
+    assert str(hot_path) in message
+    assert _HOT_REFRESH_COMMAND in message
+
+
 def test_run_update_preserves_hot_nodes_structure(tmp_path, monkeypatch):
     caps_payloads = {
         "alpha.md": _caps_payload("alpha.md", deps_in=["obsolete"]),
