@@ -36,6 +36,7 @@ def test_since_command_resolves_capsules_for_non_birdseye_diff(monkeypatch):
             "diff",
             "--name-status",
             "--find-renames",
+            "--find-copies",
             "main...HEAD",
         ]
         assert cwd == update._REPO_ROOT
@@ -85,6 +86,7 @@ def test_git_diff_resolver_parses_rename_status(monkeypatch):
         "diff",
         "--name-status",
         "--find-renames",
+        "--find-copies",
         "main...HEAD",
     ]
     assert captured["cwd"] == update._REPO_ROOT
@@ -169,6 +171,7 @@ def test_git_diff_resolver_uses_repo_root(monkeypatch):
         "diff",
         "--name-status",
         "--find-renames",
+        "--find-copies",
         "feature...HEAD",
     ]
     assert captured["capture_output"] is True
@@ -522,6 +525,7 @@ def test_run_update_with_since_handles_git_rename(tmp_path, monkeypatch):
             "diff",
             "--name-status",
             "--find-renames",
+            "--find-copies",
             "main...HEAD",
         ]
         assert cwd == tmp_path
@@ -1079,6 +1083,7 @@ def test_git_diff_resolver_filters_paths(monkeypatch):
         "diff",
         "--name-status",
         "--find-renames",
+        "--find-copies",
         "develop...HEAD",
     ]
     assert captured["cwd"] == update._REPO_ROOT
