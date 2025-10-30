@@ -46,40 +46,81 @@ def read_event_body(event_path: Path) -> str | None:
 
 def read_pr_body_from_path(path: Path) -> str | None:
     if not path.exists():
-        print(f"PR body file not found: {path}", file=sys.stderr)
         return None
     return path.read_text(encoding="utf-8")
+
+
+@dataclass
+class ResolutionResult:
+    body: str | None
+    errors: list[str] = field(default_factory=list)
+
+    @property
+    def is_success(self) -> bool:
+        return self.body is not None
+
+
+class PRBodyResolver:
+    def __init__(
+        self,
+        *,
+        env_getter: Callable[[str], str | None] | None = None,
+        path_reader: Callable[[Path], str | None] | None = None,
+        event_reader: Callable[[Path], str | None] | None = None,
+    ) -> None:
+        self._env_getter = env_getter or os.environ.get
+        self._path_reader = path_reader or read_pr_body_from_path
+        self._event_reader = event_reader or read_event_body
+
+    def resolve(
+        self,
+        *,
+        cli_body: str | None = None,
+        cli_body_path: Path | None = None,
+    ) -> ResolutionResult:
+        if cli_body is not None:
+            return ResolutionResult(body=cli_body)
+
+        errors: list[str] = []
+
+        if cli_body_path is not None:
+            body_from_cli_path = self._path_reader(cli_body_path)
+            if body_from_cli_path is not None:
+                return ResolutionResult(body=body_from_cli_path)
+            errors.append(f"PR body file not found: {cli_body_path}")
+
+        direct_body = self._env_getter("PR_BODY")
+        if direct_body is not None:
+            return ResolutionResult(body=direct_body)
+
+        env_body_path_value = self._env_getter("PR_BODY_PATH")
+        if env_body_path_value:
+            env_body_path = Path(env_body_path_value)
+            body_from_env_path = self._path_reader(env_body_path)
+            if body_from_env_path is not None:
+                return ResolutionResult(body=body_from_env_path)
+            errors.append(f"PR body file not found: {env_body_path}")
+
+        event_path_value = self._env_getter("GITHUB_EVENT_PATH")
+        if event_path_value:
+            body_from_event = self._event_reader(Path(event_path_value))
+            if body_from_event is not None:
+                return ResolutionResult(body=body_from_event)
+
+        errors.append("PR body data is unavailable. Set PR_BODY or GITHUB_EVENT_PATH.")
+        return ResolutionResult(body=None, errors=errors)
 
 
 def resolve_pr_body(
     *, cli_body: str | None = None, cli_body_path: Path | None = None
 ) -> str | None:
-    if cli_body is not None:
-        return cli_body
-
-    if cli_body_path is not None:
-        return read_pr_body_from_path(cli_body_path)
-
-    direct_body = os.environ.get("PR_BODY")
-    if direct_body is not None:
-        return direct_body
-
-    env_body_path_value = os.environ.get("PR_BODY_PATH")
-    if env_body_path_value:
-        body_from_path = read_pr_body_from_path(Path(env_body_path_value))
-        if body_from_path is not None:
-            return body_from_path
+    resolver = PRBodyResolver()
+    result = resolver.resolve(cli_body=cli_body, cli_body_path=cli_body_path)
+    if not result.is_success:
+        for message in result.errors:
+            print(message, file=sys.stderr)
         return None
-
-    event_path_value = os.environ.get("GITHUB_EVENT_PATH")
-    if not event_path_value:
-        print(
-            "PR body data is unavailable. Set PR_BODY or GITHUB_EVENT_PATH.",
-            file=sys.stderr,
-        )
-        return None
-
-    return read_event_body(Path(event_path_value))
+    return result.body
 
 
 INTENT_PATTERN = re.compile(
@@ -280,12 +321,17 @@ def main(
     hint_resolver: Callable[[], Sequence[str] | None] | None = None,
 ) -> int:
     args = parse_arguments(argv or ())
-    body = resolve_pr_body(
+    resolver = PRBodyResolver()
+    resolution = resolver.resolve(
         cli_body=args.pr_body,
         cli_body_path=args.pr_body_path,
     )
-    if body is None:
+    if not resolution.is_success:
+        for message in resolution.errors:
+            print(message, file=sys.stderr)
         return 1
+    body = resolution.body
+    assert body is not None
 
     outcome = collect_validation_outcome(
         body,
