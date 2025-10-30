@@ -105,7 +105,7 @@ class GitDiffResolver:
             payloads: list[str]
             if kind in {"R", "C"} and len(columns) >= 3:
                 payloads = columns[1:3]
-            elif kind in {"A", "M", "D"} and len(columns) >= 2:
+            elif kind in {"A", "M", "D", "T"} and len(columns) >= 2:
                 payloads = [columns[1]]
             else:
                 continue
