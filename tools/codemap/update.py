@@ -83,6 +83,7 @@ class GitDiffResolver:
                 "diff",
                 "--name-status",
                 "--find-renames",
+                "--find-copies",
                 f"{reference}...HEAD",
             ],
             capture_output=True,
