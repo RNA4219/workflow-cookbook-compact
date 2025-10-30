@@ -109,6 +109,18 @@ def test_git_diff_resolver_parses_copy_status(monkeypatch):
     )
 
 
+def test_git_diff_resolver_parses_type_change(monkeypatch):
+    def fake_run(args, capture_output, text, check, cwd):
+        return SimpleNamespace(stdout="T\tREADME.md\n")
+
+    monkeypatch.setattr(update.subprocess, "run", fake_run)
+
+    resolver = update.GitDiffResolver()
+    resolved = resolver.resolve("main")
+
+    assert resolved == (Path("docs/birdseye/caps/README.md.json"),)
+
+
 def test_git_diff_resolver_uses_repo_root(monkeypatch):
     captured = {}
 
