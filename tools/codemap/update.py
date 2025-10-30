@@ -383,8 +383,12 @@ def _resolve_focus_nodes(
     graph_in: Mapping[str, Sequence[str]],
     caps_state: CapsuleState,
     cap_path_lookup: Mapping[Path, str],
+    available_caps: Mapping[str, Path],
 ) -> set[str]:
-    if not caps_state:
+    combined_caps: dict[str, Path] = dict(available_caps)
+    for cap_id, (cap_path, _cap_data, _cap_original) in caps_state.items():
+        combined_caps.setdefault(cap_id, cap_path)
+    if not combined_caps:
         return set()
     focus_nodes: set[str] = set()
     root_resolved = root.resolve()
@@ -395,12 +399,12 @@ def _resolve_focus_nodes(
     for candidate in root_targets:
         resolved = candidate.resolve()
         if resolved in special_roots:
-            return set(caps_state)
+            return set(combined_caps)
         cap_id = cap_path_lookup.get(resolved)
         if cap_id:
             focus_nodes.add(cap_id)
     if not focus_nodes:
-        focus_nodes = set(caps_state)
+        focus_nodes = set(caps_state) or set(combined_caps)
     seen: set[str] = set()
     queue: deque[tuple[str, int]] = deque((node, 0) for node in focus_nodes)
     while queue:
@@ -410,13 +414,13 @@ def _resolve_focus_nodes(
         seen.add(node)
         if distance == 2:
             continue
-        for neighbour in graph_out.get(node, ()): 
+        for neighbour in graph_out.get(node, ()):
             if neighbour not in seen:
                 queue.append((neighbour, distance + 1))
-        for neighbour in graph_in.get(node, ()): 
+        for neighbour in graph_in.get(node, ()):
             if neighbour not in seen:
                 queue.append((neighbour, distance + 1))
-    return {node for node in seen if node in caps_state}
+    return {node for node in seen if node in combined_caps}
 
 
 def _refresh_index(
@@ -570,7 +574,23 @@ def run_update(options: UpdateOptions) -> UpdateReport:
 
         caps_state: CapsuleState = {}
         cap_path_lookup: dict[Path, str] = {}
+        available_caps: dict[str, Path] = {}
         if emit_caps:
+            raw_nodes = index_data.get("nodes", {})
+            if isinstance(raw_nodes, Mapping):
+                for node_id, node_payload in raw_nodes.items():
+                    if not isinstance(node_id, str) or not isinstance(node_payload, Mapping):
+                        continue
+                    caps_ref = node_payload.get("caps")
+                    if not isinstance(caps_ref, str) or not caps_ref:
+                        continue
+                    candidate_path = Path(caps_ref)
+                    if candidate_path.is_absolute():
+                        resolved_candidate = candidate_path.resolve()
+                    else:
+                        resolved_candidate = (_REPO_ROOT / candidate_path).resolve()
+                    available_caps.setdefault(node_id, resolved_candidate)
+                    cap_path_lookup.setdefault(resolved_candidate, node_id)
             for cap_path in sorted(caps_dir.glob("*.json")):
                 if not cap_path.is_file():
                     continue
@@ -580,8 +600,10 @@ def run_update(options: UpdateOptions) -> UpdateReport:
                 cap_id = cap_data.get("id")
                 if not isinstance(cap_id, str):
                     continue
-                caps_state[cap_id] = (cap_path, cap_data, cap_original)
-                cap_path_lookup[cap_path.resolve()] = cap_id
+                cap_path_resolved = cap_path.resolve()
+                caps_state[cap_id] = (cap_path_resolved, cap_data, cap_original)
+                cap_path_lookup[cap_path_resolved] = cap_id
+                available_caps.setdefault(cap_id, cap_path_resolved)
                 serial_allocator.observe(cap_data.get("generated_at"))
 
         if emit_index:
@@ -608,7 +630,7 @@ def run_update(options: UpdateOptions) -> UpdateReport:
                 allocator=serial_allocator,
             )
 
-        if emit_caps and caps_state:
+        if emit_caps and available_caps:
             focus_nodes = _resolve_focus_nodes(
                 root_targets,
                 root,
@@ -616,7 +638,24 @@ def run_update(options: UpdateOptions) -> UpdateReport:
                 graph_in,
                 caps_state,
                 cap_path_lookup,
+                available_caps,
             )
+            missing_caps = [cap_id for cap_id in focus_nodes if cap_id not in caps_state]
+            for cap_id in missing_caps:
+                cap_path = available_caps.get(cap_id)
+                if cap_path is None:
+                    continue
+                placeholder_data: dict[str, Any] = {
+                    "id": cap_id,
+                    "role": "doc",
+                    "public_api": [],
+                    "summary": cap_id,
+                    "deps_out": [],
+                    "deps_in": [],
+                    "risks": [],
+                    "tests": [],
+                }
+                caps_state[cap_id] = (cap_path, placeholder_data, "")
             for cap_id in sorted(focus_nodes):
                 _refresh_capsule(
                     cap_id,

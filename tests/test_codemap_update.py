@@ -549,6 +549,44 @@ def test_run_update_with_since_handles_git_rename(tmp_path, monkeypatch):
     assert set(report.performed_writes) == expected_caps
 
 
+def test_run_update_recreates_missing_capsule(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(update, "_REPO_ROOT", tmp_path)
+
+    caps_payloads = {
+        "README.md": _caps_payload("README.md"),
+        "RUNBOOK.md": _caps_payload("RUNBOOK.md"),
+    }
+    _, _, _, cap_paths = _prepare_birdseye(
+        tmp_path,
+        edges=[["README.md", "RUNBOOK.md"], ["RUNBOOK.md", "README.md"]],
+        caps_payloads=caps_payloads,
+        hot_entries=("README.md", "RUNBOOK.md"),
+        root=tmp_path / "docs" / "birdseye",
+    )
+
+    missing_path = cap_paths["README.md"]
+    missing_path.unlink()
+    assert not missing_path.exists()
+
+    options = update.parse_args(["--since"])
+    diff_targets = (Path("docs/birdseye/caps/README.md.json"),)
+    options = replace(
+        options,
+        diff_resolver=SimpleNamespace(resolve=lambda _: diff_targets),
+    )
+
+    report = update.run_update(options)
+
+    assert missing_path.exists()
+    assert missing_path in report.performed_writes
+
+    payload = json.loads(missing_path.read_text(encoding="utf-8"))
+    assert payload["id"] == "README.md"
+    assert payload["deps_out"] == ["RUNBOOK.md"]
+    assert payload["deps_in"] == ["RUNBOOK.md"]
+
+
 def test_run_update_resolves_targets_from_repo_root_outside_cwd(tmp_path, monkeypatch):
     repo_root = tmp_path / "repo"
     outside_dir = tmp_path / "outside"
