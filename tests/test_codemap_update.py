@@ -1174,6 +1174,8 @@ def test_resolve_focus_nodes_includes_two_hop_neighbours(tmp_path):
     graph_out = {"alpha": ["beta"], "beta": ["gamma"], "gamma": ["delta"], "delta": []}
     graph_in = {"beta": ["alpha"], "gamma": ["beta"], "delta": ["gamma"], "alpha": []}
 
+    available_caps = {cap_id: cap_path.resolve() for cap_id, cap_path in cap_paths.items()}
+
     focus = update._resolve_focus_nodes(
         (cap_beta,),
         root,
@@ -1181,6 +1183,7 @@ def test_resolve_focus_nodes_includes_two_hop_neighbours(tmp_path):
         graph_in,
         caps_state,
         cap_lookup,
+        available_caps,
     )
 
     assert focus == {"alpha", "beta", "gamma", "delta"}
