@@ -3,12 +3,15 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools.ci.aggregate_int import collect_category_metrics, write_metrics
+from tools.ci.aggregate_int import _REPO_ROOT, _read_commits, collect_category_metrics, write_metrics
 
 
 def test_collects_categories_from_pr_body_and_commits() -> None:
@@ -34,3 +37,21 @@ def test_writes_expected_json_structure(tmp_path: Path) -> None:
     assert set(written) == {"combined", "sources"}
     assert set(written["sources"]) == {"commits", "pr_body"}
     assert written == metrics
+
+
+def test_read_commits_uses_repo_root(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("COMMIT_MESSAGES", raising=False)
+    monkeypatch.delenv("COMMIT_MESSAGES_PATH", raising=False)
+
+    captured: dict[str, Path | None] = {"cwd": None}
+
+    def fake_run(*args, **kwargs):  # type: ignore[no-untyped-def]
+        captured["cwd"] = kwargs.get("cwd")
+        return SimpleNamespace(returncode=0, stdout="feat: awesome change\n")
+
+    monkeypatch.setattr("tools.ci.aggregate_int.subprocess.run", fake_run)
+
+    result = _read_commits(None)
+
+    assert result == ["feat: awesome change"]
+    assert captured["cwd"] == _REPO_ROOT

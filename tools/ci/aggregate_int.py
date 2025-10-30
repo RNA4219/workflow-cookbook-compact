@@ -12,6 +12,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Dict, Mapping, Sequence
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
 CATEGORY_ALIASES: Mapping[str, str] = {
     "feature": "feature", "feat": "feature", "fix": "fix", "bugfix": "fix",
     "chore": "chore", "docs": "docs", "doc": "docs",
@@ -79,7 +81,13 @@ def _read_commits(path: Path | None) -> list[str]:
             return [line for line in file_path.read_text(encoding="utf-8").splitlines() if line]
     if value:
         return [line for line in value.splitlines() if line]
-    result = subprocess.run(["git", "log", "-1", "--pretty=%s"], capture_output=True, text=True, check=False)
+    result = subprocess.run(
+        ["git", "log", "-1", "--pretty=%s"],
+        capture_output=True,
+        check=False,
+        cwd=_REPO_ROOT,
+        encoding="utf-8",
+    )
     if result.returncode != 0:
         return []
     line = result.stdout.strip()
