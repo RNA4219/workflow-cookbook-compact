@@ -1,3 +1,4 @@
+import io
 import sys
 from pathlib import Path
 
@@ -404,3 +405,20 @@ def test_pr_body_resolver_collects_failure_reasons(tmp_path):
         "PR body data is unavailable. Set PR_BODY or GITHUB_EVENT_PATH.",
     ]
     assert recorded_paths == [missing_path]
+    assert (
+        result.combined_error_message
+        == "\n".join(
+            [
+                f"PR body file not found: {missing_path}",
+                "PR body data is unavailable. Set PR_BODY or GITHUB_EVENT_PATH.",
+            ]
+        )
+    )
+
+    buffer = io.StringIO()
+    result.emit_errors(stream=buffer)
+    assert buffer.getvalue() == (
+        "PR body file not found: {0}\nPR body data is unavailable. Set PR_BODY or GITHUB_EVENT_PATH.\n".format(
+            missing_path
+        )
+    )
