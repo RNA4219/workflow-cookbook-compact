@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from itertools import zip_longest
-from math import sqrt
+from math import isclose, sqrt
 from typing import Any, Dict, Iterable, List, Mapping, MutableMapping
 
 _Message = Mapping[str, Any]
@@ -117,15 +117,22 @@ def _to_vector(values: Sequence[float]) -> List[float]:
     return [float(value) for value in values]
 
 
+_FLOAT_ZERO_ABS_TOL = 1e-12
+
+
+def _is_effectively_zero(value: float) -> bool:
+    return isclose(value, 0.0, abs_tol=_FLOAT_ZERO_ABS_TOL)
+
+
 def _cosine_similarity(a: Sequence[float], b: Sequence[float]) -> float:
     vec_a = _to_vector(a)
     vec_b = _to_vector(b)
     dot_product = sum(x * y for x, y in zip_longest(vec_a, vec_b, fillvalue=0.0))
     norm_a = sqrt(sum(x * x for x in vec_a))
     norm_b = sqrt(sum(y * y for y in vec_b))
-    if norm_a == 0.0 and norm_b == 0.0:
+    if _is_effectively_zero(norm_a) and _is_effectively_zero(norm_b):
         return 0.0
-    if norm_a == 0.0 or norm_b == 0.0:
+    if _is_effectively_zero(norm_a) or _is_effectively_zero(norm_b):
         return 0.0
     similarity = dot_product / (norm_a * norm_b)
     if similarity < 0.0:
