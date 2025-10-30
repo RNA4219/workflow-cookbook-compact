@@ -234,6 +234,8 @@ files copied from this repo into other projects remain Apache-2.0 and require re
   `<number>` を追記し、`governance/prioritization.yaml` の重み付けを参照する。
 - ローカルでゲートを確認する場合は `PR_BODY` に PR 本文を渡してから
   `python tools/ci/check_governance_gate.py` を実行する。
+  （任意のディレクトリからは `python /path/to/workflow-cookbook/tools/ci/check_governance_gate.py`
+  のように実行しても同様に検証できる。）
 
   ```sh
   PR_BODY=$(cat <<'EOF'
