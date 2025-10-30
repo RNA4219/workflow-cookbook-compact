@@ -82,40 +82,59 @@ class GitDiffResolver:
                 "git",
                 "diff",
                 "--name-status",
+                "-z",
                 "--find-renames",
                 "--find-copies",
                 f"{reference}...HEAD",
             ],
             capture_output=True,
-            text=True,
             check=True,
             cwd=_REPO_ROOT,
         )
-        diff_entries: list[str] = []
-        for raw_line in result.stdout.splitlines():
-            stripped = raw_line.strip()
-            if not stripped:
-                continue
-            columns = [segment.strip() for segment in stripped.split("\t")]
-            if not columns:
-                continue
-            status = columns[0]
+        stdout = result.stdout
+        if isinstance(stdout, bytes):
+            decoded = stdout.decode("utf-8", errors="surrogateescape")
+        else:
+            decoded = str(stdout)
+        if not decoded:
+            return ()
+        tokens = [segment for segment in decoded.split("\0") if segment]
+        entries: list[str] = []
+
+        def _clean(value: str) -> str:
+            candidate = value.strip()
+            if candidate.startswith("\"") and candidate.endswith("\"") and len(candidate) >= 2:
+                candidate = candidate[1:-1]
+            candidate = candidate.replace("\\", "/").strip()
+            return candidate
+
+        iterator = iter(tokens)
+        for token in iterator:
+            parts = token.split("\t")
+            status = parts[0].strip() if parts else ""
             if not status:
                 continue
             kind = status[0].upper()
-            payloads: list[str]
-            if kind in {"R", "C"} and len(columns) >= 3:
-                payloads = columns[1:3]
-            elif kind in {"A", "M", "D", "T", "U"} and len(columns) >= 2:
-                payloads = [columns[1]]
-            else:
+            payloads = [value for value in parts[1:] if value]
+            required = 0
+            if kind in {"R", "C"}:
+                required = 2
+            elif kind in {"A", "M", "D", "T", "U"}:
+                required = 1
+            if required == 0:
                 continue
-            for value in payloads:
-                candidate = value.replace("\\", "/").strip()
-                if not candidate:
-                    continue
-                diff_entries.append(candidate)
-        derived = _derive_targets_from_since(diff_entries)
+            while len(payloads) < required:
+                try:
+                    payloads.append(next(iterator))
+                except StopIteration:
+                    break
+            if len(payloads) < required:
+                continue
+            for payload in payloads[:required]:
+                candidate = _clean(payload)
+                if candidate:
+                    entries.append(candidate)
+        derived = _derive_targets_from_since(entries, repo_root=_REPO_ROOT)
         return tuple(
             path
             for path in derived

@@ -30,17 +30,21 @@ def test_ensure_python_version_exits(monkeypatch, capsys):
 def test_since_command_resolves_capsules_for_non_birdseye_diff(monkeypatch):
     options = update.parse_args(["--since", "--emit", "index+caps"])
 
-    def fake_run(args, capture_output, text, check, cwd):
+    def fake_run(args, capture_output, check, cwd, **kwargs):
         assert args == [
             "git",
             "diff",
             "--name-status",
+            "-z",
             "--find-renames",
             "--find-copies",
             "main...HEAD",
         ]
         assert cwd == update._REPO_ROOT
-        return SimpleNamespace(stdout="M\tREADME.md\n")
+        assert capture_output is True
+        assert check is True
+        assert kwargs == {}
+        return SimpleNamespace(stdout=b"M\tREADME.md\0")
 
     monkeypatch.setattr(update.subprocess, "run", fake_run)
     options = replace(options, diff_resolver=update.GitDiffResolver())
@@ -68,13 +72,13 @@ def test_since_command_falls_back_to_default_targets(monkeypatch):
 def test_git_diff_resolver_parses_rename_status(monkeypatch):
     captured = {}
 
-    def fake_run(args, capture_output, text, check, cwd):
+    def fake_run(args, capture_output, check, cwd, **kwargs):
         captured["args"] = args
-        assert capture_output is True
-        assert text is True
-        assert check is True
         captured["cwd"] = cwd
-        return SimpleNamespace(stdout="R100\tREADME.md\tRUNBOOK.md\n")
+        captured["capture_output"] = capture_output
+        captured["check"] = check
+        captured["kwargs"] = kwargs
+        return SimpleNamespace(stdout=b"R100\tREADME.md\tRUNBOOK.md\0")
 
     monkeypatch.setattr(update.subprocess, "run", fake_run)
 
@@ -85,10 +89,14 @@ def test_git_diff_resolver_parses_rename_status(monkeypatch):
         "git",
         "diff",
         "--name-status",
+        "-z",
         "--find-renames",
         "--find-copies",
         "main...HEAD",
     ]
+    assert captured["capture_output"] is True
+    assert captured["check"] is True
+    assert captured["kwargs"] == {}
     assert captured["cwd"] == update._REPO_ROOT
     assert resolved == (
         Path("docs/birdseye/caps/README.md.json"),
@@ -99,17 +107,17 @@ def test_git_diff_resolver_parses_rename_status(monkeypatch):
 def test_git_diff_resolver_parses_copy_status(monkeypatch):
     captured = {}
 
-    def fake_run(args, capture_output, text, check, cwd):
+    def fake_run(args, capture_output, check, cwd, **kwargs):
         captured.update(
             {
                 "args": args,
                 "capture_output": capture_output,
-                "text": text,
                 "check": check,
                 "cwd": cwd,
+                "kwargs": kwargs,
             }
         )
-        return SimpleNamespace(stdout="C100\tREADME.md\tRUNBOOK.md\n")
+        return SimpleNamespace(stdout=b"C100\tREADME.md\tRUNBOOK.md\0")
 
     monkeypatch.setattr(update.subprocess, "run", fake_run)
 
@@ -120,14 +128,15 @@ def test_git_diff_resolver_parses_copy_status(monkeypatch):
         "git",
         "diff",
         "--name-status",
+        "-z",
         "--find-renames",
         "--find-copies",
         "main...HEAD",
     ]
     assert captured["capture_output"] is True
-    assert captured["text"] is True
     assert captured["check"] is True
     assert captured["cwd"] == update._REPO_ROOT
+    assert captured["kwargs"] == {}
     assert resolved == (
         Path("docs/birdseye/caps/README.md.json"),
         Path("docs/birdseye/caps/RUNBOOK.md.json"),
@@ -135,8 +144,9 @@ def test_git_diff_resolver_parses_copy_status(monkeypatch):
 
 
 def test_git_diff_resolver_parses_type_change(monkeypatch):
-    def fake_run(args, capture_output, text, check, cwd):
-        return SimpleNamespace(stdout="T\tREADME.md\n")
+    def fake_run(args, capture_output, check, cwd, **kwargs):
+        assert kwargs == {}
+        return SimpleNamespace(stdout=b"T\tREADME.md\0")
 
     monkeypatch.setattr(update.subprocess, "run", fake_run)
 
@@ -147,8 +157,9 @@ def test_git_diff_resolver_parses_type_change(monkeypatch):
 
 
 def test_git_diff_resolver_parses_unmerged_status(monkeypatch):
-    def fake_run(args, capture_output, text, check, cwd):
-        return SimpleNamespace(stdout="U\tREADME.md\n")
+    def fake_run(args, capture_output, check, cwd, **kwargs):
+        assert kwargs == {}
+        return SimpleNamespace(stdout=b"U\tREADME.md\0")
 
     monkeypatch.setattr(update.subprocess, "run", fake_run)
 
@@ -161,17 +172,17 @@ def test_git_diff_resolver_parses_unmerged_status(monkeypatch):
 def test_git_diff_resolver_uses_repo_root(monkeypatch):
     captured = {}
 
-    def fake_run(args, capture_output, text, check, cwd):
+    def fake_run(args, capture_output, check, cwd, **kwargs):
         captured.update(
             {
                 "args": args,
                 "capture_output": capture_output,
-                "text": text,
                 "check": check,
                 "cwd": cwd,
+                "kwargs": kwargs,
             }
         )
-        return SimpleNamespace(stdout="")
+        return SimpleNamespace(stdout=b"")
 
     monkeypatch.setattr(update.subprocess, "run", fake_run)
 
@@ -182,14 +193,49 @@ def test_git_diff_resolver_uses_repo_root(monkeypatch):
         "git",
         "diff",
         "--name-status",
+        "-z",
         "--find-renames",
         "--find-copies",
         "feature...HEAD",
     ]
     assert captured["capture_output"] is True
-    assert captured["text"] is True
     assert captured["check"] is True
     assert captured["cwd"] == update._REPO_ROOT
+    assert captured["kwargs"] == {}
+
+
+def test_git_diff_resolver_handles_quoted_paths(monkeypatch, tmp_path):
+    repo_root = tmp_path / "repo"
+    capsule_root = repo_root / "docs" / "birdseye" / "caps"
+    capsule_root.mkdir(parents=True)
+    target_capsule = capsule_root / "docs.new guide.md.json"
+    target_capsule.write_text("{}", encoding="utf-8")
+
+    monkeypatch.setattr(update, "_REPO_ROOT", repo_root)
+
+    def fake_run(args, capture_output, check, cwd, **kwargs):
+        assert args == [
+            "git",
+            "diff",
+            "--name-status",
+            "-z",
+            "--find-renames",
+            "--find-copies",
+            "main...HEAD",
+        ]
+        assert capture_output is True
+        assert check is True
+        assert cwd == repo_root
+        assert kwargs == {}
+        payload = b'M\t"docs/new guide.md"\0'
+        return SimpleNamespace(stdout=payload)
+
+    monkeypatch.setattr(update.subprocess, "run", fake_run)
+
+    resolver = update.GitDiffResolver()
+    resolved = resolver.resolve("main")
+
+    assert resolved == (Path("docs/birdseye/caps/docs.new guide.md.json"),)
 
 
 def test_derive_targets_from_since_accepts_absolute_paths():
