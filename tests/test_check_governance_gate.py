@@ -6,7 +6,11 @@ import pytest
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from tools.ci import check_governance_gate
-from tools.ci.check_governance_gate import validate_pr_body
+from tools.ci.check_governance_gate import (
+    PRBodyResolver,
+    ResolutionResult,
+    validate_pr_body,
+)
 
 
 def test_get_changed_paths_uses_repo_root(monkeypatch):
@@ -291,3 +295,112 @@ def test_main_requires_pr_body(monkeypatch, capsys):
     assert exit_code == 1
     captured = capsys.readouterr()
     assert "PR body data is unavailable" in captured.err
+
+
+def test_pr_body_resolver_prefers_cli(monkeypatch):
+    env_data = {
+        "PR_BODY": "env body",
+        "PR_BODY_PATH": "/tmp/pr_body_env.md",
+        "GITHUB_EVENT_PATH": "/tmp/event.json",
+    }
+
+    def fake_env_getter(key: str) -> str | None:
+        return env_data.get(key)
+
+    recorded_paths: list[Path] = []
+
+    def fake_path_reader(path: Path) -> str | None:
+        recorded_paths.append(path)
+        return f"read:{path}"
+
+    resolver = PRBodyResolver(
+        env_getter=fake_env_getter,
+        path_reader=fake_path_reader,
+        event_reader=lambda path: "event body",
+    )
+
+    result = resolver.resolve(cli_body="cli body", cli_body_path=Path("/tmp/cli.md"))
+
+    assert isinstance(result, ResolutionResult)
+    assert result.body == "cli body"
+    assert result.errors == []
+    assert recorded_paths == []
+
+
+def test_pr_body_resolver_uses_env_and_path(monkeypatch, tmp_path):
+    env_body_path = tmp_path / "body.md"
+    env_body_path.write_text("env path body", encoding="utf-8")
+
+    env_data = {
+        "PR_BODY": "env body",
+        "PR_BODY_PATH": str(env_body_path),
+    }
+
+    def fake_env_getter(key: str) -> str | None:
+        return env_data.get(key)
+
+    resolver = PRBodyResolver(
+        env_getter=fake_env_getter,
+        path_reader=lambda path: path.read_text(encoding="utf-8"),
+        event_reader=lambda path: "event body",
+    )
+
+    result_direct = resolver.resolve()
+    assert result_direct.body == "env body"
+    assert result_direct.errors == []
+
+    env_data.pop("PR_BODY")
+    result_from_path = resolver.resolve()
+    assert result_from_path.body == "env path body"
+    assert result_from_path.errors == []
+
+
+def test_pr_body_resolver_reads_event_payload(tmp_path):
+    event_path = tmp_path / "event.json"
+    event_path.write_text('{"pull_request": {"body": "event body"}}', encoding="utf-8")
+
+    env_data = {"GITHUB_EVENT_PATH": str(event_path)}
+
+    resolver = PRBodyResolver(
+        env_getter=env_data.get,
+        path_reader=lambda path: None,
+        event_reader=lambda path: "event body" if path == event_path else None,
+    )
+
+    result = resolver.resolve()
+
+    assert result.body == "event body"
+    assert result.errors == []
+
+
+def test_pr_body_resolver_collects_failure_reasons(tmp_path):
+    missing_path = tmp_path / "missing.md"
+
+    env_data: dict[str, str] = {
+        "PR_BODY_PATH": str(missing_path),
+        "GITHUB_EVENT_PATH": str(tmp_path / "missing-event.json"),
+    }
+
+    def fake_env_getter(key: str) -> str | None:
+        return env_data.get(key)
+
+    recorded_paths: list[Path] = []
+
+    def fake_path_reader(path: Path) -> str | None:
+        recorded_paths.append(path)
+        return None
+
+    resolver = PRBodyResolver(
+        env_getter=fake_env_getter,
+        path_reader=fake_path_reader,
+        event_reader=lambda path: None,
+    )
+
+    result = resolver.resolve()
+
+    assert result.body is None
+    assert result.errors == [
+        f"PR body file not found: {missing_path}",
+        "PR body data is unavailable. Set PR_BODY or GITHUB_EVENT_PATH.",
+    ]
+    assert recorded_paths == [missing_path]
