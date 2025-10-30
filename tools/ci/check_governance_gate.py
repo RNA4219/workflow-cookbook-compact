@@ -246,7 +246,7 @@ class ValidationOutcome:
 class ValidationRule(ABC):
     @abstractmethod
     def evaluate(self, context: ValidationContext, outcome: ValidationOutcome) -> None:
-        ...
+        raise NotImplementedError()
 
 
 @dataclass
