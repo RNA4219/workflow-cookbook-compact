@@ -501,7 +501,7 @@ def _prepare_birdseye(
     return root, index_path, hot_path, cap_paths
 
 
-def test_birdseye_session_plan_computes_expected_writes(tmp_path, monkeypatch):
+def test_birdseye_update_plan_records_targets_focus_and_writes(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(update, "_REPO_ROOT", tmp_path)
 
@@ -532,18 +532,31 @@ def test_birdseye_session_plan_computes_expected_writes(tmp_path, monkeypatch):
         dry_run=True,
     )
 
-    session = update.BirdseyeUpdateSession(options=options, timestamp="2025-01-01T00:00:00Z")
-    plan = session.plan()
+    snapshots = {
+        path: path.read_text(encoding="utf-8")
+        for path in (index_path, hot_path, *cap_paths.values())
+    }
 
-    planned_paths = {write.path for write in plan.writes}
+    planner = update.BirdseyeUpdatePlanner(
+        options=options, timestamp="2025-01-01T00:00:00Z"
+    )
+    plan = planner.plan()
 
     assert plan.generated_at == "00002"
+    assert plan.targets == (cap_paths["alpha.md"],)
+    assert plan.focus_nodes == ("alpha.md", "beta.md", "gamma.md")
+
+    planned_paths = set(plan.planned_paths())
+
     assert index_path in planned_paths
     assert hot_path in planned_paths
     assert cap_paths["alpha.md"] in planned_paths
     assert cap_paths["beta.md"] in planned_paths
     assert cap_paths["gamma.md"] in planned_paths
     assert cap_paths["delta.md"] not in planned_paths
+
+    for payload_path, before in snapshots.items():
+        assert payload_path.read_text(encoding="utf-8") == before
 
 
 def test_run_update_with_since_updates_capsules_within_two_hops(tmp_path, monkeypatch):
@@ -1267,8 +1280,10 @@ def test_resolve_focus_nodes_includes_two_hop_neighbours(tmp_path):
     available_caps = {cap_id: cap_path.resolve() for cap_id, cap_path in cap_paths.items()}
 
     options = update.UpdateOptions(targets=(cap_beta,), emit="caps")
-    session = update.BirdseyeUpdateSession(options=options, timestamp="2025-01-01T00:00:00Z")
-    focus = session._resolve_focus_nodes(
+    planner = update.BirdseyeUpdatePlanner(
+        options=options, timestamp="2025-01-01T00:00:00Z"
+    )
+    focus = planner._resolve_focus_nodes(
         (cap_beta,),
         root,
         graph_out,
@@ -1296,14 +1311,16 @@ def test_refresh_hot_updates_serial_and_preserves_metadata(tmp_path):
     hot_original = hot_path.read_text(encoding="utf-8")
     hot_payload = json.loads(hot_original)
     options = update.UpdateOptions(targets=(hot_path,), emit="index+caps", dry_run=False)
-    session = update.BirdseyeUpdateSession(options=options, timestamp=timestamp)
-    session.serial_allocator.observe("00042")
-    session._plan_hot(hot_path, hot_payload, hot_original)
-    plan = update.BirdseyePlan(
-        generated_at=session._generated_at or timestamp,
-        writes=tuple(session._writes),
+    planner = update.BirdseyeUpdatePlanner(options=options, timestamp=timestamp)
+    planner.serial_allocator.observe("00042")
+    planner._plan_hot(hot_path, hot_payload, hot_original)
+    plan = update.BirdseyeUpdatePlan(
+        generated_at=planner._generated_at or timestamp,
+        targets=(hot_path,),
+        focus_nodes=(),
+        writes=tuple(planner._writes),
     )
-    report = session.execute(plan)
+    report = update.execute_plan(plan, dry_run=False)
 
     assert report.planned_writes == (hot_path,)
     assert report.performed_writes == (hot_path,)
@@ -1333,19 +1350,21 @@ def test_refresh_capsule_updates_dependencies_and_serial(tmp_path):
     cap_original = cap_path.read_text(encoding="utf-8")
     caps_state = {"alpha": (cap_path, json.loads(cap_original), cap_original)}
     options = update.UpdateOptions(targets=(cap_path,), emit="caps", dry_run=False)
-    session = update.BirdseyeUpdateSession(options=options, timestamp="2025-01-02T00:00:00Z")
-    session.serial_allocator.observe("00010")
-    session._plan_capsule(
+    planner = update.BirdseyeUpdatePlanner(options=options, timestamp="2025-01-02T00:00:00Z")
+    planner.serial_allocator.observe("00010")
+    planner._plan_capsule(
         "alpha",
         caps_state["alpha"],
         {"alpha": ["beta"]},
         {"alpha": ["gamma"]},
     )
-    plan = update.BirdseyePlan(
-        generated_at=session._generated_at or "2025-01-02T00:00:00Z",
-        writes=tuple(session._writes),
+    plan = update.BirdseyeUpdatePlan(
+        generated_at=planner._generated_at or "2025-01-02T00:00:00Z",
+        targets=(cap_path,),
+        focus_nodes=("alpha",),
+        writes=tuple(planner._writes),
     )
-    report = session.execute(plan)
+    report = update.execute_plan(plan, dry_run=False)
 
     assert report.planned_writes == (cap_path,)
     assert report.performed_writes == (cap_path,)

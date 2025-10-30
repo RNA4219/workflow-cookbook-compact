@@ -337,9 +337,14 @@ class PlannedWrite:
 
 
 @dataclass(frozen=True)
-class BirdseyePlan:
+class BirdseyeUpdatePlan:
     generated_at: str
+    targets: tuple[Path, ...]
+    focus_nodes: tuple[str, ...]
     writes: tuple[PlannedWrite, ...]
+
+    def planned_paths(self) -> tuple[Path, ...]:
+        return tuple(write.path for write in self.writes)
 
 
 def _finalise(paths: set[Path]) -> tuple[Path, ...]:
@@ -379,7 +384,7 @@ def _build_graph(index_data: Mapping[str, Any]) -> tuple[Graph, Graph]:
 
 
 
-class BirdseyeUpdateSession:
+class BirdseyeUpdatePlanner:
     def __init__(self, *, options: UpdateOptions, timestamp: str | None = None) -> None:
         self.options = options
         self.emit_index = options.emit in {"index", "index+caps"}
@@ -388,29 +393,23 @@ class BirdseyeUpdateSession:
         self.serial_allocator = _SerialAllocator()
         self._generated_at: str | None = None
         self._writes: list[PlannedWrite] = []
+        self._focus_nodes: set[str] = set()
+        self._targets: tuple[Path, ...] = ()
 
-    def plan(self) -> BirdseyePlan:
+    def plan(self) -> BirdseyeUpdatePlan:
+        self._writes.clear()
+        self._focus_nodes.clear()
+        self._generated_at = None
         resolved_targets = self.options.resolve_targets()
+        self._targets = resolved_targets
         grouped = _group_targets(resolved_targets)
         for root, root_targets in grouped.items():
             self._plan_for_root(root, root_targets)
-        return BirdseyePlan(
+        return BirdseyeUpdatePlan(
             generated_at=self._generated_at or self.timestamp,
+            targets=self._targets,
+            focus_nodes=tuple(sorted(self._focus_nodes)),
             writes=tuple(self._writes),
-        )
-
-    def execute(self, plan: BirdseyePlan) -> UpdateReport:
-        planned_paths = {write.path for write in plan.writes}
-        performed: set[Path] = set()
-        if not self.options.dry_run:
-            for write in plan.writes:
-                write.path.parent.mkdir(parents=True, exist_ok=True)
-                write.path.write_text(write.content, encoding='utf-8')
-                performed.add(write.path)
-        return UpdateReport(
-            generated_at=plan.generated_at,
-            planned_writes=_finalise(planned_paths),
-            performed_writes=_finalise(performed),
         )
 
     def _plan_for_root(self, root: Path, root_targets: Sequence[Path]) -> None:
@@ -454,6 +453,7 @@ class BirdseyeUpdateSession:
                 cap_path_lookup,
                 available_caps,
             )
+            self._focus_nodes.update(focus_nodes)
             self._ensure_placeholders(focus_nodes, caps_state, available_caps)
             for cap_id in sorted(focus_nodes):
                 self._plan_capsule(cap_id, caps_state[cap_id], graph_out, graph_in)
@@ -652,11 +652,26 @@ class BirdseyeUpdateSession:
             self._generated_at = value
 
 
+def execute_plan(plan: BirdseyeUpdatePlan, *, dry_run: bool) -> UpdateReport:
+    planned_paths = set(plan.planned_paths())
+    performed: set[Path] = set()
+    if not dry_run:
+        for write in plan.writes:
+            write.path.parent.mkdir(parents=True, exist_ok=True)
+            write.path.write_text(write.content, encoding="utf-8")
+            performed.add(write.path)
+    return UpdateReport(
+        generated_at=plan.generated_at,
+        planned_writes=_finalise(planned_paths),
+        performed_writes=_finalise(performed),
+    )
+
+
 def run_update(options: UpdateOptions) -> UpdateReport:
     timestamp = _format_timestamp(utc_now())
-    session = BirdseyeUpdateSession(options=options, timestamp=timestamp)
-    plan = session.plan()
-    return session.execute(plan)
+    planner = BirdseyeUpdatePlanner(options=options, timestamp=timestamp)
+    plan = planner.plan()
+    return execute_plan(plan, dry_run=options.dry_run)
 
 def main(argv: Iterable[str] | None = None) -> int:
     ensure_python_version()
