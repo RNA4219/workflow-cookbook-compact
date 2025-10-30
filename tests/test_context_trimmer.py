@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib
 import sys
 from itertools import zip_longest
-from math import sqrt
+from math import isclose, sqrt
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Dict, Iterable, List, Sequence
@@ -154,15 +154,28 @@ def test_trim_messages_semantic_retention_matches_cosine_similarity() -> None:
     norm_original = sqrt(sum(x * x for x in original_vector))
     norm_trimmed = sqrt(sum(y * y for y in trimmed_vector))
 
-    if norm_original == 0.0 and norm_trimmed == 0.0:
+    if isclose(norm_original, 0.0, abs_tol=1e-12) and isclose(
+        norm_trimmed, 0.0, abs_tol=1e-12
+    ):
         expected = 1.0
-    elif norm_original == 0.0 or norm_trimmed == 0.0:
+    elif isclose(norm_original, 0.0, abs_tol=1e-12) or isclose(
+        norm_trimmed, 0.0, abs_tol=1e-12
+    ):
         expected = 0.0
     else:
         expected = dot_product / (norm_original * norm_trimmed)
 
     expected = max(0.0, min(1.0, expected))
     assert retention == pytest.approx(expected)
+
+
+def test_cosine_similarity_treats_near_zero_norms_as_zero() -> None:
+    module = _reload_context_trimmer(fake_tiktoken=None)
+
+    tiny_value = 1e-12
+    similarity = module._cosine_similarity([tiny_value], [tiny_value])
+
+    assert similarity == pytest.approx(0.0)
 
 
 def test_trim_messages_semantic_retention_zero_vector() -> None:
