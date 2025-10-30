@@ -501,6 +501,51 @@ def _prepare_birdseye(
     return root, index_path, hot_path, cap_paths
 
 
+def test_birdseye_session_plan_computes_expected_writes(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(update, "_REPO_ROOT", tmp_path)
+
+    caps_payloads = {
+        "alpha.md": _caps_payload("alpha.md", deps_out=["beta.md"], deps_in=[]),
+        "beta.md": _caps_payload("beta.md", deps_out=[], deps_in=["alpha.md", "gamma.md"]),
+        "gamma.md": _caps_payload("gamma.md", deps_out=["delta.md"], deps_in=["beta.md"]),
+        "delta.md": _caps_payload("delta.md", deps_out=[], deps_in=["gamma.md"]),
+    }
+    root, index_path, hot_path, cap_paths = _prepare_birdseye(
+        tmp_path,
+        root=tmp_path / "docs" / "birdseye",
+        edges=[
+            ["alpha.md", "beta.md"],
+            ["beta.md", "alpha.md"],
+            ["beta.md", "gamma.md"],
+            ["gamma.md", "beta.md"],
+            ["gamma.md", "delta.md"],
+            ["delta.md", "gamma.md"],
+        ],
+        caps_payloads=caps_payloads,
+        hot_entries=("alpha.md", "beta.md", "gamma.md", "delta.md"),
+    )
+
+    options = update.UpdateOptions(
+        targets=(cap_paths["alpha.md"],),
+        emit="index+caps",
+        dry_run=True,
+    )
+
+    session = update.BirdseyeUpdateSession(options=options, timestamp="2025-01-01T00:00:00Z")
+    plan = session.plan()
+
+    planned_paths = {write.path for write in plan.writes}
+
+    assert plan.generated_at == "00002"
+    assert index_path in planned_paths
+    assert hot_path in planned_paths
+    assert cap_paths["alpha.md"] in planned_paths
+    assert cap_paths["beta.md"] in planned_paths
+    assert cap_paths["gamma.md"] in planned_paths
+    assert cap_paths["delta.md"] not in planned_paths
+
+
 def test_run_update_with_since_updates_capsules_within_two_hops(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(update, "_REPO_ROOT", tmp_path)
@@ -1221,7 +1266,9 @@ def test_resolve_focus_nodes_includes_two_hop_neighbours(tmp_path):
 
     available_caps = {cap_id: cap_path.resolve() for cap_id, cap_path in cap_paths.items()}
 
-    focus = update._resolve_focus_nodes(
+    options = update.UpdateOptions(targets=(cap_beta,), emit="caps")
+    session = update.BirdseyeUpdateSession(options=options, timestamp="2025-01-01T00:00:00Z")
+    focus = session._resolve_focus_nodes(
         (cap_beta,),
         root,
         graph_out,
@@ -1245,27 +1292,21 @@ def test_refresh_hot_updates_serial_and_preserves_metadata(tmp_path):
         },
     )
 
-    planned: set[Path] = set()
-    performed: set[Path] = set()
     timestamp = "2025-01-02T00:00:00Z"
     hot_original = hot_path.read_text(encoding="utf-8")
     hot_payload = json.loads(hot_original)
-    allocator = update._SerialAllocator()
-    allocator.observe("00042")
-    update._refresh_hot(
-        hot_path,
-        hot_payload,
-        hot_original,
-        timestamp=timestamp,
-        dry_run=False,
-        planned=planned,
-        performed=performed,
-        remember_generated=lambda _: None,
-        allocator=allocator,
+    options = update.UpdateOptions(targets=(hot_path,), emit="index+caps", dry_run=False)
+    session = update.BirdseyeUpdateSession(options=options, timestamp=timestamp)
+    session.serial_allocator.observe("00042")
+    session._plan_hot(hot_path, hot_payload, hot_original)
+    plan = update.BirdseyePlan(
+        generated_at=session._generated_at or timestamp,
+        writes=tuple(session._writes),
     )
+    report = session.execute(plan)
 
-    assert planned == {hot_path}
-    assert performed == {hot_path}
+    assert report.planned_writes == (hot_path,)
+    assert report.performed_writes == (hot_path,)
     refreshed = json.loads(hot_path.read_text(encoding="utf-8"))
     assert refreshed["generated_at"] == "00043"
     assert refreshed["index_snapshot"] == _HOT_INDEX_SNAPSHOT
@@ -1291,26 +1332,23 @@ def test_refresh_capsule_updates_dependencies_and_serial(tmp_path):
     )
     cap_original = cap_path.read_text(encoding="utf-8")
     caps_state = {"alpha": (cap_path, json.loads(cap_original), cap_original)}
-    planned: set[Path] = set()
-    performed: set[Path] = set()
-    allocator = update._SerialAllocator()
-    allocator.observe("00010")
-
-    update._refresh_capsule(
+    options = update.UpdateOptions(targets=(cap_path,), emit="caps", dry_run=False)
+    session = update.BirdseyeUpdateSession(options=options, timestamp="2025-01-02T00:00:00Z")
+    session.serial_allocator.observe("00010")
+    session._plan_capsule(
         "alpha",
         caps_state["alpha"],
         {"alpha": ["beta"]},
         {"alpha": ["gamma"]},
-        "2025-01-02T00:00:00Z",
-        dry_run=False,
-        planned=planned,
-        performed=performed,
-        remember_generated=lambda _: None,
-        allocator=allocator,
     )
+    plan = update.BirdseyePlan(
+        generated_at=session._generated_at or "2025-01-02T00:00:00Z",
+        writes=tuple(session._writes),
+    )
+    report = session.execute(plan)
 
-    assert planned == {cap_path}
-    assert performed == {cap_path}
+    assert report.planned_writes == (cap_path,)
+    assert report.performed_writes == (cap_path,)
     refreshed = json.loads(cap_path.read_text(encoding="utf-8"))
     assert refreshed["deps_out"] == ["beta"]
     assert refreshed["deps_in"] == ["gamma"]
