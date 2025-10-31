@@ -8,7 +8,7 @@ from itertools import zip_longest
 from math import isclose, sqrt
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, Dict, Iterable, List, Sequence
+from typing import Any, Dict, Iterable, List, Mapping, Sequence
 
 import pytest
 
@@ -219,6 +219,66 @@ def test_select_messages_respects_budget() -> None:
     assert trimmed[0]["role"] == "system"
     assert len(trimmed) == 2
     assert trimmed[-1]["role"] == "user"
+
+
+def test_context_trim_session_allows_component_overrides() -> None:
+    module = _reload_context_trimmer(fake_tiktoken=None)
+    messages = _messages()
+    class StubCounter:
+        def count_message(self, message: Dict[str, Any]) -> int:
+            assert "content" in message
+            return 7
+
+        def meta(self) -> Dict[str, Any]:
+            return {"strategy": "stub"}
+
+    counter = StubCounter()
+    measurement_calls: List[Sequence[Dict[str, Any]]] = []
+    selector_calls: List[Sequence[int]] = []
+    semantic_calls: List[tuple[Sequence[Dict[str, Any]], Sequence[Dict[str, Any]]]] = []
+    def measurement(_: StubCounter, payload: Sequence[Dict[str, Any]]) -> Any:
+        measurement_calls.append(tuple(payload))
+        tokens = tuple(3 for _ in payload)
+        return module.TokenCounterResult(per_message_tokens=tokens, total_tokens=3 * len(payload))
+
+    def selector(payload: Sequence[Dict[str, Any]], per_message_tokens: Sequence[int], *, max_tokens: int) -> List[Dict[str, Any]]:
+        selector_calls.append(tuple(per_message_tokens))
+        assert max_tokens == 9
+        return [dict(payload[0]), dict(payload[-1])]
+
+    def semantics(
+        original_messages: Sequence[Dict[str, Any]],
+        trimmed_messages: Sequence[Dict[str, Any]],
+        semantic_options: Mapping[str, Any] | None,
+    ) -> tuple[Dict[str, Any], float | None]:
+        semantic_calls.append((tuple(original_messages), tuple(trimmed_messages)))
+        assert semantic_options == {"flag": True}
+        return {"flag": True}, 0.5
+
+    strategy = module.ContextTrimStrategy(lambda _: counter, measurement, lambda payload, per_tokens, budget: selector(payload, per_tokens, max_tokens=budget), semantics)
+    result = module.ContextTrimSession(
+        messages,
+        model="stub-model",
+        max_context_tokens=9,
+        semantic_options={"flag": True},
+        strategy=strategy,
+    ).run().as_mapping()
+
+    assert len(measurement_calls) == 2
+    assert selector_calls == [tuple(3 for _ in messages)]
+    assert len(semantic_calls) == 1
+    assert [m["content"] for m in result["messages"]] == [messages[0]["content"], messages[-1]["content"]]
+    assert result["token_counter"] == {"strategy": "stub"}
+    assert result["statistics"]["input_tokens"] == 3 * len(messages)
+    assert result["statistics"]["output_tokens"] == 6
+    assert result["statistics"]["semantic_retention"] == pytest.approx(0.5)
+
+
+def test_context_trim_session_matches_trim_messages_result() -> None:
+    module = _reload_context_trimmer(fake_tiktoken=None)
+    messages = _messages()
+    session = module.ContextTrimSession(messages, model="test-model", max_context_tokens=100)
+    assert session.run().as_mapping() == module.trim_messages(messages, max_context_tokens=100, model="test-model")
 
 
 def test_compute_semantic_metrics_propagates_retention() -> None:

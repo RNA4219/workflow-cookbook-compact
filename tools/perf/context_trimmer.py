@@ -9,10 +9,15 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from itertools import zip_longest
 from math import isclose, sqrt
-from typing import Any, Dict, Iterable, List, Mapping, MutableMapping
+from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Protocol
 
 _Message = Mapping[str, Any]
 _MutableMessage = MutableMapping[str, Any]
+
+
+class TokenCounterProtocol(Protocol):
+    def count_message(self, message: _Message) -> int: ...
+    def meta(self) -> Dict[str, Any]: ...
 
 
 @dataclass(frozen=True)
@@ -25,7 +30,7 @@ class TokenCounterResult:
     @classmethod
     def from_messages(
         cls,
-        counter: "_TokenCounter",
+        counter: TokenCounterProtocol,
         messages: Sequence[_Message],
     ) -> "TokenCounterResult":
         """Measure tokens for the provided messages."""
@@ -237,6 +242,53 @@ def select_messages(
     return trimmed
 
 
+@dataclass(frozen=True)
+class ContextTrimStrategy:
+    token_counter_factory: Callable[[str], TokenCounterProtocol]
+    token_measurement: Callable[[TokenCounterProtocol, Sequence[_Message]], TokenCounterResult]
+    message_selector: Callable[[Sequence[_MutableMessage], Sequence[int], int], List[_MutableMessage]]
+    semantic_metrics: Callable[[Sequence[_Message], Sequence[_Message], Mapping[str, Any] | None], tuple[Dict[str, Any], float | None]]
+
+    @classmethod
+    def default(cls) -> "ContextTrimStrategy":
+        return cls(
+            _TokenCounter,
+            TokenCounterResult.from_messages,
+            lambda messages, per_tokens, budget: select_messages(messages, per_tokens, max_tokens=budget),
+            compute_semantic_metrics,
+        )
+
+
+class ContextTrimSession:
+    def __init__(
+        self,
+        messages: Sequence[_Message],
+        *,
+        max_context_tokens: int,
+        model: str,
+        token_counter: TokenCounterProtocol | None = None,
+        semantic_options: Mapping[str, Any] | None = None,
+        strategy: ContextTrimStrategy | None = None,
+    ) -> None:
+        self._messages = messages
+        self._max_context_tokens = max_context_tokens
+        self._model = model
+        self._token_counter: TokenCounterProtocol | None = token_counter
+        self._semantic_options = semantic_options
+        self._strategy = strategy or ContextTrimStrategy.default()
+
+    def run(self) -> TrimOutcome:
+        counter = self._token_counter or self._strategy.token_counter_factory(self._model)
+        self._token_counter = counter
+        mutable = _normalise_messages(self._messages)
+        input_tokens = self._strategy.token_measurement(counter, mutable)
+        trimmed = self._strategy.message_selector(mutable, input_tokens.per_message_tokens, self._max_context_tokens)
+        output_tokens = self._strategy.token_measurement(counter, trimmed)
+        used_options, retention = self._strategy.semantic_metrics(mutable, trimmed, self._semantic_options)
+        statistics = build_statistics(input_tokens.total_tokens, output_tokens.total_tokens, retention)
+        return TrimOutcome(messages=trimmed, statistics=statistics, token_counter=counter.meta(), semantic_options=used_options)
+
+
 def trim_messages(
     messages: Sequence[_Message],
     *,
@@ -247,32 +299,11 @@ def trim_messages(
 ) -> Mapping[str, Any]:
     """Trim messages to satisfy a maximum context token budget."""
 
-    counter = token_counter or _TokenCounter(model)
-    mutable_messages = _normalise_messages(messages)
-    input_tokens = TokenCounterResult.from_messages(counter, mutable_messages)
-    trimmed = select_messages(
-        mutable_messages,
-        input_tokens.per_message_tokens,
-        max_tokens=max_context_tokens,
+    session = ContextTrimSession(
+        messages,
+        max_context_tokens=max_context_tokens,
+        model=model,
+        token_counter=token_counter,
+        semantic_options=semantic_options,
     )
-    output_tokens = TokenCounterResult.from_messages(counter, trimmed)
-
-    semantic_used_options, semantic_retention = compute_semantic_metrics(
-        mutable_messages,
-        trimmed,
-        semantic_options,
-    )
-
-    statistics = build_statistics(
-        input_tokens.total_tokens,
-        output_tokens.total_tokens,
-        semantic_retention,
-    )
-
-    outcome = TrimOutcome(
-        messages=trimmed,
-        statistics=statistics,
-        token_counter=counter.meta(),
-        semantic_options=semantic_used_options,
-    )
-    return outcome.as_mapping()
+    return session.run().as_mapping()
