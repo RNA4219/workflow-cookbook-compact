@@ -13,6 +13,7 @@ from tools.context.pack import (
     DEFAULT_CONFIG,
     assemble_sections,
     build_graph_view,
+    ContextPackPlanner,
     load_config,
     pack_graph,
     score_candidates,
@@ -83,6 +84,24 @@ def test_pack_graph_prioritises_ppr(sample_graph: Path) -> None:
     assert result["metrics"]["token_in"] <= 400
     pprs = [section["why"]["ppr"] for section in sections]
     assert pprs[0] >= max(pprs[1:]) if len(pprs) > 1 else pprs[0] > 0
+
+
+def test_context_pack_plan_candidates_and_budget(sample_graph: Path) -> None:
+    planner = ContextPackPlanner()
+    plan = planner.build_plan(
+        graph_path=sample_graph,
+        intent="INT-9 implement rollout",
+        budget_tokens=400,
+        diff_paths=["docs/b.md"],
+        config=DEFAULT_CONFIG,
+    )
+
+    assert plan.target_candidates[:3] == [
+        "docs/b.md#ops",
+        "docs/a.md#impl",
+        "docs/a.md#root",
+    ]
+    assert plan.budget_remaining == 20
 
 
 def test_load_config_overrides_defaults(tmp_path: Path, sample_graph: Path) -> None:
@@ -194,3 +213,54 @@ def test_assemble_sections_matches_pack_graph(sample_graph: Path) -> None:
             )
     for key, value in assembly.metrics.items():
         assert value == pytest.approx(result["metrics"][key], rel=1e-6, abs=1e-9)
+
+
+def test_cli_main_emits_pack_output(
+    tmp_path: Path, sample_graph: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "diff.txt"
+    diff_path.write_text("docs/b.md\n")
+    output_path = tmp_path / "pack.json"
+
+    expected = pack_graph(
+        graph_path=sample_graph,
+        intent="INT-9 implement rollout",
+        budget_tokens=400,
+        diff_paths=["docs/b.md"],
+        config=None,
+    )
+
+    args = [
+        "context-pack",
+        "--graph",
+        str(sample_graph),
+        "--intent",
+        "INT-9 implement rollout",
+        "--budget",
+        "400",
+        "--diff",
+        str(diff_path),
+        "--output",
+        str(output_path),
+    ]
+    monkeypatch.setattr(sys, "argv", args)
+
+    from tools.context import pack as pack_module
+
+    pack_module.main()
+
+    result = json.loads(output_path.read_text())
+
+    assert result["intent"] == expected["intent"]
+    assert result["budget"] == expected["budget"]
+    assert len(result["sections"]) == len(expected["sections"])
+    for res_section, exp_section in zip(result["sections"], expected["sections"]):
+        assert res_section["id"] == exp_section["id"]
+        assert res_section["tok"] == exp_section["tok"]
+        assert res_section["filters"] == exp_section["filters"]
+        for key in ["intent", "diff", "recency", "hub", "role", "ppr", "score"]:
+            assert res_section["why"][key] == pytest.approx(
+                exp_section["why"][key], rel=1e-6, abs=1e-9
+            )
+    for key, value in result["metrics"].items():
+        assert value == pytest.approx(expected["metrics"][key], rel=1e-6, abs=1e-9)

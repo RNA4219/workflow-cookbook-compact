@@ -7,7 +7,17 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Iterable, List, Mapping, MutableMapping, Sequence, TypedDict, cast
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    MutableMapping,
+    Sequence,
+    TypedDict,
+    cast,
+)
 
 class GraphNode(TypedDict, total=False):
     id: str
@@ -109,6 +119,93 @@ class CandidateRanking:
 class AssemblyResult:
     sections: List[SectionEntry]
     metrics: PackMetrics
+
+
+@dataclass(frozen=True)
+class ContextPackPlan:
+    intent: str
+    budget_tokens: int
+    diff_paths: Sequence[str]
+    graph: Mapping[str, object]
+    config: Mapping[str, object]
+    view: GraphView
+    ranking: CandidateRanking
+    assembly: AssemblyResult
+
+    @property
+    def target_candidates(self) -> List[str]:
+        candidates: List[str] = []
+        for node in self.ranking.ranked_nodes:
+            node_id = node.get("id")
+            if isinstance(node_id, str):
+                candidates.append(node_id)
+        return candidates
+
+    @property
+    def budget_remaining(self) -> int:
+        consumed = int(self.assembly.metrics["token_in"])
+        remaining = self.budget_tokens - consumed
+        return remaining if remaining >= 0 else 0
+
+
+class ContextPackPlanner:
+    def __init__(
+        self,
+        *,
+        config_loader: Callable[[Path | None], Mapping[str, object]] | None = None,
+    ) -> None:
+        self._config_loader = config_loader or load_config
+        self.config: Mapping[str, object] | None = None
+        self.graph: Mapping[str, object] | None = None
+        self.view: GraphView | None = None
+        self.ranking: CandidateRanking | None = None
+        self.assembly: AssemblyResult | None = None
+
+    def build_plan(
+        self,
+        *,
+        graph_path: Path,
+        intent: str,
+        budget_tokens: int,
+        diff_paths: Sequence[str],
+        config: Mapping[str, object] | None = None,
+    ) -> ContextPackPlan:
+        config_map = config if config is not None else self._config_loader(None)
+        graph = json.loads(graph_path.read_text())
+        view = build_graph_view(graph, intent, diff_paths, config_map)
+        ranking = score_candidates(view, config_map)
+        assembly = assemble_sections(view, ranking, budget_tokens, config_map)
+        self.config = config_map
+        self.graph = graph
+        self.view = view
+        self.ranking = ranking
+        self.assembly = assembly
+        return ContextPackPlan(
+            intent=intent,
+            budget_tokens=budget_tokens,
+            diff_paths=tuple(diff_paths),
+            graph=graph,
+            config=config_map,
+            view=view,
+            ranking=ranking,
+            assembly=assembly,
+        )
+
+
+class ContextPackExecutor:
+    def __init__(self, plan: ContextPackPlan) -> None:
+        self.plan = plan
+        self.output: PackOutput | None = None
+
+    def pack(self) -> PackOutput:
+        result: PackOutput = {
+            "intent": self.plan.intent,
+            "budget": str(self.plan.budget_tokens),
+            "sections": self.plan.assembly.sections,
+            "metrics": self.plan.assembly.metrics,
+        }
+        self.output = result
+        return result
 
 
 def load_config(path: Path | None = None) -> ConfigDict:
@@ -581,18 +678,16 @@ def pack_graph(
     diff_paths: Sequence[str],
     config: Mapping[str, object] | None = None,
 ) -> PackOutput:
-    config = config or load_config()
-    graph = json.loads(Path(graph_path).read_text())
-    view = build_graph_view(graph, intent, diff_paths, config)
-    ranking = score_candidates(view, config)
-    assembly = assemble_sections(view, ranking, budget_tokens, config)
-    result: PackOutput = {
-        "intent": intent,
-        "budget": str(budget_tokens),
-        "sections": assembly.sections,
-        "metrics": assembly.metrics,
-    }
-    return result
+    planner = ContextPackPlanner()
+    plan = planner.build_plan(
+        graph_path=graph_path,
+        intent=intent,
+        budget_tokens=budget_tokens,
+        diff_paths=diff_paths,
+        config=config,
+    )
+    executor = ContextPackExecutor(plan)
+    return executor.pack()
 
 
 def main() -> None:
@@ -607,8 +702,17 @@ def main() -> None:
     diff_paths = []
     for diff in args.diff:
         diff_paths.extend(diff.read_text().splitlines())
-    config = load_config(args.config) if args.config else load_config()
-    result = pack_graph(args.graph, args.intent, args.budget, diff_paths, config)
+    config = load_config(args.config) if args.config else None
+    planner = ContextPackPlanner()
+    plan = planner.build_plan(
+        graph_path=args.graph,
+        intent=args.intent,
+        budget_tokens=args.budget,
+        diff_paths=diff_paths,
+        config=config,
+    )
+    executor = ContextPackExecutor(plan)
+    result = executor.pack()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, ensure_ascii=False))
 
