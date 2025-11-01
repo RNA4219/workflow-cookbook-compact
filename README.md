@@ -1,3 +1,17 @@
+# Downsized Workflow Cookbook / Codex Task Kit
+
+> **A compact, ROI-driven workflow and design framework optimized for local LLMs and low-cost APIs.**  
+> This downsized edition keeps the governance and guardrails of the original *Workflow Cookbook* while reducing resource requirements to run on CPUs or small GPUs.  
+> It enables single-turn or few-turn completion of **summarization → requirements analysis → design**, maintaining traceability and evaluation quality throughout.
+
+### Key Features
+- **CodexHub-based shortest reference chain**: Load only directly linked and 1–2-layer dependencies.  
+- **ROI-driven task planning**: Prioritize stories by `value / effort / risk / confidence → roi_score`.  
+- **Governance & Evaluation ready**: Guardrails, BirdEye-L, and minimal CI are built in.  
+- **Lightweight target**: Designed for projects up to ~50 k LOC, manageable even on 7–14B LLMs.
+
+For Japanese documentation, please continue below.  
+
 ---
 intent_id: INT-001
 owner: your-handle
