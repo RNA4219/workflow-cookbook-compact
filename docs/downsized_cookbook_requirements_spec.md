@@ -1,6 +1,8 @@
 # Downsized Workflow Cookbook: Requirements & Specification
 _JP: ダウンサイザード Workflow Cookbook: 要件と仕様_
 
+> **概要のみを確認したい場合:** `docs/downsized_cookbook_summary.md` で主要ポイントを一覧できます。
+
 ## 1. Objectives
 _JP: 目的_
 

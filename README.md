@@ -13,6 +13,8 @@ next_review_due: 2025-11-14
 ローカル CPU／小規模 GPU／安価な API を想定した軽量ワークフロー集です。オリジナル Cookbook の統治とガードレールを保ちながら、
 **要約 → 要件整理 → 設計化** を単発または少ターンで進められるように整理しました。詳細要件は `docs/downsized_cookbook_requirements_spec.md` を参照してください。
 
+> **クイックサマリー:** 主要ポイントのみを確認したい場合は `docs/downsized_cookbook_summary.md` を参照してください。
+
 ## サマリー
 
 | 項目 | ハイライト |
