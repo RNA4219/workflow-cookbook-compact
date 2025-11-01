@@ -12,15 +12,15 @@
 | --- | --- | --- |
 | `docs/` | テンプレートとガバナンス資料 | Blueprint, Runbook, Evaluation, Guardrails, Spec, Design, `BIRDSEYE.md`, `TASKS.md` |
 | `recipes/` | YAML レシピ | `summarize.yaml`, `req_to_srs_roi.yaml`, `srs_scope_plan.yaml`, `srs_to_design_roi.yaml`, `birdseye_summary.yaml` |
-| `tools/` | 補助ツール | レシピランナー (`runner.ts`/`runner.py`), BirdEye-Lite, ROI Planner, LOC Budget Checker |
+| `tools/` | 補助ツール | コンセプト概要のみ（レシピランナーや BirdEye-Lite などの実装は別途用意） |
 | `config/` | プロファイル・予算設定 | モデル設定、ROI 設定 |
 | `examples/` | サンプル入出力 | ROI 付与例、成果物サンプル |
 
 ## 推奨フロー
 1. テンプレート複製：課題・制約・検証基準を `docs/` テンプレートに記述。
 2. ROI 設定：`.env` などで `ROI_BUDGET` とプロファイルを調整し、`req_to_srs_roi.yaml` → `srs_scope_plan.yaml` で採択。
-3. レシピ実行：`tools/runner.{ts,py}` により LLM 呼び出し・JSON 検証を実施 (`budget.max_input/max_output` を遵守)。
-4. 可視化：`tools/birdseye_lite.py` で ≤30 ノード／≤60 エッジの依存グラフを生成。
+3. レシピ実行：任意のレシピランナー（JSON 検証・トークン予算対応済みのもの）で `budget.max_input/max_output` を順守。
+4. 可視化：`docs/BIRDSEYE.md` の手順に沿って BirdEye-Lite 相当のツール（外部実装）で ≤30 ノード／≤60 エッジの依存グラフを生成。
 5. 監査：`docs/EVALUATION.md` チェックリストでスキーマ・ROI・受入基準を確認し、`CHANGELOG.md` に記録。
 
 ## 要件サマリー
