@@ -26,7 +26,7 @@ _JP: スコープ_
 ### In scope / 対象範囲
 - `docs/`: テンプレート群、BirdEye ライト資料、軽量バックログ。
 - `recipes/`: 要約・要件分解・スコープ策定・設計変換・依存可視化の YAML。
-- `tools/`: レシピ実行や ROI/LOC/依存チェックを行う補助スクリプト。
+- 補助ツール: レシピ実行や ROI/LOC/依存チェックを行う外部スクリプト群（§4 参照）。
 - `config/`: モデルプロファイル、トークン予算、ROI 設定。
 - `examples/`: 入出力サンプルと ROI 付与例。
 
@@ -47,18 +47,29 @@ _JP: 前提と制約_
 ## 4. Key Components
 _JP: 主な構成要素_
 
-1. **Directory structure:**  
-   `docs/` にテンプレート、`recipes/` に YAML、`tools/` に補助スクリプト、`examples/` にサンプル、`config/` に設定を配置し、補足は `tools/README.md` にまとめる。
+1. **Directory structure:**
+   `docs/` にテンプレート、`recipes/` に YAML、補助ツールは外部スクリプトとして管理し、`examples/` にサンプル、`config/` に設定を配置する。
 2. **Templates:**  
    Blueprint／Runbook／Evaluation／Guardrails／Spec／Design で課題・スコープ・I/O・検証・統制を固定化する。
 3. **Pipelines:**  
    レシピランナーが `budget.max_input/max_output` を順守しながら LLM を呼び出し、JSON を生成・検証する。
 4. **ROI prioritisation:**  
    要件→SRS レシピで `value` `effort` `risk` `confidence` `roi_score` を算出し、スコープ計画レシピで `ROI_BUDGET` 内のストーリーを選定する。
-5. **BirdEye-Lite:**  
+5. **BirdEye-Lite:**
    依存関係を抽出し、≤30 ノード／≤60 エッジの Mermaid グラフでコンテキストを最小化する。
-6. **Guardrails & evaluation:**  
+6. **Guardrails & evaluation:**
    `docs/GUARDRAILS.md` と `docs/EVALUATION.md` で行動基準と受入チェックを管理する。
+
+### Supplementary tools / 補助ツール概要
+
+このリポジトリには実装済みスクリプトは含まれていませんが、以下の補助ツールを外部実装として運用することを想定しています。
+
+- **レシピランナー**: YAML レシピを実行し、JSON 検証やトークン予算 (`budget.max_input/max_output`) の監視を担う外部実装。
+- **BirdEye-Lite**: 依存関係を抽出し、≤30 ノード／≤60 エッジの Mermaid グラフを生成する可視化ツール。手順は `docs/BIRDSEYE.md` を参照。
+- **ROI Planner**: `value` / `effort` / `risk` / `confidence` から `roi_score` を算出し、`ROI_BUDGET` 内のストーリー選定を補助。
+- **LOC Budget Checker**: 設計キャパシティや推奨行数を超過しないかを確認し、超過時に警告するためのユーティリティ。
+
+各ツールは ROI とトークン予算のガードレールを尊重し、検証可能な JSON を出力することを前提としています。
 
 ## 5. Non-Functional Requirements
 _JP: 非機能要件_

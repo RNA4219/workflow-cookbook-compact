@@ -32,7 +32,7 @@ next_review_due: 2025-11-14
 
 - `docs/` – Blueprint / Runbook / Evaluation / Guardrails / Spec / Design テンプレートと BirdEye ライト関連資料。
 - `recipes/` – 要約、要件分解、ROI 選定、設計変換、依存可視化の YAML レシピ。
-- `tools/` – 補助スクリプトの概要は `tools/README.md` を参照。
+- 補助ツール – 外部スクリプトの概要は `docs/downsized_cookbook_requirements_spec.md` §4 を参照。
 - `config/` – モデルプロファイルとトークン予算、ROI 設定。
 - `examples/` – サンプル入出力と ROI 付与例。
 
@@ -54,7 +54,7 @@ next_review_due: 2025-11-14
 | `recipes/srs_to_design_roi.yaml` | SRS→設計マッピング | ストーリー別モジュール一覧 |
 | `recipes/birdseye_summary.yaml` | 依存可視化 | Mermaid グラフ |
 
-補助ツールの役割と前提条件は `tools/README.md` に集約しています。
+補助ツールの役割と前提条件は `docs/downsized_cookbook_requirements_spec.md` §4「Supplementary tools」に集約しています。
 
 ## ガバナンスと記録
 

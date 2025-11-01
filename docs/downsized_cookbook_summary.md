@@ -12,7 +12,7 @@
 | --- | --- | --- |
 | `docs/` | ガバナンスおよびテンプレート | Blueprint, Runbook, Evaluation, Guardrails, Spec, Design, `BIRDSEYE.md`, `TASKS.md` |
 | `recipes/` | LLM レシピ | `summarize.yaml`, `req_to_srs_roi.yaml`, `srs_scope_plan.yaml`, `srs_to_design_roi.yaml`, `birdseye_summary.yaml` |
-| `tools/` | 補助スクリプトのガイド | `tools/README.md`（BirdEye-Lite・ROI/LOC チェックの概要） |
+| 補助ツール | 外部スクリプトのガイド | `docs/downsized_cookbook_requirements_spec.md` §4（BirdEye-Lite・ROI/LOC チェックの概要） |
 | `config/` | モデル・ROI 設定 | モデルプロファイル、`ROI_BUDGET` |
 | `examples/` | サンプル成果物 | ROI 付与例、入出力例 |
 
