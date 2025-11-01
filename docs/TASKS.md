@@ -16,7 +16,7 @@ next_review_due: 2025-11-28
 
 ## 2. 記入テンプレート
 
-Task Seed は `TASK.codex.md` に定義されたテンプレートに準拠し、以下の要点を押さえる。
+Task Seed は本ドキュメントで示すテンプレートに準拠し、以下の要点を押さえる。
 
 ```markdown
 ---
@@ -37,14 +37,14 @@ next_review_due: YYYY-MM-DD
 - Out: 明示的に触れない領域
 
 ## Requirements
-- Behavior / I/O / Constraints / Acceptance Criteria を `TASK.codex.md` の粒度で箇条書き。
+- Behavior / I/O / Constraints / Acceptance Criteria を本テンプレートと同じ粒度で箇条書き。
 - Lint/Type/Test のゼロエラーを必須条件として明記する。
 
 ## Affected Paths
 - グロブ表記で変更予定ファイル群を列挙。
 
 ## Local Commands
-- 利用スタックに応じたゲートコマンドを `TASK.codex.md` の雛形から抜粋。
+- 利用スタックに応じたゲートコマンドをテンプレート内の例から抜粋。
 
 ## 3. 登録済み Task Seeds
 
@@ -55,7 +55,7 @@ next_review_due: YYYY-MM-DD
 ```
 
 > **用語補足**: `Objective`・`Scope`・`Requirements` の定義は [`docs/addenda/A_Glossary.md`](addenda/A_Glossary.md) を参照し、
-> `TASK.codex.md` の章立てと整合させる。
+> 本テンプレートの章立てと整合させる。
 
 ## 3. 検証ログ（TDD 前提）
 
