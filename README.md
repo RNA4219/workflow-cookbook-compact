@@ -45,6 +45,7 @@ next_review_due: 2025-11-14
 
 ```
 downsized-cookbook/
+├── HUB.codex.md           # ガバナンス資料のハブ/自動タスク化ポリシー
 ├── docs/                   # テンプレートとガバナンス文書
 │   ├── BLUEPRINT.md        # 課題/スコープ/制約/I-O契約/フロー
 │   ├── RUNBOOK.md          # 環境構築・実行手順・検証
@@ -98,6 +99,8 @@ downsized-cookbook/
 
 - **GUARDRAILS.md:** 長文投入前の要約やモデルの能力範囲遵守など、LLM連携時の行動指針を明記しています。
 - **EVALUATION.md:** スキーマ検証・ROIテスト・受入基準をチェックリスト化し、自動検証を容易にします。
+- **HUB.codex.md:** Blueprint や Runbook などの主要ドキュメントを集約し、エージェント／ツールによる自動タスク分割とオーケストレーション
+  のルールを定義します。
 - **CHANGELOG.md:** すべての変更を時系列で記録し、テンプレートの適用と成果物を追跡します。
 
 ## 非機能要件 / Non-Functional Notes
