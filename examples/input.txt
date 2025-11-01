@@ -1,0 +1,9 @@
+Service: API Gateway
+Availability Target: 99.9%
+Observed Availability: 99.6%
+Key Error Budget Consumers:
+- Deployments with missing smoke tests
+- Regional failover rehearsals skipped in Q4
+Action Items:
+- Add smoke test gate to deploy pipeline
+- Schedule monthly failover drill
