@@ -12,14 +12,6 @@
 
 For Japanese documentation, please continue below.  
 
----
-intent_id: INT-001
-owner: your-handle
-status: active   # draft|active|deprecated
-last_reviewed_at: 2025-10-14
-next_review_due: 2025-11-14
----
-
 # Downsized Workflow Cookbook / Codex Task Kit
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
