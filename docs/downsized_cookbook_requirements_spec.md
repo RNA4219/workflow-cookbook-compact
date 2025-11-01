@@ -3,6 +3,18 @@ _JP: ダウンサイザード Workflow Cookbook: 要件と仕様_
 
 > **概要のみを確認したい場合:** `docs/downsized_cookbook_summary.md` で主要ポイントを一覧できます。
 
+## Snapshot Summary
+
+| 項目 | 要約 | 詳細節 |
+| --- | --- | --- |
+| 目的 | 軽量環境で要約→要件→設計を少ターンで完遂し、統治理想を維持 | §1 Objectives |
+| スコープ | Markdown テンプレート、YAML レシピ、軽量スクリプト、設定、サンプル | §2 Scope |
+| 制約 | 入出力トークン上限、JSON 準拠、ROI 予算、設計キャパ ≈50k 行、低リソース HW | §3 Assumptions & Constraints |
+| コア要素 | ディレクトリ構造、テンプレート群、レシピパイプライン、ROI 優先付け、BirdEye-Lite、ガードレール | §4 Key Components |
+| 非機能要件 | 可搬性・拡張性・保守性・使いやすさを重視 | §5 Non-Functional Requirements |
+
+各節は README の「クイックリファレンス」と相互参照可能な形で整理しており、テンプレート導入時の確認表として利用できます。
+
 ## 1. Objectives
 _JP: 目的_
 

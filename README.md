@@ -15,6 +15,22 @@ next_review_due: 2025-11-14
 
 > **クイックサマリー:** 主要ポイントのみを確認したい場合は `docs/downsized_cookbook_summary.md` を参照してください。
 
+## クイックリファレンス
+
+| カテゴリ | チェック項目 | 詳細リソース |
+| --- | --- | --- |
+| 目的 | 要約→要件→設計を少ターンで完遂し、テンプレートとガードレールを維持 | `docs/downsized_cookbook_requirements_spec.md` §1 |
+| スコープ | Markdown テンプレート／YAML レシピ／軽量ツールと設定一式 | 同 §2 |
+| 前提 | 入力 ≈500–1,000 トークン、JSON 準拠、ROI 上限、設計キャパ ≈50k 行 | 同 §3 |
+| ワークフロー | テンプレート整備→ROI 選定→レシピ実行→BirdEye 可視化→評価チェック | 「実行フロー」節 |
+| ガバナンス | Guardrails・Evaluation・BirdEye ライト・CHANGELOG で監査性確保 | 「ガバナンス」節 |
+
+### 最初に読むべきドキュメント
+
+- `docs/downsized_cookbook_summary.md` – README と要件仕様を要約したチェックリスト。
+- `docs/downsized_cookbook_requirements_spec.md` – 目的／スコープ／制約の正式な要件定義。
+- `HUB.codex.md` – テンプレート運用とタスクオーケストレーションの基準。
+
 ## サマリー
 
 | 項目 | ハイライト |
@@ -34,11 +50,11 @@ next_review_due: 2025-11-14
 
 ## 実行フロー
 
-1. `docs/` のテンプレートをプロジェクト用に複製し、課題・スコープ・制約・検証基準を記述。
-2. `.env` 等で `ROI_BUDGET` とプロファイルを設定し、`recipes/req_to_srs_roi.yaml` → `recipes/srs_scope_plan.yaml` で ROI 選定。
-3. `tools/runner.{ts,py}` でレシピを実行し、`budget.max_input/max_output` 内で JSON 成果物を取得。
-4. `tools/birdseye_lite.py` で最大 30 ノード／60 エッジの依存グラフを生成し、成果物に添付。
-5. `docs/EVALUATION.md` のチェックリストでスキーマ検証・ROI コンプライアンスを確認し、`CHANGELOG.md` に記録。
+1. **テンプレート整備:** `docs/` から必要テンプレートを複製し、課題・制約・検証基準を記述。
+2. **ROI 設定:** `.env` などで `ROI_BUDGET`／モデルプロファイルを調整し、`recipes/req_to_srs_roi.yaml` と `recipes/srs_scope_plan.yaml` で採択候補を決定。
+3. **レシピ実行:** `tools/runner.{ts,py}` で LLM 呼び出し・JSON スキーマ検証を実施し、`budget.max_input/max_output` を厳守。
+4. **依存可視化:** `tools/birdseye_lite.py` で ≤30 ノード／≤60 エッジの Mermaid グラフを生成し成果物に添付。
+5. **検証と記録:** `docs/EVALUATION.md` チェックリストでスキーマ／ROI／受入基準を確認し、`CHANGELOG.md` に追記。
 
 ## レシピ一覧
 
@@ -52,10 +68,11 @@ next_review_due: 2025-11-14
 
 ## 制約と前提
 
-- 入力は CPU ≈500 トークン／7B ≈1,000 トークン、出力は 200–300 トークンを目安に分割や要約を行う。
-- すべての LLM 応答は JSON スキーマで検証可能な形に揃える。
-- `ROI_BUDGET` が労力上限を制御し、超過ストーリーは自動保留。
-- 設計キャパシティは ≈50k 行規模をガイドラインとし、超過時はタスク分割を検討。
+- **トークン予算:** CPU モデルは入力 ≈500 トークン、7B モデルは ≈1,000 トークン、出力は ≈200–300 トークンを目安に要約や分割を実施。
+- **フォーマット:** すべての LLM 応答は検証可能な JSON スキーマに準拠。
+- **ROI 制御:** `ROI_BUDGET` で労力上限を管理し、超過ストーリーは自動保留。
+- **設計キャパシティ:** 約 50k 行を超える見込みの場合はタスク分割や手動介入を検討。
+- **ハードウェア:** GPU なしでも動作可能な軽量モデルを前提とし、対話ターン数を最小化。
 
 ## ツールと自動化
 
