@@ -1,16 +1,13 @@
 # Birdseye データセット運用ガイド
 
-Birdseye は、Workflow Cookbook の知識マップを 3 層（Index / Capsules / Hot）で提供します。
-Guardrails の「Bootstrap → Index → Caps」という読込順序を支えるデータセットとして、各層の成果物と鮮度管理ルールをこのディレクトリで管理します。
+Birdseye は、Workflow Cookbook の知識マップを 2 層（Index / Hot）で提供します。
+ダウンサイザード版では大容量の Capsules 層を廃止し、Guardrails の「Bootstrap → Index」までを最小構成として管理します。
 
 ## ディレクトリ構成
 
 - `index.json`
   - 役割: Birdseye ノード一覧と隣接関係（Edges）の基盤データ
   - Guardrails 連携: `plan` や `notes` で ±hop を抽出する際の一次ソース
-- `caps/`
-  - 役割: 各ノードのカプセル要約（`<path>.json` を 1 ノード 1 ファイルで保持）
-  - Guardrails 連携: `deps_out`・公開 API・リスク情報を提供
 - `hot.json`
   - 役割: 主要ノードのホットリスト
   - Guardrails 連携: 「頻出入口ホットリスト」を満たし、即時参照を補助
@@ -29,18 +26,18 @@ Guardrails が要求する「自動再生成＋鮮度確認」を満たすため
 ```bash
 python tools/codemap/update.py \
   --targets docs/birdseye/index.json,docs/birdseye/hot.json \
-  --emit index+caps
+  --emit index
 ```
 
 1. 対象ノード（`--targets`）に今回更新したファイルや重要エントリをカンマ区切りで列挙します。
    Birdseye を再生成する場合は `docs/birdseye/` 配下を明示してください。
-2. `--emit` で出力対象を指定します。現在は `index+caps` が標準です。
+2. `--emit` で出力対象を指定します。ダウンサイザード版では `index` のみを生成します。
 3. `docs/birdseye/index.json` と `docs/birdseye/hot.json` を同一ターゲットで指定すると、両データセットの鮮度が揃います。
    出力後は `index.json.generated_at` / `hot.json.generated_at` が最新コミットに追随しているか確認し、
    必要に応じてホットリスト項目の `last_verified_at` が対象ノードの最新確認日を反映しているか点検します。
 4. 差分をレビューし、`docs/BIRDSEYE.md` のフォールバック情報と矛盾がないことをチェックしてからコミットします。
 
-> 手動編集が必要な場合でも、Birdseye スキーマ（`id`・`role`・`caps`・`edges` など）とパス命名規則（`/` を `.` に置換）を崩さないでください。
+> 手動編集が必要な場合でも、Birdseye スキーマ（`id`・`role`・`edges` など）とパス命名規則（`/` を `.` に置換）を崩さないでください。
 
 ## ホットリストと鮮度管理
 
