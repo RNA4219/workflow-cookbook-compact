@@ -16,17 +16,17 @@ _JP: ダウンサイザード Workflow Cookbook: 要件と仕様_
 ## 1. Objectives
 _JP: 目的_
 
-- **Lightweight execution:** CPU（1〜3B）や小規模 GPU（≈7B）でも要約→要件→設計のワークフローを少トークンで回せること。
-- **Governance retention:** Blueprint／Runbook／Evaluation／Guardrails／Design／Spec の必須テンプレートを通じて、課題・制約・受入基準を実装前に固められること。
-- **ROI-first planning:** `ROI_BUDGET` を軸に、価値・労力・リスク・確信度の評価済みストーリーから優先実装を決定できること。
+- **Lightweight execution:** 1〜7B クラスのモデルで要約→要件→設計を少トークンで遂行する。
+- **Governance retention:** Blueprint／Runbook／Evaluation／Guardrails／Design／Spec テンプレートで前提と制約を固める。
+- **ROI-first planning:** `ROI_BUDGET` を軸に価値・労力・リスク・確信度を評価し、優先タスクを選定する。
 
 ## 2. Scope
 _JP: スコープ_
 
 ### In scope / 対象範囲
-- `docs/`: テンプレート群、BirdEye ライト運用資料、軽量バックログ。
-- `recipes/`: 要約・要件分解・スコープ策定・設計変換・依存可視化の YAML 定義。
-- `tools/`: レシピ実行、ROI 計算、LOC 集計、依存解析を支援するスクリプト。
+- `docs/`: テンプレート群、BirdEye ライト資料、軽量バックログ。
+- `recipes/`: 要約・要件分解・スコープ策定・設計変換・依存可視化の YAML。
+- `tools/`: レシピ実行や ROI/LOC/依存チェックを行う補助スクリプト。
 - `config/`: モデルプロファイル、トークン予算、ROI 設定。
 - `examples/`: 入出力サンプルと ROI 付与例。
 
@@ -38,33 +38,33 @@ _JP: スコープ_
 ## 3. Assumptions & Constraints
 _JP: 前提と制約_
 
-- **Context budgets:** CPU ≈500 トークン、7B ≈1,000 トークン、出力 ≈200–300 トークンを目安とし、必要に応じて要約／分割する。
-- **Hardware:** GPU なしや量子化モデルを想定し、対話ターン数は最小限に抑える。
+- **Context budgets:** CPU ≈500 トークン、7B ≈1,000 トークン、出力 ≈200–300 トークン。超過時は要約や分割で調整。
+- **Hardware:** GPU なしや量子化モデルを想定し、対話ターンは最小化する。
 - **JSON outputs:** すべての LLM 応答は検証可能な JSON を返す。
-- **ROI budget:** `ROI_BUDGET` で労力上限を管理し、超過ストーリーは保留扱いとする。
-- **Design capacity:** ≈50k 行を超える見込みの場合はタスク分割や手動介入を検討する。
+- **ROI budget:** `ROI_BUDGET` で労力上限を管理し、超過ストーリーは保留する。
+- **Design capacity:** 設計見積が ≈50k 行を超える場合はタスク分割や手動介入を検討する。
 
 ## 4. Key Components
 _JP: 主な構成要素_
 
-1. **Directory structure:** `docs/` にテンプレート、`recipes/` に YAML、`tools/` に補助スクリプト、`examples/` にサンプル、`config/` に設定を配置し、ツールの詳細は `tools/README.md` で補足する。
-2. **Templates:** Blueprint、Runbook、Evaluation、Guardrails、Spec、Design で課題・スコープ・I/O・検証・統制を固定化する。
-3. **Pipelines:** レシピランナーが入力を読み込み、LLM を呼び出し、`budget.max_input/max_output` を守りながら JSON を生成・検証する。
-4. **ROI prioritisation:** 要件→SRS レシピで `value` `effort` `risk` `confidence` `roi_score` を付与し、スコープ計画レシピで `ROI_BUDGET` 内のストーリーを採択する。
-5. **BirdEye-Lite:** 依存関係を抽出し、≤30 ノード／≤60 エッジの Mermaid グラフを生成してコンテキストを最小化する。
-6. **Guardrails & evaluation:** `GUARDRAILS.md` と `EVALUATION.md` により行動基準と受入チェックを一元管理する。
+1. **Directory structure:** `docs/` にテンプレート、`recipes/` に YAML、`tools/` に補助スクリプト、`examples/` にサンプル、`config/` に設定を配置する。補足は `tools/README.md` に記載する。
+2. **Templates:** Blueprint／Runbook／Evaluation／Guardrails／Spec／Design で課題・スコープ・I/O・検証・統制を固定化する。
+3. **Pipelines:** レシピランナーが入力を読み込み、`budget.max_input/max_output` を順守しながら LLM を呼び出して JSON を生成・検証する。
+4. **ROI prioritisation:** 要件→SRS レシピで `value` `effort` `risk` `confidence` `roi_score` を算出し、スコープ計画レシピで `ROI_BUDGET` 内のストーリーを採択する。
+5. **BirdEye-Lite:** 依存関係を抽出し、≤30 ノード／≤60 エッジの Mermaid グラフでコンテキストを最小化する。
+6. **Guardrails & evaluation:** `docs/GUARDRAILS.md` と `docs/EVALUATION.md` によって行動基準と受入チェックを一元管理する。
 
 ## 5. Non-Functional Requirements
 _JP: 非機能要件_
 
 - **Portability:** Node.js または Python で動作し、重い依存や GPU を要求しない。
 - **Extensibility:** レシピ・テンプレート・設定の追加を容易に行える汎用構造を保つ。
-- **Maintainability:** Markdown／YAML と `CHANGELOG.md` による履歴管理でシンプルに保守できる。
-- **Usability:** README と `examples/` で導入手順とサンプルを提示し、セットアップを迅速化する。
+- **Maintainability:** Markdown／YAML と `CHANGELOG.md` で履歴を追跡する。
+- **Usability:** README と `examples/` で導入手順とサンプルを提供し、セットアップを簡易化する。
 
 ## 6. Implementation Notes
 _JP: 実装メモ_
 
 - トークン予算は推奨値であり、超過時は警告のみ行う。
-- BirdEye-Lite、ROI プランナー、LOC チェッカーは任意利用だが、ガードレール遵守と ROI フロー実行を補助する目的で提供する。
+- BirdEye-Lite、ROI プランナー、LOC チェッカーは任意利用だが、ガードレール遵守と ROI フローの補助として提供する。
 - 生成物は `CHANGELOG.md` と各テンプレートで一貫して追跡する。
