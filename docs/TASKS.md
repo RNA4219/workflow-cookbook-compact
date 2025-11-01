@@ -11,8 +11,8 @@ next_review_due: 2025-11-28
 ## 1. 目的
 
 - `HUB.codex.md` や `BLUEPRINT.md` などで抽出された課題を、着手可能な Task Seed として整理する。
-- インシデント記録（`docs/IN-*.md`）や品質基準（`EVALUATION.md`）と突合し、再発防止と受け入れ条件を明文化する。
-- `CHECKLISTS.md` の出荷基準を満たすための実施ログを残し、後続レビューで追跡できるようにする。
+- `docs/EVALUATION.md` と `docs/downsized_cookbook_requirements_spec.md` に記載された基準と突合し、受け入れ条件を明確にする。
+- 実施内容は `CHANGELOG.md` や関連 PR から追跡できるように記録する。
 
 ## 2. 記入テンプレート
 
@@ -46,25 +46,18 @@ next_review_due: YYYY-MM-DD
 ## Local Commands
 - 利用スタックに応じたゲートコマンドをテンプレート内の例から抜粋。
 
-## 3. 登録済み Task Seeds
-
-- [docs/tasks/task-autosave-project-locks.md](tasks/task-autosave-project-locks.md): AutoSave と Merge のロック整合性を段階導入で検証するタスク。
-
 ## Deliverables
 - PR 要約・Intent 明記・必要なドキュメント差分を記載。
 ```
 
-> **用語補足**: `Objective`・`Scope`・`Requirements` の定義は [`docs/addenda/A_Glossary.md`](addenda/A_Glossary.md) を参照し、
-> 本テンプレートの章立てと整合させる。
+> **用語補足**: `Objective`・`Scope`・`Requirements` の定義は `docs/downsized_cookbook_requirements_spec.md` の該当セクションと整合させる。
 
 ## 3. 検証ログ（TDD 前提）
 
 1. **テスト設計を先行**: 着手前に必要なユニット/統合テストを列挙し、期待する失敗/成功条件を `Tests` セクションへ記す。
 2. **実行コマンドの記録**: `Tests` もしくは `Commands` セクションに、実際に走らせたコマンドと結果（例: `pytest -q` → fail/pass）を時系列で追記する。
-3. **インシデントとの連携**: 再発防止策が `docs/IN-*.md` に存在する場合、該当節を参照し、テストケースや検証ログにリンクを残す。
-4. **チェックリスト照合**: ゲート通過後は `CHECKLISTS.md` の該当項目を確認し、未完了項目があれば Follow-up へ移す。
-
-> 代表的な検証手順は [`docs/addenda/I_Test_Cases.md`](addenda/I_Test_Cases.md) を参照する。
+3. **インシデントとの連携**: 重大な不具合に遭遇した場合は `docs/RUNBOOK.md#observability` の初動手順に沿って共有し、検証ログから参照できるようリンクを残す。
+4. **評価基準の照合**: ゲート通過後は `docs/EVALUATION.md` を確認し、未完了項目があれば Follow-up へ移す。
 
 ## 4. フォローアップ手順
 
@@ -72,9 +65,8 @@ next_review_due: YYYY-MM-DD
 - **情報同期**: 追記した Task Seed は `HUB.codex.md` の分類に基づき、関連ドキュメント（Blueprint /
   Guardrails / Incident）とのリンクを整備する。
 - **レビュー結果の反映**: レビュアーからの追加要求は `Notes` に記録し、着手が別タスクになる場合は Task Seed ID を採番して紐付ける。
-- **完了判定**: `CHECKLISTS.md` と `EVALUATION.md` の条件を満たし、検証ログがすべてグリーンであることを確認して `status: done` へ更新する。
-- **Changelog 通番**: 変更履歴を編集する場合は [README.md の変更履歴の更新ルール](../README.md#changelog-update-rules) に従い、
-  既存の最大通番に 1 を加えて 4 桁ゼロ埋めで記録する。
+- **完了判定**: `docs/EVALUATION.md` の条件を満たし、検証ログがすべてグリーンであることを確認して `status: done` へ更新する。
+- **Changelog 通番**: 変更履歴を編集する場合は `CHANGELOG.md` の最新通番を確認し、既存の最大値に 1 を加えて 4 桁ゼロ埋めで記録する。
 - **成果の転記**: 完了した Task Seed の成果差分は `[Unreleased](../CHANGELOG.md#unreleased)` に通番付きで記録し、
   当該 Task Seed からリンクを張って追跡できるようにする。
 

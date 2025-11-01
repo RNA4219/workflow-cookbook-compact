@@ -10,33 +10,26 @@ next_review_due: 2025-11-14
 
 ## Acceptance Criteria
 
-- 必須要件（フォーマット・件数・整合性など）
-- PR本文に Priority Score（値と根拠）が記録されていること。
-- governance/policy.yaml の forbidden_paths を変更しないこと。
-- インシデント発生時は docs/IN-YYYYMMDD-XXX.md を作成し、該当PRおよびRUNBOOKから相互リンクする
+- 各 Markdown には Intent メタデータ（intent_id / owner / status / review 日付）が残り、変更内容に合わせて更新されている。
+- `README.md`・`docs/downsized_cookbook_requirements_spec.md`・`docs/downsized_cookbook_summary.md` の記述が変更差分と矛盾しない。
+- `recipes/*.yaml` の `budget.*` 設定や出力スキーマに変更が入る場合は、`config/` と `examples/` の対応する値を併せて確認・更新する。
+- 重大な不具合が判明した際は `docs/RUNBOOK.md#observability` に沿って初動記録を残し、関連差分から参照できるようリンクする。
 
 ## KPIs
 
 | 指標 | 目的 | 収集方法 | 目標値 |
 | --- | --- | --- | --- |
-| `checklist_compliance_rate` | ドキュメント出荷時に必須チェックリストへ準拠できた割合を可視化し、ヒューマンエラーの早期検知につなげる。 | `python -m tools.perf.collect_metrics --suite qa --metrics-url <Prometheus URL> --log-path <StructuredLogger 等の運用ログ>` で `.ga/qa-metrics.json` を生成し、`checklist_compliance_rate` を参照する。必要に応じて構成管理ログ（例: `docs/logs/docops.log`）で完了数と対象総数を突合する。詳細は [RUNBOOK.md#Observability](RUNBOOK.md#observability)。 | 週次平均で 0.95 以上。 |
-| `task_seed_cycle_time_minutes` | Task Seed の受付から初回処理完了までの所要時間を把握し、着手遅延を抑制する。 | `.ga/qa-metrics.json` に正規化される `task_seed_cycle_time_*` 系イベントを参照する（収集 CLI は [RUNBOOK.md#Observability](RUNBOOK.md#observability) に準拠）。 | 1440 分（24 時間）以下を維持。 |
-| `birdseye_refresh_delay_minutes` | Birdseye ダッシュボードの更新遅延を監視し、情報可視化の鮮度を保証する。 | Prometheus の `birdseye_refresh_delay_*` 系メトリクスを CLI が平均化し `.ga/qa-metrics.json` に書き出す。必要に応じてジョブ監視ログで遅延の有無を確認する。 | 60 分以下を維持。 |
-| `review_latency` | レビュー待機時間を定量化し、ボトルネックを可視化する。 | Prometheus の `workflow_review_latency_*` / `legacy_review_latency_*` を CLI が正規化した値を `.ga/qa-metrics.json` から取得する。詳細は [RUNBOOK.md#Observability](RUNBOOK.md#observability)。 | 12 時間以下を維持。 |
-| `compress_ratio` | トリミング後コンテキストの圧縮率を測定し、情報損失を防ぐ。 | `tools.perf.metrics_registry.MetricsRegistry.observe_trim` を通じてエクスポートし、収集 CLI が `.ga/qa-metrics.json` に書き出した値を確認する。 | 0.60 以下を維持し、過剰圧縮を回避。 |
-| `semantic_retention` | コンテキストトリミング後に保持された意味情報の割合を監視し、質の劣化を検知する。 | 埋め込みログ（例: `StructuredLogger` 経由の `semantic_retention`）を CLI が統合し `.ga/qa-metrics.json` へ出力する。手順は [RUNBOOK.md#Observability](RUNBOOK.md#observability) を参照。 | 0.85 以上を維持。 |
-| `reopen_rate` | 再オープン率を追跡し、運用完了後の手戻りを抑制する。 | Prometheus の `workflow_reopen_rate_*` → `docops_reopen_rate` → `reopen_rate` を収集 CLI が正規化し `.ga/qa-metrics.json` に出力する。 | 5% 以下を維持。 |
-| `spec_completeness` | スペック充足率を定量化し、要求事項の欠落を防ぐ。 | Prometheus の `workflow_spec_completeness_*` と運用ログ（例: `StructuredLogger` の `spec_completeness_*`）を CLI が統合し `.ga/qa-metrics.json` で欠損や乖離を確認する。 | 90% 以上を維持。 |
+| `doc_alignment` | 主要ドキュメント間の記述差異を早期に把握する。 | `README.md`・`docs/downsized_cookbook_requirements_spec.md`・`docs/downsized_cookbook_summary.md` の対応セクションをレビューし、差異があれば同一 PR 内で整合させる。 | 100% 整合 |
+| `roi_traceability` | ROI の算定根拠と設定値を追跡できる状態を保つ。 | `recipes/req_to_srs_roi.yaml`・`recipes/srs_scope_plan.yaml` の `budget.*` と `config/` の ROI 設定、`examples/requirements.md` のフィールドを照合する。 | 更新から 1 営業日以内に同期 |
+| `changelog_freshness` | ユーザー影響がある変更を迅速に記録する。 | リリース対象差分では `CHANGELOG.md` の `[Unreleased]` に通番付き項目を追加する。 | 対象変更の 100% |
 
-> KPI の収集手順と CLI オプションは常に [`RUNBOOK.md#Observability`](RUNBOOK.md#observability) と同期し、差異があれば双方を更新する。
+> KPI の確認結果は `docs/RUNBOOK.md#observability` の共有手順に沿って記録し、乖離があれば双方のドキュメントを更新する。
 
 ## Test Outline
 
-- 単体: 入力→出力の例テーブル（[ケース I-03](docs/addenda/I_Test_Cases.md#i-03-task-seed-tdd-例)）
-- 結合: 代表シナリオ（[ケース I-02](docs/addenda/I_Test_Cases.md#i-02-birdseye-再生成確認)）
-- 回帰: 重要パス再確認（[ケース I-01](docs/addenda/I_Test_Cases.md#i-01-チェックリスト突合)）
-
-> 検証手順の詳細は [`docs/addenda/I_Test_Cases.md`](docs/addenda/I_Test_Cases.md) を参照する。
+- 単体: `examples/requirements.md` を基に `recipes/req_to_srs_roi.yaml` の出力スキーマ（`value` / `effort` / `risk` / `confidence` / `roi_score`）を確認する。
+- 結合: `recipes/srs_scope_plan.yaml` と `config/budget.yaml`・`config/profiles.yaml` の整合性を確認し、優先順位が `ROI_BUDGET` 内に収まることを検証する。
+- 回帰: `docs/BIRDSEYE.md` の手順で依存グラフを見直し、更新したノードが `docs/birdseye/index.json` に正しく反映されているか点検する。
 
 ## Verification Checklist
 
