@@ -75,7 +75,7 @@ downsized-cookbook/
 
 1. **必須テンプレートをコピー:** `docs/`直下の Blueprint / Runbook / Evaluation / Guardrails / Spec / Design をプロジェクト用に複製し、課題・制約・受入基準を埋めます。
 2. **ROI予算を設定:** `.env` 等で `ROI_BUDGET=<effort_points>` を設定し、`recipes/req_to_srs_roi.yaml` → `recipes/srs_scope_plan.yaml` の順に実行します。
-3. **レシピを実行:** `tools/runner.{ts,py}` で YAML を読み込み、入力ファイルを指定してシングルターンで JSON 出力を得ます。`budget.max_input`/`max_output` を守り、必要に応じて要約や分割を挟みます。
+3. **レシピを実行:** `tools/runner.{ts,py}` で YAML を読み込み、`examples/requirements.md` や `examples/input.txt` といったサンプルを入力に指定してシングルターンで JSON 出力を得ます。`budget.max_input`/`max_output` を守り、必要に応じて要約や分割を挟みます。
 4. **BirdEye-Lite:** `tools/birdseye_lite.py` を使い、対象リポジトリの import/use 関係から最大30ノード/60エッジの Mermaid 図を生成し、レシピに添付します。
 5. **成果を検証:** `EVALUATION.md` に定義したスキーマ検証・ROIコンプライアンス・受入テストを満たしているか確認し、`CHANGELOG.md` に通番付きで記録します。
 
