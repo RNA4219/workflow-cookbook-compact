@@ -47,7 +47,7 @@ _JP: 前提と制約_
 ## 4. Key Components
 _JP: 主な構成要素_
 
-1. **Directory structure:** `docs/` にテンプレート、`recipes/` に YAML、`tools/` にスクリプト、`examples/` にサンプル、`config/` に設定、`HUB.codex.md` をルートに配置する。
+1. **Directory structure:** `docs/` にテンプレート、`recipes/` に YAML、`tools/` に補助スクリプト、`examples/` にサンプル、`config/` に設定を配置し、ツールの詳細は `tools/README.md` で補足する。
 2. **Templates:** Blueprint、Runbook、Evaluation、Guardrails、Spec、Design で課題・スコープ・I/O・検証・統制を固定化する。
 3. **Pipelines:** レシピランナーが入力を読み込み、LLM を呼び出し、`budget.max_input/max_output` を守りながら JSON を生成・検証する。
 4. **ROI prioritisation:** 要件→SRS レシピで `value` `effort` `risk` `confidence` `roi_score` を付与し、スコープ計画レシピで `ROI_BUDGET` 内のストーリーを採択する。

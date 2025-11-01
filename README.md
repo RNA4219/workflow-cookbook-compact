@@ -20,19 +20,19 @@ next_review_due: 2025-11-14
 | スコープ | Markdown テンプレート、YAML レシピ、軽量スクリプト、設定、サンプル | 同 §2 |
 | 前提 | 入出力トークン上限、JSON スキーマ準拠、ROI 予算、設計キャパ ≈50k 行 | 同 §3 |
 | ワークフロー | テンプレート整備→ROI 選定→レシピ実行→BirdEye 可視化→評価・記録 | 本 README「標準ワークフロー」 |
-| ガバナンス | Guardrails／Evaluation／BirdEye／CHANGELOG による監査性 | `HUB.codex.md`, `docs/EVALUATION.md`, `docs/GUARDRAILS.md` |
+| ガバナンス | Guardrails／Evaluation／BirdEye／CHANGELOG による監査性 | `docs/EVALUATION.md`, `docs/GUARDRAILS.md`, `docs/TASKS.md` |
 
 ### 最初に読むドキュメント
 
 - `docs/downsized_cookbook_summary.md` – チェックリスト形式の概要。
 - `docs/downsized_cookbook_requirements_spec.md` – 目的・スコープ・制約の詳細仕様。
-- `HUB.codex.md` – テンプレート運用とタスクオーケストレーション指針。
+- `docs/TASKS.md` – タスクシード運用と簡易オーケストレーションの手引き。
 
 ## 構成概要
 
 - `docs/` – Blueprint / Runbook / Evaluation / Guardrails / Spec / Design テンプレートと BirdEye ライト関連資料。
 - `recipes/` – 要約、要件分解、ROI 選定、設計変換、依存可視化の YAML レシピ。
-- `tools/` – レシピランナー (`runner.{ts,py}`)、BirdEye-Lite、ROI プランナー、LOC チェッカーなどの補助スクリプト。
+- `tools/` – 補助スクリプトの概要は `tools/README.md` を参照。
 - `config/` – モデルプロファイルとトークン予算、ROI 設定。
 - `examples/` – サンプル入出力と ROI 付与例。
 
@@ -40,8 +40,8 @@ next_review_due: 2025-11-14
 
 1. `docs/` のテンプレートで課題・制約・検証基準を定義。
 2. `.env` と `config/` を基に `ROI_BUDGET`／モデルプロファイルを調整し、`recipes/req_to_srs_roi.yaml` と `recipes/srs_scope_plan.yaml` で優先ストーリーを決定。
-3. `tools/runner.{ts,py}` でレシピを実行し、`budget.max_input/max_output` と JSON スキーマを検証。
-4. `tools/birdseye_lite.py` で ≤30 ノード／≤60 エッジの Mermaid グラフを作成。
+3. `recipes/*.yaml` を任意の LLM ランナーで実行し、`budget.max_input/max_output` と JSON スキーマを検証。
+4. `docs/BIRDSEYE.md` の手順で ≤30 ノード／≤60 エッジの Mermaid グラフを作成。
 5. `docs/EVALUATION.md` で成果を確認し、`CHANGELOG.md` に記録。
 
 ## 主なレシピとツール
@@ -54,13 +54,13 @@ next_review_due: 2025-11-14
 | `recipes/srs_to_design_roi.yaml` | SRS→設計マッピング | ストーリー別モジュール一覧 |
 | `recipes/birdseye_summary.yaml` | 依存可視化 | Mermaid グラフ |
 
-補助スクリプト（Runner／BirdEye-Lite／ROI Planner／LOC Budget Checker など）は `tools/` に集約しています。
+補助ツールの役割と前提条件は `tools/README.md` に集約しています。
 
 ## ガバナンスと記録
 
 - `docs/GUARDRAILS.md` で行動原則と長文要約手順を管理。
 - `docs/EVALUATION.md` でスキーマ適合・ROI 準拠・受入基準を確認。
-- `HUB.codex.md` でテンプレート運用とタスク管理のルールを統合。
 - 変更履歴は `CHANGELOG.md` に記録します。
+- タスク分解と記録は `docs/TASKS.md` を基準に管理します。
 
 このテンプレート群を活用することで、限られたリソースでもガバナンスを維持しながら迅速なワークフロー運用が可能になります。
