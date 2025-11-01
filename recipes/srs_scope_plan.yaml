@@ -1,0 +1,48 @@
+recipe: srs_scope_plan
+version: 0.1.0
+description: "Select a deliverable scope that respects the ROI budget."
+inputs:
+  - id: stories
+    type: file
+    format: json
+  - id: roi_budget
+    type: env
+    name: ROI_BUDGET
+    required: true
+outputs:
+  - id: scope_plan
+    type: json
+    schema:
+      type: object
+      properties:
+        accepted:
+          type: array
+          items:
+            type: string
+        deferred:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+      required:
+        - accepted
+        - deferred
+budget:
+  max_input_tokens: 500
+  max_output_tokens: 256
+steps:
+  - id: select_scope
+    description: "Choose stories within ROI_BUDGET and justify trade-offs."
+    llm:
+      client: default
+      mode: single_turn
+    prompt:
+      system: "You are a scope planner who outputs JSON only."
+      user: |
+        Review the candidate stories and choose a subset whose total effort is within ROI_BUDGET.
+        Return accepted (list of story IDs), deferred (remaining IDs), and notes explaining the trade-offs.
+        ---
+        ROI_BUDGET={{roi_budget}}
+        Stories:
+        {{stories}}

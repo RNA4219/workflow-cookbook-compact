@@ -1,0 +1,16 @@
+# Default model profiles for downsized workflows
+cpu_small:
+  description: "Quantised 1-3B local model"
+  max_input_tokens: 500
+  max_output_tokens: 256
+  temperature: 0.2
+7b_gpu:
+  description: "7B parameter GPU-hosted model"
+  max_input_tokens: 1000
+  max_output_tokens: 300
+  temperature: 0.3
+cheap_api:
+  description: "Low-cost hosted API profile"
+  max_input_tokens: 1200
+  max_output_tokens: 400
+  temperature: 0.1

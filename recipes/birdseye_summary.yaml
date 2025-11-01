@@ -1,0 +1,47 @@
+recipe: birdseye_summary
+version: 0.1.0
+description: "Generate a compact dependency graph using BirdEye-Lite."
+inputs:
+  - id: repository_root
+    type: path
+    format: directory
+  - id: max_nodes
+    type: parameter
+    default: 30
+  - id: max_edges
+    type: parameter
+    default: 60
+outputs:
+  - id: mermaid_graph
+    type: json
+    schema:
+      type: object
+      properties:
+        mermaid:
+          type: string
+        nodes:
+          type: integer
+        edges:
+          type: integer
+      required:
+        - mermaid
+budget:
+  max_input_tokens: 200
+  max_output_tokens: 200
+steps:
+  - id: run_birdseye_lite
+    description: "Execute the BirdEye-Lite tool and format the result as JSON."
+    tool:
+      name: birdseye_lite
+      args:
+        root: {{repository_root}}
+        max_nodes: {{max_nodes}}
+        max_edges: {{max_edges}}
+    postprocess:
+      format: json
+      template: |
+        {
+          "mermaid": "{{output.graph}}",
+          "nodes": {{output.nodes}},
+          "edges": {{output.edges}}
+        }

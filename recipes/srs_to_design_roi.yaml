@@ -1,0 +1,66 @@
+recipe: srs_to_design_roi
+version: 0.1.0
+description: "Translate scoped SRS stories into module-level design notes."
+inputs:
+  - id: scope_plan
+    type: file
+    format: json
+  - id: blueprint
+    type: file
+    format: markdown
+outputs:
+  - id: design_notes
+    type: json
+    schema:
+      type: object
+      properties:
+        modules:
+          type: array
+          items:
+            type: object
+            properties:
+              module:
+                type: string
+              responsibilities:
+                type: array
+                items:
+                  type: string
+              dependencies:
+                type: array
+                items:
+                  type: string
+              related_stories:
+                type: array
+                items:
+                  type: string
+            required:
+              - module
+              - responsibilities
+              - related_stories
+        risks:
+          type: array
+          items:
+            type: string
+      required:
+        - modules
+budget:
+  max_input_tokens: 900
+  max_output_tokens: 512
+steps:
+  - id: design_breakdown
+    description: "Map accepted stories to modules and outline dependencies."
+    llm:
+      client: default
+      mode: single_turn
+    prompt:
+      system: "You are a systems designer who outputs JSON only."
+      user: |
+        Using the scope plan and blueprint context, propose a module-level design.
+        For each module include responsibilities, dependencies, and related story IDs.
+        Capture any implementation risks.
+        ---
+        Scope Plan:
+        {{scope_plan}}
+        ---
+        Blueprint Context:
+        {{blueprint}}
