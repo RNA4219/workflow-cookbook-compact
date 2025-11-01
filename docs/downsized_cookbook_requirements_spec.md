@@ -18,6 +18,8 @@ _JP: スコープ_
   - JP: **対象範囲:**
   - A minimal set of markdown templates (Blueprint, Runbook, Evaluation, Guardrails, Spec and Design) to describe tasks, constraints and acceptance criteria.
     - JP: 課題、制約、受け入れ基準を記述する最小限の Markdown テンプレート（Blueprint、Runbook、Evaluation、Guardrails、Spec、Design）。
+  - BirdEye oversight materials (`docs/BIRDSEYE.md` and the curated `docs/birdseye/` artefacts) and the lightweight backlog tracker (`docs/TASKS.md`) that document dependency views and work-in-progress without restoring the full governance archive.
+    - JP: 依存関係ビューと作業進行を記録するための BirdEye 管理資料（`docs/BIRDSEYE.md` と精選した `docs/birdseye/` アーティファクト）、および軽量なバックログトラッカー（`docs/TASKS.md`）。大規模なガバナンスアーカイブを復活させることなく維持します。
   - YAML recipes to drive tasks such as summarising input text, converting requirements to SRS (with ROI), creating a scope plan and translating SRS into design artefacts.  Each recipe defines inputs, outputs and budgets.
     - JP: 入出力と予算を定義する YAML レシピ。要約、要件から SRS（ROI 付き）、スコープ計画の作成、SRS から設計成果物への翻訳などのタスクを駆動します。
   - Lightweight scripts to run recipes through pluggable LLM clients (e.g., OpenAI compatible API or Ollama), enforce optional token budgets and output JSON.

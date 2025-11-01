@@ -23,6 +23,7 @@ next_review_due: 2025-11-14
 ### 対象範囲
 
 - 上記テンプレート群（`docs/`配下）と、最小限のガイド付きレシピ（`recipes/`）。
+- BirdEye ライト運用ドキュメント（`docs/BIRDSEYE.md` および `docs/birdseye/`）と軽量バックログ管理（`docs/TASKS.md`）。
 - レシピ実行を支援する軽量スクリプトと BirdEye-Lite、ROI プランナー等のツール（`tools/`）。
 - モデル別プロフィールやトークン予算を定義する設定ファイル（`config/`）。
 - 入力・出力例、ROI スコア付与例を収めたサンプル群（`examples/`）。
