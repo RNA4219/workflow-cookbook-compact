@@ -1,3 +1,0 @@
-- name: governance:skip
-  color: "ededed"
-  description: Skip governance gate checks for qualifying pull requests
