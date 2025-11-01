@@ -7,7 +7,7 @@ _JP: ダウンサイザード Workflow Cookbook: 要件と仕様_
 
 | 項目 | 要約 | 詳細節 |
 | --- | --- | --- |
-| 目的 | 軽量環境で要約→要件→設計を少ターンで完遂しつつ統治理想を維持 | §1 |
+| 目的 | 軽量環境で要約→要件→設計を最小ターンで遂行し統治理想を維持 | §1 |
 | スコープ | Markdown テンプレート、YAML レシピ、軽量スクリプト、設定、サンプル | §2 |
 | 制約 | トークン／ROI 予算、JSON 準拠、設計キャパ ≈50k 行、低リソース HW | §3 |
 | コア要素 | ディレクトリ構成、テンプレート、レシピランナー、ROI 優先付け、BirdEye-Lite、ガードレール | §4 |
@@ -16,8 +16,8 @@ _JP: ダウンサイザード Workflow Cookbook: 要件と仕様_
 ## 1. Objectives
 _JP: 目的_
 
-- **Lightweight execution:** 1〜7B クラスのモデルで要約→要件→設計を少トークンで遂行する。
-- **Governance retention:** Blueprint／Runbook／Evaluation／Guardrails／Design／Spec テンプレートで前提と制約を固める。
+- **Lightweight execution:** 1〜7B クラスのモデルで要約→要件→設計を少トークンで完了させる。
+- **Governance retention:** Blueprint／Runbook／Evaluation／Guardrails／Design／Spec テンプレートで前提と制約を維持する。
 - **ROI-first planning:** `ROI_BUDGET` を軸に価値・労力・リスク・確信度を評価し、優先タスクを選定する。
 
 ## 2. Scope
@@ -47,12 +47,18 @@ _JP: 前提と制約_
 ## 4. Key Components
 _JP: 主な構成要素_
 
-1. **Directory structure:** `docs/` にテンプレート、`recipes/` に YAML、`tools/` に補助スクリプト、`examples/` にサンプル、`config/` に設定を配置する。補足は `tools/README.md` に記載する。
-2. **Templates:** Blueprint／Runbook／Evaluation／Guardrails／Spec／Design で課題・スコープ・I/O・検証・統制を固定化する。
-3. **Pipelines:** レシピランナーが入力を読み込み、`budget.max_input/max_output` を順守しながら LLM を呼び出して JSON を生成・検証する。
-4. **ROI prioritisation:** 要件→SRS レシピで `value` `effort` `risk` `confidence` `roi_score` を算出し、スコープ計画レシピで `ROI_BUDGET` 内のストーリーを採択する。
-5. **BirdEye-Lite:** 依存関係を抽出し、≤30 ノード／≤60 エッジの Mermaid グラフでコンテキストを最小化する。
-6. **Guardrails & evaluation:** `docs/GUARDRAILS.md` と `docs/EVALUATION.md` によって行動基準と受入チェックを一元管理する。
+1. **Directory structure:**  
+   `docs/` にテンプレート、`recipes/` に YAML、`tools/` に補助スクリプト、`examples/` にサンプル、`config/` に設定を配置し、補足は `tools/README.md` にまとめる。
+2. **Templates:**  
+   Blueprint／Runbook／Evaluation／Guardrails／Spec／Design で課題・スコープ・I/O・検証・統制を固定化する。
+3. **Pipelines:**  
+   レシピランナーが `budget.max_input/max_output` を順守しながら LLM を呼び出し、JSON を生成・検証する。
+4. **ROI prioritisation:**  
+   要件→SRS レシピで `value` `effort` `risk` `confidence` `roi_score` を算出し、スコープ計画レシピで `ROI_BUDGET` 内のストーリーを選定する。
+5. **BirdEye-Lite:**  
+   依存関係を抽出し、≤30 ノード／≤60 エッジの Mermaid グラフでコンテキストを最小化する。
+6. **Guardrails & evaluation:**  
+   `docs/GUARDRAILS.md` と `docs/EVALUATION.md` で行動基準と受入チェックを管理する。
 
 ## 5. Non-Functional Requirements
 _JP: 非機能要件_
