@@ -22,6 +22,8 @@ _JP: スコープ_
     - JP: 入出力と予算を定義する YAML レシピ。要約、要件から SRS（ROI 付き）、スコープ計画の作成、SRS から設計成果物への翻訳などのタスクを駆動します。
   - Lightweight scripts to run recipes through pluggable LLM clients (e.g., OpenAI compatible API or Ollama), enforce optional token budgets and output JSON.
     - JP: プラガブルな LLM クライアント（例: OpenAI 互換 API や Ollama）を通じてレシピを実行し、任意のトークン予算を適用し、JSON を出力する軽量スクリプト。
+  - A `HUB.codex.md` document that aggregates governance materials and codifies task orchestration rules for agents.
+    - JP: ガバナンス資料を集約し、エージェントによるタスクオーケストレーション規則を定義する `HUB.codex.md` ドキュメント。
   - A “BirdEye‑Lite” tool that scans a repository for import/use relations and produces a mermaid graph limited to the top N nodes/edges, avoiding large context ingestion【172882294315981†L18-L32】.
     - JP: リポジトリをスキャンして import／利用関係を抽出し、トップ N ノード／エッジに限定した Mermaid グラフを生成する「BirdEye-Lite」ツール。巨大なコンテキストの取り込みを避けます【172882294315981†L18-L32】。
   - Optional tools to compute line‑of‑code budgets and warn when input sizes exceed the recommended guidelines.
@@ -55,6 +57,8 @@ _JP: 主な構成要素_
 
 1. **Directory structure:**  Following the original cookbook’s design, the downsized kit places templates and deliverables under `docs/`, sample inputs/outputs under `examples/` and helper scripts under `tools/`【706646524446654†L10-L18】.  Recipes live in a `recipes/` folder, and configuration in `config/`.  This structure ensures CI or scripts can find mandatory files and simplifies navigation.
 _JP: 1. **ディレクトリ構成:** オリジナルの Cookbook の設計に従い、テンプレートと成果物は `docs/`、サンプル入出力は `examples/`、ヘルパースクリプトは `tools/` に配置します【706646524446654†L10-L18】。レシピは `recipes/`、設定は `config/` に置きます。この構成により CI やスクリプトが必須ファイルを見つけやすく、ナビゲーションも簡単になります。_
+   - Include a root-level `HUB.codex.md` that links these artefacts and defines automation policies for splitting tasks.
+     - JP: これらの成果物を連携し、自動タスク分割ポリシーを定義するルート直下の `HUB.codex.md` を含めます。
 2. **Templates:**
 _JP: 2. **テンプレート:**_
    - **BLUEPRINT.md** – captures the problem statement, scope (in/out), constraints/assumptions, I/O contract, minimal flow and interfaces.  It follows the original blueprint template but encourages brevity.
