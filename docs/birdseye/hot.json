@@ -1,172 +1,178 @@
 {
-    "generated_at": "00022",
+    "generated_at": "00006",
     "index_snapshot": "docs/birdseye/index.json",
-    "refresh_command": "python tools/codemap/update.py --targets docs\/birdseye/index.json,docs\/birdseye/hot.json --emit index+caps",
-    "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。",
+    "refresh_command": "manual: docs/birdseye/README.md の更新フローに従い index/hot を同時編集",
+    "curation_notes": "Downsized Workflow Cookbook の運用で最初に確認すべきガバナンス/タスク/可視化ノードを集約したホットリスト。同梱の README フローで index.json と同時更新し、最新の運用手順と整合させる。",
     "nodes": [
         {
             "id": "README.md",
             "role": "bootstrap",
-            "reason": "リポジトリ全体の導入手順と Birdseye の初回読込フローを定義する起点。",
-            "caps": "docs/birdseye/caps/README.md.json",
+            "reason": "ダウンサイザード版の導入手順と主要リファレンスへの導線をまとめた起点。",
+            "caps": null,
             "edges": [
+                "docs/downsized_cookbook_summary.md",
+                "docs/downsized_cookbook_requirements_spec.md",
+                "docs/TASKS.md",
                 "GUARDRAILS.md",
                 "HUB.codex.md",
-                "BLUEPRINT.md",
-                "RUNBOOK.md",
-                "EVALUATION.md",
                 "docs/birdseye/index.json"
             ],
-            "last_verified_at": "2025-02-20T00:00:00Z",
+            "last_verified_at": "2025-10-14T00:00:00Z",
             "index_snapshot": "docs/birdseye/index.json",
-            "refresh_command": "python tools/codemap/update.py --targets docs\/birdseye/index.json,docs\/birdseye/hot.json --emit index+caps",
-            "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
+            "refresh_command": "manual: docs/birdseye/README.md の更新フローに従い index/hot を同時編集",
+            "curation_notes": "Downsized Workflow Cookbook の標準ワークフローと Birdseye ライト再生成手順を確認する出発点。"
         },
         {
             "id": "GUARDRAILS.md",
             "role": "policy",
-            "reason": "自動化が従うべき行動指針と Birdseye 鮮度管理の期待値を定義。",
-            "caps": "docs/birdseye/caps/GUARDRAILS.md.json",
+            "reason": "ダウンサイザード運用で守る行動指針と Birdseye 鮮度管理の期待値を定義。",
+            "caps": null,
             "edges": [
                 "README.md",
                 "HUB.codex.md",
-                "RUNBOOK.md",
+                "docs/downsized_cookbook_requirements_spec.md",
                 "EVALUATION.md",
-                "docs/birdseye/index.json",
+                "docs/TASKS.md",
                 "docs/BIRDSEYE.md"
             ],
-            "last_verified_at": "2025-02-20T00:00:00Z",
+            "last_verified_at": "2025-10-14T00:00:00Z",
             "index_snapshot": "docs/birdseye/index.json",
-            "refresh_command": "python tools/codemap/update.py --targets docs\/birdseye/index.json,docs\/birdseye/hot.json --emit index+caps",
-            "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
+            "refresh_command": "manual: docs/birdseye/README.md の更新フローに従い index/hot を同時編集",
+            "curation_notes": "ガードレール更新時にタスク指針と評価基準へ即座に反映するための政策ノード。"
         },
         {
             "id": "HUB.codex.md",
             "role": "navigation",
-            "reason": "仕様とタスクの依存グラフを整理し、Birdseye からの hop を結節させるハブ。",
-            "caps": "docs/birdseye/caps/HUB.codex.md.json",
+            "reason": "ダウンサイザード版でタスク分解と依存を束ねるナビゲーションハブ。",
+            "caps": null,
             "edges": [
                 "README.md",
-                "GUARDRAILS.md",
-                "RUNBOOK.md",
-                "EVALUATION.md",
-                "CHECKLISTS.md",
+                "docs/downsized_cookbook_requirements_spec.md",
+                "docs/downsized_cookbook_summary.md",
+                "docs/TASKS.md",
+                "docs/BIRDSEYE.md",
                 "docs/birdseye/index.json"
             ],
-            "last_verified_at": "2025-02-20T00:00:00Z",
+            "last_verified_at": "2025-10-14T00:00:00Z",
             "index_snapshot": "docs/birdseye/index.json",
-            "refresh_command": "python tools/codemap/update.py --targets docs\/birdseye/index.json,docs\/birdseye/hot.json --emit index+caps",
-            "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
+            "refresh_command": "manual: docs/birdseye/README.md の更新フローに従い index/hot を同時編集",
+            "curation_notes": "タスク種別ごとの導線を保ち、Birdseye hop で要求仕様と運用文書を横断できるようにする。"
         },
         {
             "id": "RUNBOOK.md",
             "role": "operations",
-            "reason": "運用手順と Birdseye 再生成を含む標準オペレーションを定義。",
-            "caps": "docs/birdseye/caps/RUNBOOK.md.json",
+            "reason": "標準オペレーションと Birdseye ライト更新の実務手順を保持。",
+            "caps": null,
             "edges": [
                 "README.md",
-                "GUARDRAILS.md",
+                "docs/TASKS.md",
                 "EVALUATION.md",
-                "docs/IN-20250115-001.md"
+                "docs/BIRDSEYE.md",
+                "docs/birdseye/index.json"
             ],
-            "last_verified_at": "2025-02-20T00:00:00Z",
+            "last_verified_at": "2025-10-21T00:00:00Z",
             "index_snapshot": "docs/birdseye/index.json",
-            "refresh_command": "python tools/codemap/update.py --targets docs\/birdseye/index.json,docs\/birdseye/hot.json --emit index+caps",
-            "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
+            "refresh_command": "manual: docs/birdseye/README.md の更新フローに従い index/hot を同時編集",
+            "curation_notes": "Runbook の更新で Birdseye 再生成と検証コマンドが同期されるように追跡する。"
         },
         {
             "id": "EVALUATION.md",
             "role": "quality",
-            "reason": "受入基準と Birdseye カプセルで参照される品質メトリクスを定義。",
-            "caps": "docs/birdseye/caps/EVALUATION.md.json",
+            "reason": "受入基準と ROI/品質メトリクスを集約し、ダウンサイザード成果の検証を支える。",
+            "caps": null,
             "edges": [
                 "README.md",
                 "GUARDRAILS.md",
-                "RUNBOOK.md",
-                "CHECKLISTS.md"
+                "docs/TASKS.md",
+                "docs/downsized_cookbook_requirements_spec.md"
             ],
-            "last_verified_at": "2025-02-20T00:00:00Z",
+            "last_verified_at": "2025-10-14T00:00:00Z",
             "index_snapshot": "docs/birdseye/index.json",
-            "refresh_command": "python tools/codemap/update.py --targets docs\/birdseye/index.json,docs\/birdseye/hot.json --emit index+caps",
-            "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
+            "refresh_command": "manual: docs/birdseye/README.md の更新フローに従い index/hot を同時編集",
+            "curation_notes": "評価基準とタスクログの整合を取り、ROI 審査を即座に確認するための品質ノード。"
         },
         {
-            "id": "BLUEPRINT.md",
+            "id": "docs/downsized_cookbook_requirements_spec.md",
             "role": "requirements",
-            "reason": "要件定義と機能境界を Birdseye 経由で共有するベースライン。",
-            "caps": "docs/birdseye/caps/BLUEPRINT.md.json",
+            "reason": "ダウンサイザード版の目的・スコープ・制約を体系化した基準書。",
+            "caps": null,
             "edges": [
                 "README.md",
                 "HUB.codex.md",
-                "GUARDRAILS.md"
+                "docs/downsized_cookbook_summary.md",
+                "EVALUATION.md",
+                "docs/TASKS.md"
             ],
-            "last_verified_at": "2025-02-20T00:00:00Z",
+            "last_verified_at": "2025-10-21T00:00:00Z",
             "index_snapshot": "docs/birdseye/index.json",
-            "refresh_command": "python tools/codemap/update.py --targets docs\/birdseye/index.json,docs\/birdseye/hot.json --emit index+caps",
-            "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
+            "refresh_command": "manual: docs/birdseye/README.md の更新フローに従い index/hot を同時編集",
+            "curation_notes": "要件と制約を確認し、Summary/TASKS/Evaluation との整合を取るための要件ノード。"
         },
         {
-            "id": "CHECKLISTS.md",
-            "role": "checklist",
-            "reason": "デリバリー時の確認項目を管理し、Birdseye hop の実運用を支える。",
-            "caps": "docs/birdseye/caps/CHECKLISTS.md.json",
+            "id": "docs/TASKS.md",
+            "role": "tasking",
+            "reason": "Task Seed テンプレートと検証ログ運用を定義し、TDD 前提の進行を支える。",
+            "caps": null,
             "edges": [
                 "README.md",
                 "HUB.codex.md",
-                "EVALUATION.md"
+                "EVALUATION.md",
+                "docs/downsized_cookbook_requirements_spec.md"
             ],
-            "last_verified_at": "2025-02-20T00:00:00Z",
+            "last_verified_at": "2025-10-28T00:00:00Z",
             "index_snapshot": "docs/birdseye/index.json",
-            "refresh_command": "python tools/codemap/update.py --targets docs\/birdseye/index.json,docs\/birdseye/hot.json --emit index+caps",
-            "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
+            "refresh_command": "manual: docs/birdseye/README.md の更新フローに従い index/hot を同時編集",
+            "curation_notes": "Task Seed の作成・検証ログと評価指標を接続し、即時にタスク化へ移れるようにする。"
         },
         {
             "id": "docs/BIRDSEYE.md",
             "role": "fallback",
-            "reason": "Guardrails が要求する Edges/Hot/更新手順のフォールバック資料。",
-            "caps": "docs/birdseye/caps/docs.BIRDSEYE.md.json",
+            "reason": "JSON にアクセスできない状況で Birdseye ホット/インデックス構造を要約するフォールバック資料。",
+            "caps": null,
             "edges": [
                 "README.md",
                 "GUARDRAILS.md",
-                "docs/birdseye/index.json",
-                "tools/codemap/README.md"
+                "docs/TASKS.md",
+                "docs/downsized_cookbook_summary.md",
+                "docs/birdseye/index.json"
             ],
-            "last_verified_at": "2025-02-20T00:00:00Z",
+            "last_verified_at": "2025-10-28T00:00:00Z",
             "index_snapshot": "docs/birdseye/index.json",
-            "refresh_command": "python tools/codemap/update.py --targets docs\/birdseye/index.json,docs\/birdseye/hot.json --emit index+caps",
-            "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
+            "refresh_command": "manual: docs/birdseye/README.md の更新フローに従い index/hot を同時編集",
+            "curation_notes": "Birdseye JSON にアクセスできない場合の代替導線として Summary/TASKS と同期させる。"
         },
         {
             "id": "docs/birdseye/index.json",
             "role": "index",
-            "reason": "Birdseye の hop 計算を担う中核インデックス。ホットリストとも鮮度を同期する。",
-            "caps": "docs/birdseye/caps/docs.birdseye.index.json.json",
+            "reason": "Birdseye ライトの hop 計算とホットリスト同期の基盤データ。",
+            "caps": null,
             "edges": [
                 "README.md",
-                "GUARDRAILS.md",
                 "HUB.codex.md",
-                "docs/birdseye/caps/",
-                "tools/codemap/"
+                "docs/downsized_cookbook_requirements_spec.md",
+                "docs/TASKS.md",
+                "docs/downsized_cookbook_summary.md"
             ],
-            "last_verified_at": "2025-02-20T00:00:00Z",
+            "last_verified_at": "2025-10-28T00:00:00Z",
             "index_snapshot": "docs/birdseye/index.json",
-            "refresh_command": "python tools/codemap/update.py --targets docs\/birdseye/index.json,docs\/birdseye/hot.json --emit index+caps",
-            "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
+            "refresh_command": "manual: docs/birdseye/README.md の更新フローに従い index/hot を同時編集",
+            "curation_notes": "ホットリストとの整合を保つため、Summary/Requirements/TASKS と同時に見直す。"
         },
         {
-            "id": "tools/codemap/README.md",
-            "role": "tooling",
-            "reason": "codemap.update の実行契約と Birdseye 再生成パラメータを明示。",
-            "caps": "docs/birdseye/caps/tools.codemap.README.md.json",
+            "id": "docs/downsized_cookbook_summary.md",
+            "role": "summary",
+            "reason": "Requirements Spec・README・TASKS を橋渡しするチェックシート形式の概要。",
+            "caps": null,
             "edges": [
-                "docs/BIRDSEYE.md",
-                "tools/codemap/update.py",
-                "docs/birdseye/index.json"
+                "README.md",
+                "HUB.codex.md",
+                "docs/downsized_cookbook_requirements_spec.md",
+                "docs/TASKS.md"
             ],
-            "last_verified_at": "2025-02-20T00:00:00Z",
+            "last_verified_at": "2025-10-21T00:00:00Z",
             "index_snapshot": "docs/birdseye/index.json",
-            "refresh_command": "python tools/codemap/update.py --targets docs\/birdseye/index.json,docs\/birdseye/hot.json --emit index+caps",
-            "curation_notes": "Workflow Cookbook の主要な起点ドキュメントと Birdseye 運用ノードを即時参照できるようにキュレーションしたホットリスト。index.json の更新時は同じターゲットで hot を再生成し、各ノードの鮮度をチェックする。"
+            "refresh_command": "manual: docs/birdseye/README.md の更新フローに従い index/hot を同時編集",
+            "curation_notes": "Summary を起点に Requirements/TASKS/評価ドキュメントへ素早く展開できるようにする。"
         }
     ]
 }
