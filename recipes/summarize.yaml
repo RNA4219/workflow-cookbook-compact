@@ -1,0 +1,37 @@
+recipe: summarize
+version: 0.1.0
+description: "Summarise input text into a fixed-length bullet list."
+inputs:
+  - id: source_text
+    type: file
+    format: markdown
+outputs:
+  - id: summary
+    type: json
+    schema:
+      type: object
+      properties:
+        bullets:
+          type: array
+          items:
+            type: string
+          minItems: 5
+          maxItems: 5
+      required:
+        - bullets
+budget:
+  max_input_tokens: 500
+  max_output_tokens: 256
+steps:
+  - id: summarise
+    description: "Produce a concise bullet list from the provided text."
+    llm:
+      client: default
+      mode: single_turn
+    prompt:
+      system: "You are a concise analyst who outputs JSON."
+      user: |
+        Summarise the provided document into exactly five bullet points.
+        Respond as JSON matching the schema.
+        ---
+        {{source_text}}

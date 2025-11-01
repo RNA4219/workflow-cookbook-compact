@@ -1,0 +1,66 @@
+recipe: req_to_srs_roi
+version: 0.1.0
+description: "Transform requirements into ROI-scored SRS stories."
+inputs:
+  - id: requirements
+    type: file
+    format: markdown
+  - id: roi_budget
+    type: env
+    name: ROI_BUDGET
+    required: false
+outputs:
+  - id: stories
+    type: json
+    schema:
+      type: object
+      properties:
+        stories:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              value:
+                type: integer
+              effort:
+                type: integer
+              risk:
+                type: integer
+              confidence:
+                type: integer
+              roi_score:
+                type: number
+              notes:
+                type: string
+            required:
+              - id
+              - title
+              - value
+              - effort
+              - risk
+              - confidence
+              - roi_score
+      required:
+        - stories
+budget:
+  max_input_tokens: 800
+  max_output_tokens: 512
+steps:
+  - id: derive_stories
+    description: "Map requirements to ROI-ranked SRS stories."
+    llm:
+      client: default
+      mode: single_turn
+    prompt:
+      system: "You are an ROI-focused systems analyst. Always answer with valid JSON."
+      user: |
+        Break down the requirements into independent stories.
+        Score each story with value, effort, risk, and confidence (1-5 scale).
+        Compute roi_score = (value * confidence) / (effort * max(risk,1)).
+        Respect ROI_BUDGET if provided by tagging stories that should be prioritised.
+        ---
+        {{requirements}}

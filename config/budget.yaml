@@ -1,0 +1,8 @@
+# Recommended ROI and token budgets
+roi:
+  default_budget: 40
+  notes: "Override via ROI_BUDGET env variable when planning."
+tokens:
+  cpu_small: 500
+  7b_gpu: 1000
+  cheap_api: 1200
